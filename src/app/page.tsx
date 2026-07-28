@@ -39,7 +39,7 @@ export default async function HomePage() {
                 Handcrafted Kubo Villas
               </h2>
             </div>
-            <p className="text-xs text-[#2b1d14]/60 mt-2 md:mt-0">Swipe to view suites $\rightarrow$</p>
+            <p className="text-xs text-[#2b1d14]/60 mt-2 md:mt-0">Swipe to view suites →</p>
           </div>
 
           <RoomCarousel rooms={rooms} />

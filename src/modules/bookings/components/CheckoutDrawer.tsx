@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Clock, Loader2, Users } from 'lucide-react';
+import { X, Clock, Loader2 } from 'lucide-react';
 import { createBookingAction } from '../actions/createBooking';
 import type { Room } from '@/modules/shared/types/database.types';
 
@@ -26,7 +26,6 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
 
     if (!isOpen) return null;
 
-    // Calculate dynamic nights & total
     const nights = checkIn && checkOut && new Date(checkOut) > new Date(checkIn)
         ? Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))
         : 0;
@@ -62,7 +61,6 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
         <div className="fixed inset-0 z-50 bg-[#1c120c]/70 backdrop-blur-xs flex justify-end flex-col sm:items-center sm:justify-center p-0 sm:p-4">
             <div className="bg-[#faf7f2] w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-[#e6c898]/40 animate-in slide-in-from-bottom duration-300 max-h-[92vh] overflow-y-auto pb-[calc(2rem+env(safe-area-inset-bottom))]">
 
-                {/* Header */}
                 <div className="flex justify-between items-center border-b border-[#e6c898]/40 pb-4">
                     <div>
                         <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Direct Reservation</span>
@@ -84,7 +82,6 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
                             </div>
                         )}
 
-                        {/* Date Selection */}
                         <div className="grid grid-cols-2 gap-3">
                             <div className="bg-white p-3 rounded-2xl border border-[#e6c898]/40">
                                 <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Check-In</label>
@@ -108,7 +105,6 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
                             </div>
                         </div>
 
-                        {/* Guest Count Selection */}
                         <div className="bg-white p-3 rounded-2xl border border-[#e6c898]/40">
                             <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Number of Guests</label>
                             <select
@@ -124,7 +120,6 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
                             </select>
                         </div>
 
-                        {/* Guest Details */}
                         <div className="space-y-3">
                             <div className="bg-white p-3 rounded-2xl border border-[#e6c898]/40">
                                 <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Full Name</label>
@@ -163,16 +158,15 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
                             </div>
                         </div>
 
-                        {/* Price Summary */}
                         {nights > 0 && (
                             <div className="bg-[#1c120c] text-[#faf7f2] p-4 rounded-2xl flex items-center justify-between">
                                 <div>
                                     <span className="text-xs text-[#e6c898]">{nights} Night(s) • {guestsCount} Guest(s)</span>
-                                    <p className="text-xs text-[#faf7f2]/70">${room.price_per_night} x {nights} nights</p>
+                                    <p className="text-xs text-[#faf7f2]/70">₱{Number(room.price_per_night).toLocaleString()} x {nights} nights</p>
                                 </div>
                                 <div className="text-right">
                                     <span className="text-[10px] uppercase font-bold text-[#c89349]">Total Price</span>
-                                    <p className="text-xl font-extrabold text-[#faf7f2]">${estimatedTotal}</p>
+                                    <p className="text-xl font-extrabold text-[#faf7f2]">₱{estimatedTotal.toLocaleString()}</p>
                                 </div>
                             </div>
                         )}
@@ -186,7 +180,6 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
                         </button>
                     </form>
                 ) : (
-                    /* Awaiting Approval Screen */
                     <div className="py-8 text-center space-y-4">
                         <div className="w-16 h-16 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mx-auto">
                             <Clock className="w-8 h-8" />

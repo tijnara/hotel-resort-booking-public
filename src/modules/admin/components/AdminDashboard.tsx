@@ -1,19 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, X, Clock, DollarSign, Calendar, UserPlus, RefreshCw, Loader2 } from 'lucide-react';
+import Image from 'next/image';
+import { Check, X, Clock, DollarSign, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2 } from 'lucide-react';
 import { updateBookingStatusAction } from '../actions/adminActions';
 import { createStaffUserAction } from '../actions/userActions';
+import { EditRoomModal } from './EditRoomModal';
+import type { Room } from '@/modules/shared/types/database.types';
 
 interface AdminDashboardProps {
     initialBookings: any[];
     initialStaff: any[];
+    initialRooms?: Room[]; // Add the '?' to make it optional
 }
 
-export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboardProps) {
-    const [mainTab, setMainTab] = useState<'bookings' | 'users'>('bookings');
+export function AdminDashboard({
+                                   initialBookings,
+                                   initialStaff,
+                                   initialRooms = [], // Default to an empty array
+                               }: AdminDashboardProps) {
+    const [mainTab, setMainTab] = useState<'bookings' | 'users' | 'villas'>('bookings');
     const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
     const [loadingId, setLoadingId] = useState<string | null>(null);
+    const [editingRoom, setEditingRoom] = useState<Room | null>(null);
 
     // User Form State
     const [fullName, setFullName] = useState('');
@@ -23,7 +32,6 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
     const [userLoading, setUserLoading] = useState(false);
     const [userMsg, setUserMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    // Stats
     const confirmedBookings = initialBookings.filter((b) => b.status === 'confirmed');
     const pendingBookings = initialBookings.filter((b) => b.status === 'pending');
     const totalRevenue = confirmedBookings.reduce((sum, b) => sum + Number(b.total_price || 0), 0);
@@ -32,7 +40,6 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
         ? initialBookings
         : initialBookings.filter((b) => b.status === filter);
 
-    // Helper to format exact timestamp
     const formatBookingTimestamp = (isoDate: string) => {
         if (!isoDate) return 'N/A';
         return new Date(isoDate).toLocaleString('en-US', {
@@ -72,10 +79,10 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
     return (
         <div className="space-y-8">
             {/* Top View Selector */}
-            <div className="flex items-center gap-3 border-b border-[#e6c898]/40 pb-4">
+            <div className="flex items-center gap-3 border-b border-[#e6c898]/40 pb-4 overflow-x-auto [scrollbar-width:none]">
                 <button
                     onClick={() => setMainTab('bookings')}
-                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider transition ${
+                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider transition whitespace-nowrap ${
                         mainTab === 'bookings'
                             ? 'bg-[#1c120c] text-[#faf7f2]'
                             : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
@@ -83,9 +90,22 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
                 >
                     Reservations & Payments
                 </button>
+
+                <button
+                    onClick={() => setMainTab('villas')}
+                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap ${
+                        mainTab === 'villas'
+                            ? 'bg-[#1c120c] text-[#faf7f2]'
+                            : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
+                    }`}
+                >
+                    <Home className="w-4 h-4 text-[#c89349]" />
+                    <span>Kubo Villas ({initialRooms.length})</span>
+                </button>
+
                 <button
                     onClick={() => setMainTab('users')}
-                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition ${
+                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap ${
                         mainTab === 'users'
                             ? 'bg-[#1c120c] text-[#faf7f2]'
                             : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
@@ -105,7 +125,7 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#2b1d14]/60">Total Revenue</span>
                                 <DollarSign className="w-5 h-5" />
                             </div>
-                            <p className="text-2xl font-black text-[#1c120c]">${totalRevenue.toLocaleString()}</p>
+                            <p className="text-2xl font-black text-[#1c120c]">₱{totalRevenue.toLocaleString()}</p>
                         </div>
 
                         <div className="bg-white p-5 rounded-2xl border border-[#e6c898]/40 shadow-xs">
@@ -174,7 +194,6 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
                                             <strong>{b.rooms?.name || 'Kubo Villa'}</strong> • {b.check_in} to {b.check_out} ({b.guests_count || 1} {b.guests_count === 1 ? 'Guest' : 'Guests'})
                                         </p>
 
-                                        {/* Exact Timestamp Display */}
                                         <div className="flex items-center gap-1.5 text-[11px] text-[#c89349] font-medium pt-1">
                                             <Clock className="w-3.5 h-3.5" />
                                             <span>Booked on: {formatBookingTimestamp(b.created_at)}</span>
@@ -182,7 +201,7 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
                                     </div>
 
                                     <div className="flex items-center gap-4">
-                                        <span className="font-extrabold text-lg text-[#1c120c]">${b.total_price}</span>
+                                        <span className="font-extrabold text-lg text-[#1c120c]">₱{Number(b.total_price).toLocaleString()}</span>
                                         <div className="flex gap-2">
                                             {b.status !== 'confirmed' && (
                                                 <button
@@ -211,10 +230,68 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
                         </div>
                     </div>
                 </>
+            ) : mainTab === 'villas' ? (
+                /* Kubo Villa Management Section */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {initialRooms.map((room) => (
+                        <div key={room.id} className="bg-white rounded-3xl border border-[#e6c898]/40 overflow-hidden shadow-xs flex flex-col justify-between">
+                            <div>
+                                <div className="relative aspect-16/9 w-full bg-[#faf7f2]">
+                                    {room.images?.[0] && (
+                                        <Image
+                                            src={room.images[0]}
+                                            alt={room.name}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    )}
+                                    <div className="absolute top-3 right-3 bg-[#1c120c]/85 backdrop-blur-md text-[#faf7f2] text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-[#c89349]/30">
+                                        {room.bed_type}
+                                    </div>
+                                </div>
+
+                                <div className="p-5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] block mb-1">
+                    {room.tagline || 'Kubo Villa'}
+                  </span>
+                                    <h3 className="font-bold text-lg text-[#1c120c]">{room.name}</h3>
+                                    <p className="text-xs text-[#2b1d14]/70 mt-2 line-clamp-2 leading-relaxed">
+                                        {room.description}
+                                    </p>
+
+                                    <div className="flex items-center gap-4 mt-4 pt-4 border-t border-[#faf7f2] text-xs font-medium text-[#2b1d14]/70">
+                    <span className="flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-[#c89349]" />
+                      Max {room.max_guests} Guests
+                    </span>
+                                        <span className="flex items-center gap-1.5">
+                      <Maximize2 className="w-3.5 h-3.5 text-[#c89349]" />
+                                            {room.size_sqm} m²
+                    </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-5 pt-0 border-t border-[#faf7f2] mt-2 flex items-center justify-between">
+                                <div>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#2b1d14]/50 block">Nightly Rate</span>
+                                    <span className="font-extrabold text-xl text-[#1c120c]">₱{Number(room.price_per_night).toLocaleString()}</span>
+                                </div>
+
+                                <button
+                                    onClick={() => setEditingRoom(room)}
+                                    className="min-h-[44px] px-5 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 hover:bg-[#2b1d14] active:scale-95 transition"
+                                >
+                                    <Edit3 className="w-4 h-4 text-[#c89349]" />
+                                    <span>Edit Villa</span>
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             ) : (
                 /* Staff & User Section */
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Add User Form */}
                     <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-4">
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Staff Access</span>
@@ -289,14 +366,13 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
                         </form>
                     </div>
 
-                    {/* User List Table */}
                     <div className="lg:col-span-2 bg-white rounded-3xl border border-[#e6c898]/40 shadow-xs overflow-hidden">
                         <div className="p-5 border-b border-[#e6c898]/30 flex items-center justify-between">
                             <h3 className="font-bold text-lg text-[#1c120c]">Registered Staff & Users</h3>
                             <span className="text-xs text-[#2b1d14]/60">{initialStaff.length} Accounts</span>
                         </div>
 
-                        <div className="divide-y divide-[#faf7f2]">
+                        <div className="divide-[#faf7f2] divide-y">
                             {initialStaff.map((u) => (
                                 <div key={u.id} className="p-5 flex items-center justify-between">
                                     <div>
@@ -318,6 +394,15 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Edit Room Modal */}
+            {editingRoom && (
+                <EditRoomModal
+                    room={editingRoom}
+                    isOpen={!!editingRoom}
+                    onClose={() => setEditingRoom(null)}
+                />
             )}
         </div>
     );

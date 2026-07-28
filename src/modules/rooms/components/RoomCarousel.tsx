@@ -69,7 +69,7 @@ export function RoomCarousel({ rooms }: RoomCarouselProps) {
                             <div>
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#2b1d14]/50 block">Nightly</span>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="font-black text-xl text-[#1c120c]">${room.price_per_night}</span>
+                                    <span className="font-black text-xl text-[#1c120c]">₱{Number(room.price_per_night).toLocaleString()}</span>
                                     <span className="text-[#2b1d14]/50 text-xs">/night</span>
                                 </div>
                             </div>
@@ -85,7 +85,6 @@ export function RoomCarousel({ rooms }: RoomCarouselProps) {
                 ))}
             </div>
 
-            {/* Checkout Drawer Component */}
             {selectedRoom && (
                 <CheckoutDrawer
                     room={selectedRoom}

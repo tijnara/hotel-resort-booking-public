@@ -1,6 +1,13 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Create a reusable Gmail SMTP transporter
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+    },
+});
 
 interface EmailProps {
     to: string;
@@ -13,7 +20,7 @@ interface EmailProps {
 }
 
 /**
- * STAGE 1: Sent immediately after the guest submits their booking request.
+ * STAGE 1: Sent immediately to the guest when they submit a booking request.
  */
 export async function sendRequestReceivedEmail({
                                                    to,
@@ -24,15 +31,15 @@ export async function sendRequestReceivedEmail({
                                                    checkOut,
                                                    totalPrice,
                                                }: EmailProps) {
-    if (!process.env.RESEND_API_KEY) {
-        console.error('❌ Resend Error: RESEND_API_KEY is missing in .env.local');
-        return { success: false, error: 'Missing API Key' };
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+        console.warn('⚠️ Gmail Error: GMAIL_USER or GMAIL_APP_PASSWORD missing in .env.local');
+        return { success: false, error: 'Missing Credentials' };
     }
 
     try {
-        const { data, error } = await resend.emails.send({
-            from: 'Seaview Resort <onboarding@resend.dev>',
-            to: [to],
+        const info = await transporter.sendMail({
+            from: `"Seaview Resort" <${process.env.GMAIL_USER}>`,
+            to: to, // Sends directly to ANY guest email!
             subject: `Booking Request Received #${bookingRef} - Seaview Kubo Resort`,
             html: `
         <div style="font-family: Arial, sans-serif; background-color: #faf7f2; padding: 24px; color: #1c120c;">
@@ -60,7 +67,7 @@ export async function sendRequestReceivedEmail({
                 <p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Villa:</strong> ${roomName}</p>
                 <p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Check-In:</strong> ${checkIn}</p>
                 <p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Check-Out:</strong> ${checkOut}</p>
-                <p style="margin: 0; font-size: 13px;"><strong>Estimated Total:</strong> $${totalPrice}</p>
+                <p style="margin: 0; font-size: 13px;"><strong>Estimated Total:</strong> ₱${Number(totalPrice).toLocaleString()}</p>
               </div>
 
               <p style="font-size: 12px; color: #666; margin-bottom: 0;">
@@ -76,21 +83,16 @@ export async function sendRequestReceivedEmail({
       `,
         });
 
-        if (error) {
-            console.error('❌ Resend API Error (Stage 1):', error);
-            return { success: false, error };
-        }
-
-        console.log('✅ Stage 1: Request Received Email Sent!');
-        return { success: true, data };
+        console.log('✅ Stage 1 Email Sent to Guest via Gmail SMTP:', info.messageId);
+        return { success: true, data: info };
     } catch (err) {
-        console.error('❌ Failed to execute sendRequestReceivedEmail:', err);
+        console.error('❌ Failed to send Stage 1 email via Gmail:', err);
         return { success: false, error: err };
     }
 }
 
 /**
- * STAGE 2: Sent when the admin approves/confirms the stay in the admin dashboard.
+ * STAGE 2: Sent when admin approves/confirms the stay in the dashboard.
  */
 export async function sendConfirmationEmail({
                                                 to,
@@ -101,15 +103,15 @@ export async function sendConfirmationEmail({
                                                 checkOut,
                                                 totalPrice,
                                             }: EmailProps) {
-    if (!process.env.RESEND_API_KEY) {
-        console.error('❌ Resend Error: RESEND_API_KEY is missing in .env.local');
-        return { success: false, error: 'Missing API Key' };
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+        console.warn('⚠️ Gmail Error: GMAIL_USER or GMAIL_APP_PASSWORD missing in .env.local');
+        return { success: false, error: 'Missing Credentials' };
     }
 
     try {
-        const { data, error } = await resend.emails.send({
-            from: 'Seaview Resort <onboarding@resend.dev>',
-            to: [to],
+        const info = await transporter.sendMail({
+            from: `"Seaview Resort" <${process.env.GMAIL_USER}>`,
+            to: to, // Sends directly to ANY guest email!
             subject: `Booking Confirmed #${bookingRef} - Seaview Kubo Resort`,
             html: `
         <div style="font-family: Arial, sans-serif; background-color: #faf7f2; padding: 24px; color: #1c120c;">
@@ -137,7 +139,7 @@ export async function sendConfirmationEmail({
                 <p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Villa:</strong> ${roomName}</p>
                 <p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Check-In:</strong> ${checkIn}</p>
                 <p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Check-Out:</strong> ${checkOut}</p>
-                <p style="margin: 0; font-size: 13px;"><strong>Total Amount:</strong> $${totalPrice}</p>
+                <p style="margin: 0; font-size: 13px;"><strong>Total Amount:</strong> ₱${Number(totalPrice).toLocaleString()}</p>
               </div>
 
               <p style="font-size: 12px; color: #666; margin-bottom: 0;">
@@ -153,15 +155,10 @@ export async function sendConfirmationEmail({
       `,
         });
 
-        if (error) {
-            console.error('❌ Resend API Error (Stage 2):', error);
-            return { success: false, error };
-        }
-
-        console.log('✅ Stage 2: Confirmation Email Sent Successfully!');
-        return { success: true, data };
+        console.log('✅ Stage 2 Email Sent to Guest via Gmail SMTP:', info.messageId);
+        return { success: true, data: info };
     } catch (err) {
-        console.error('❌ Failed to execute sendConfirmationEmail:', err);
+        console.error('❌ Failed to send Stage 2 email via Gmail:', err);
         return { success: false, error: err };
     }
 }
