@@ -7,39 +7,39 @@ export default async function HomePage() {
   const rooms = await getRooms();
 
   return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 pb-28 md:pb-12">
+      <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] pb-28 md:pb-12">
         <Header />
 
         {/* Hero Section */}
-        <section className="relative bg-slate-950 text-white pt-16 pb-24 px-5">
-          <div className="max-w-4xl mx-auto text-center space-y-4">
-          <span className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-400">
-            A Coastal Sanctuary
+        <section className="relative bg-[#1c120c] text-[#faf7f2] pt-16 pb-24 px-5 overflow-hidden">
+          <div className="max-w-4xl mx-auto text-center space-y-4 relative z-10">
+          <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#c89349]">
+            Modern Filipino Coastal Sanctuary
           </span>
-            <h1 className="text-4xl sm:text-6xl font-light tracking-tight text-slate-100">
-              Where Horizon Meets Tranquility.
+            <h1 className="text-4xl sm:text-6xl font-light tracking-tight text-[#faf7f2]">
+              Bamboo, Capiz & Unbroken Ocean Views.
             </h1>
-            <p className="text-sm sm:text-base text-slate-400 max-w-xl mx-auto font-light leading-relaxed">
-              Minimalist oceanfront suites crafted for quiet luxury, undisturbed views, and modern coastal living.
+            <p className="text-sm sm:text-base text-[#e6c898]/80 max-w-xl mx-auto font-light leading-relaxed">
+              Handcrafted beachfront Kubo villas blending ancestral Philippine architecture with modern minimalist luxury.
             </p>
           </div>
 
           {/* Floating Desktop Booking Bar */}
-          <div className="mt-12">
+          <div className="mt-12 relative z-10">
             <BookingBar />
           </div>
         </section>
 
         {/* Room Selection Carousel */}
-        <section id="rooms" className="max-w-7xl mx-auto px-5 pt-16">
+        <section id="villas" className="max-w-7xl mx-auto px-5 pt-16">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Accommodations</span>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-1">
-                Curated Stays & Suites
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Accommodations</span>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1c120c] mt-1">
+                Handcrafted Kubo Villas
               </h2>
             </div>
-            <p className="text-xs text-slate-500 mt-2 md:mt-0">Swipe to explore rooms $\rightarrow$</p>
+            <p className="text-xs text-[#2b1d14]/60 mt-2 md:mt-0">Swipe to view suites $\rightarrow$</p>
           </div>
 
           <RoomCarousel rooms={rooms} />
