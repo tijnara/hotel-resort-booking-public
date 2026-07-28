@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
+import { X, Clock, Loader2, Users } from 'lucide-react';
 import { createBookingAction } from '../actions/createBooking';
 import type { Room } from '@/modules/shared/types/database.types';
 
@@ -18,6 +18,7 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
 
     const [checkIn, setCheckIn] = useState('');
     const [checkOut, setCheckOut] = useState('');
+    const [guestsCount, setGuestsCount] = useState<number>(1);
     const [guestName, setGuestName] = useState('');
     const [guestEmail, setGuestEmail] = useState('');
     const [guestPhone, setGuestPhone] = useState('');
@@ -43,7 +44,7 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
             guestPhone,
             checkIn,
             checkOut,
-            guestsCount: 2,
+            guestsCount,
             pricePerNight: room.price_per_night,
         });
 
@@ -53,7 +54,7 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
             setBookingRef(res.bookingId.slice(0, 8).toUpperCase());
             setStep('success');
         } else {
-            setErrorMsg(res.message || 'Could not complete reservation.');
+            setErrorMsg(res.message || 'Could not submit reservation request.');
         }
     };
 
@@ -107,6 +108,22 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
                             </div>
                         </div>
 
+                        {/* Guest Count Selection */}
+                        <div className="bg-white p-3 rounded-2xl border border-[#e6c898]/40">
+                            <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Number of Guests</label>
+                            <select
+                                value={guestsCount}
+                                onChange={(e) => setGuestsCount(Number(e.target.value))}
+                                className="w-full text-xs font-semibold text-[#1c120c] outline-none bg-transparent cursor-pointer"
+                            >
+                                {Array.from({ length: room.max_guests || 4 }, (_, i) => i + 1).map((num) => (
+                                    <option key={num} value={num}>
+                                        {num} {num === 1 ? 'Guest' : 'Guests'} (Max {room.max_guests})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
                         {/* Guest Details */}
                         <div className="space-y-3">
                             <div className="bg-white p-3 rounded-2xl border border-[#e6c898]/40">
@@ -150,7 +167,7 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
                         {nights > 0 && (
                             <div className="bg-[#1c120c] text-[#faf7f2] p-4 rounded-2xl flex items-center justify-between">
                                 <div>
-                                    <span className="text-xs text-[#e6c898]">{nights} Night(s) Stay</span>
+                                    <span className="text-xs text-[#e6c898]">{nights} Night(s) • {guestsCount} Guest(s)</span>
                                     <p className="text-xs text-[#faf7f2]/70">${room.price_per_night} x {nights} nights</p>
                                 </div>
                                 <div className="text-right">
@@ -165,31 +182,39 @@ export function CheckoutDrawer({ room, isOpen, onClose }: CheckoutDrawerProps) {
                             disabled={loading || nights <= 0}
                             className="w-full h-14 bg-[#c89349] text-[#1c120c] font-bold uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#b07d37] disabled:opacity-50 transition"
                         >
-                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirm Reservation'}
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Submit Booking Request'}
                         </button>
                     </form>
                 ) : (
-                    /* Confirmation Step */
+                    /* Awaiting Approval Screen */
                     <div className="py-8 text-center space-y-4">
-                        <div className="w-16 h-16 bg-[#2d5a43]/10 text-[#2d5a43] rounded-full flex items-center justify-center mx-auto">
-                            <CheckCircle2 className="w-10 h-10" />
+                        <div className="w-16 h-16 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mx-auto">
+                            <Clock className="w-8 h-8" />
                         </div>
                         <div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Mabuhay!</span>
-                            <h2 className="text-2xl font-bold text-[#1c120c]">Kubo Reserved</h2>
-                            <p className="text-xs text-[#2b1d14]/70 mt-1">
-                                Confirmation sent to <strong className="text-[#1c120c]">{guestEmail}</strong>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Request Submitted</span>
+                            <h2 className="text-2xl font-bold text-[#1c120c]">Awaiting Approval</h2>
+                            <p className="text-xs text-[#2b1d14]/70 mt-1 max-w-xs mx-auto leading-relaxed">
+                                Your reservation request has been sent to our desk. You will receive an email at <strong className="text-[#1c120c]">{guestEmail}</strong> once our staff confirms your stay.
                             </p>
                         </div>
 
                         <div className="bg-white p-4 rounded-2xl border border-[#e6c898]/40 text-left space-y-2 text-xs">
                             <div className="flex justify-between">
-                                <span className="text-[#2b1d14]/60">Booking Ref:</span>
+                                <span className="text-[#2b1d14]/60">Request Ref:</span>
                                 <span className="font-mono font-bold text-[#1c120c]">#{bookingRef}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-[#2b1d14]/60">Status:</span>
+                                <span className="font-bold text-amber-700 uppercase tracking-wider text-[10px]">Pending Staff Review</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-[#2b1d14]/60">Villa:</span>
                                 <span className="font-bold text-[#1c120c]">{room.name}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-[#2b1d14]/60">Guests:</span>
+                                <span className="font-bold text-[#1c120c]">{guestsCount} {guestsCount === 1 ? 'Guest' : 'Guests'}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-[#2b1d14]/60">Dates:</span>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, X, Clock, DollarSign, Calendar, UserPlus, Users, Loader2 } from 'lucide-react';
+import { Check, X, Clock, DollarSign, Calendar, UserPlus, RefreshCw, Loader2 } from 'lucide-react';
 import { updateBookingStatusAction } from '../actions/adminActions';
 import { createStaffUserAction } from '../actions/userActions';
 
@@ -31,6 +31,19 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
     const filteredBookings = filter === 'all'
         ? initialBookings
         : initialBookings.filter((b) => b.status === filter);
+
+    // Helper to format exact timestamp
+    const formatBookingTimestamp = (isoDate: string) => {
+        if (!isoDate) return 'N/A';
+        return new Date(isoDate).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+        });
+    };
 
     const handleStatusUpdate = async (id: string, status: 'confirmed' | 'cancelled' | 'pending') => {
         setLoadingId(id);
@@ -142,13 +155,30 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
                         <div className="divide-y divide-[#faf7f2]">
                             {filteredBookings.map((b) => (
                                 <div key={b.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                    <div>
-                                        <span className="font-mono text-xs font-bold text-[#c89349]">#{b.id.slice(0, 8).toUpperCase()}</span>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-mono text-xs font-bold text-[#c89349]">#{b.id.slice(0, 8).toUpperCase()}</span>
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                                                b.status === 'confirmed' ? 'bg-[#2d5a43]/10 text-[#2d5a43]' :
+                                                    b.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+                                                        'bg-rose-100 text-rose-800'
+                                            }`}>
+                        {b.status}
+                      </span>
+                                        </div>
+
                                         <h4 className="font-bold text-base text-[#1c120c]">{b.guest_name}</h4>
                                         <p className="text-xs text-[#2b1d14]/70">{b.guest_email} • {b.guest_phone}</p>
-                                        <p className="text-xs text-[#2b1d14]/80 pt-1">
-                                            <strong>{b.rooms?.name || 'Kubo Villa'}</strong> • {b.check_in} to {b.check_out}
+
+                                        <p className="text-xs text-[#2b1d14]/80 pt-0.5">
+                                            <strong>{b.rooms?.name || 'Kubo Villa'}</strong> • {b.check_in} to {b.check_out} ({b.guests_count || 1} {b.guests_count === 1 ? 'Guest' : 'Guests'})
                                         </p>
+
+                                        {/* Exact Timestamp Display */}
+                                        <div className="flex items-center gap-1.5 text-[11px] text-[#c89349] font-medium pt-1">
+                                            <Clock className="w-3.5 h-3.5" />
+                                            <span>Booked on: {formatBookingTimestamp(b.created_at)}</span>
+                                        </div>
                                     </div>
 
                                     <div className="flex items-center gap-4">
@@ -157,17 +187,21 @@ export function AdminDashboard({ initialBookings, initialStaff }: AdminDashboard
                                             {b.status !== 'confirmed' && (
                                                 <button
                                                     onClick={() => handleStatusUpdate(b.id, 'confirmed')}
-                                                    className="min-h-[40px] px-3 bg-[#2d5a43] text-white text-xs font-bold rounded-xl"
+                                                    disabled={loadingId === b.id}
+                                                    className="min-h-[40px] px-3 bg-[#2d5a43] text-white text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-[#234734] transition active:scale-95"
                                                 >
-                                                    Confirm
+                                                    {loadingId === b.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                                    <span>Confirm</span>
                                                 </button>
                                             )}
                                             {b.status !== 'cancelled' && (
                                                 <button
                                                     onClick={() => handleStatusUpdate(b.id, 'cancelled')}
-                                                    className="min-h-[40px] px-3 bg-rose-100 text-rose-800 text-xs font-bold rounded-xl"
+                                                    disabled={loadingId === b.id}
+                                                    className="min-h-[40px] px-3 bg-rose-100 text-rose-800 text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-rose-200 transition active:scale-95"
                                                 >
-                                                    Cancel
+                                                    <X className="w-4 h-4" />
+                                                    <span>Cancel</span>
                                                 </button>
                                             )}
                                         </div>
