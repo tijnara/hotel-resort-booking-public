@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Palmtree, MapPin, Phone, Mail, Laptop } from 'lucide-react';
+import { Palmtree, MapPin, Phone, Mail, Laptop, ChevronLeft, ChevronRight, Utensils } from 'lucide-react';
 import { AvailabilityBar } from '@/modules/rooms/components/AvailabilityBar';
 import { RoomCarousel } from '@/modules/rooms/components/RoomCarousel';
 import { filterAvailableRoomsAction } from '@/modules/rooms/actions/filterRooms';
@@ -19,6 +19,51 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
     const [displayedRooms, setDisplayedRooms] = useState<Room[]>(initialRooms);
     const [loading, setLoading] = useState(false);
     const [isFiltered, setIsFiltered] = useState(false);
+
+    // Collect all room images from uploaded Kubo Villas or custom hero images
+    const allRoomImages = initialRooms.flatMap((room) => room.images || []).filter(Boolean);
+    const heroImages = (settings.hero_images && settings.hero_images.length > 0)
+        ? settings.hero_images
+        : allRoomImages;
+
+    const storyBanner = settings.story_banner_image || heroImages[0] || '';
+
+    // Filter out "The Sanctuary" from header and footer navigation
+    const filteredNavLinks = (settings.nav_links || []).filter(
+        (link) => link.href !== '#sanctuary' && link.label.toLowerCase() !== 'the sanctuary'
+    );
+
+    // Slideshow State
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    useEffect(() => {
+        if (heroImages.length <= 1) return;
+        const interval = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [heroImages.length]);
+
+    // Smooth Scroll Handler
+    const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        if (href === '/' || href === '#' || href === '') {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
+        if (href.startsWith('#')) {
+            e.preventDefault();
+            const targetId = href.replace('#', '');
+            const element = document.getElementById(targetId);
+
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+    };
 
     const handleFilter = async (checkIn: string, checkOut: string) => {
         setLoading(true);
@@ -38,11 +83,15 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
     };
 
     return (
-        <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between">
+        <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between scroll-smooth">
             <div>
                 {/* Sticky Navigation Header */}
                 <header className="sticky top-0 z-40 bg-[#1c120c]/95 backdrop-blur-md text-[#faf7f2] px-6 h-20 flex items-center justify-between border-b border-[#2b1d14] shadow-lg transition-all duration-300">
-                    <Link href="/" className="flex items-center gap-2 font-bold tracking-widest text-xl uppercase text-[#faf7f2]">
+                    <Link
+                        href="/"
+                        onClick={(e) => handleNavClick(e, '/')}
+                        className="flex items-center gap-2 font-bold tracking-widest text-xl uppercase text-[#faf7f2] hover:opacity-90 transition"
+                    >
                         {settings.logo_url ? (
                             <div className="relative w-8 h-8">
                                 <Image src={settings.logo_url} alt={settings.site_name} fill className="object-contain" />
@@ -53,38 +102,65 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         <span>{settings.site_name}</span>
                     </Link>
 
-                    {/* Dynamic Navigation Links */}
+                    {/* Navigation Links (Excludes The Sanctuary) */}
                     <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-[#faf7f2]/80">
-                        {settings.nav_links.map((link, idx) => (
-                            <a key={idx} href={link.href} className="hover:text-[#c89349] transition">
+                        {filteredNavLinks.map((link, idx) => (
+                            <a
+                                key={idx}
+                                href={link.href}
+                                onClick={(e) => handleNavClick(e, link.href)}
+                                className="hover:text-[#c89349] transition cursor-pointer"
+                            >
                                 {link.label}
                             </a>
                         ))}
                     </nav>
 
-                    {/* Dynamic Reserve Button */}
+                    {/* Dynamic Smooth-Scroll Reserve Button */}
                     <a
                         href="#villas"
-                        className="min-h-[44px] px-6 bg-[#c89349] text-[#1c120c] font-bold uppercase tracking-wider text-xs rounded-xl flex items-center justify-center hover:bg-[#b07d37] transition active:scale-95"
+                        onClick={(e) => handleNavClick(e, '#villas')}
+                        className="min-h-[44px] px-6 bg-[#c89349] text-[#1c120c] font-bold uppercase tracking-wider text-xs rounded-xl flex items-center justify-center hover:bg-[#b07d37] transition active:scale-95 cursor-pointer shadow-md"
                     >
                         {settings.reserve_button_text}
                     </a>
                 </header>
 
-                {/* Dynamic Hero Section */}
-                <section className="bg-[#1c120c] text-[#faf7f2] pt-16 pb-20 px-5 text-center relative overflow-hidden">
-                    <div className="max-w-4xl mx-auto space-y-4">
+                {/* Hero Section */}
+                <section id="hero" className="bg-[#1c120c] text-[#faf7f2] pt-16 pb-20 px-5 text-center relative overflow-hidden min-h-[560px] flex flex-col justify-center">
+                    {heroImages.length > 0 && (
+                        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
+                            {heroImages.map((img, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                                        idx === currentSlide ? 'opacity-35 scale-105' : 'opacity-0 scale-100'
+                                    } transition-transform duration-[7000ms]`}
+                                >
+                                    <Image
+                                        src={img}
+                                        alt={`Kubo Room Photo ${idx + 1}`}
+                                        fill
+                                        priority={idx === 0}
+                                        className="object-cover"
+                                    />
+                                </div>
+                            ))}
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#1c120c] via-[#1c120c]/85 to-[#1c120c]/70" />
+                        </div>
+                    )}
+
+                    <div className="max-w-4xl mx-auto space-y-4 relative z-10">
                         <span className="text-[11px] font-bold uppercase tracking-widest text-[#c89349] block">
                             {settings.hero_subtitle}
                         </span>
                         <h1 className="text-4xl md:text-6xl font-light tracking-tight text-[#faf7f2] leading-tight">
                             {settings.hero_title}
                         </h1>
-                        <p className="text-xs md:text-sm text-[#e6c898]/80 max-w-xl mx-auto leading-relaxed">
+                        <p className="text-xs md:text-sm text-[#e6c898]/90 max-w-xl mx-auto leading-relaxed drop-shadow-sm">
                             {settings.hero_description}
                         </p>
 
-                        {/* Check Rates Search Bar */}
                         <div className="pt-6">
                             <AvailabilityBar
                                 onFilter={handleFilter}
@@ -93,10 +169,40 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                                 loading={loading}
                             />
                         </div>
+
+                        {heroImages.length > 1 && (
+                            <div className="pt-4 flex items-center justify-center gap-2">
+                                <button
+                                    onClick={() => setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length)}
+                                    className="p-1 rounded-full text-[#faf7f2]/60 hover:text-[#c89349] transition cursor-pointer"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+
+                                <div className="flex items-center gap-1.5">
+                                    {heroImages.map((_, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setCurrentSlide(idx)}
+                                            className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                                                idx === currentSlide ? 'w-6 bg-[#c89349]' : 'w-1.5 bg-[#faf7f2]/30 hover:bg-[#faf7f2]/60'
+                                            }`}
+                                        />
+                                    ))}
+                                </div>
+
+                                <button
+                                    onClick={() => setCurrentSlide((prev) => (prev + 1) % heroImages.length)}
+                                    className="p-1 rounded-full text-[#faf7f2]/60 hover:text-[#c89349] transition cursor-pointer"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </section>
 
-                {/* Accommodations Section */}
+                {/* Accommodations Section (#villas) */}
                 <section id="villas" className="py-16 max-w-7xl mx-auto px-5 scroll-mt-24">
                     <div className="flex items-end justify-between mb-8">
                         <div>
@@ -108,11 +214,69 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
 
                     <RoomCarousel rooms={displayedRooms} />
                 </section>
+
+                {/* Bedbox-Style Experience Section */}
+                <section id="sanctuary" className="scroll-mt-20 my-12">
+                    <div className="bg-[#1c120c] text-[#faf7f2] py-24 px-6 text-center">
+                        <div className="max-w-3xl mx-auto space-y-6">
+                            <h2 className="text-3xl md:text-5xl font-light tracking-tight leading-snug text-[#faf7f2]">
+                                {settings.story_heading_1 || "More than a stay — It's the Seaview Coastal Experience."}
+                            </h2>
+                            <p className="text-xs md:text-sm text-[#e6c898]/80 leading-relaxed font-light max-w-2xl mx-auto">
+                                {settings.story_body_1 || "Nestled along the pristine shores of the Philippines, Seaview offers a fresh take on modern beachfront luxury. We have thoughtfully crafted every Kubo villa to combine ancestral architectural details with modern minimalist comforts."}
+                            </p>
+                        </div>
+                    </div>
+
+                    {storyBanner && (
+                        <div className="relative h-[320px] sm:h-[420px] w-full overflow-hidden">
+                            <Image
+                                src={storyBanner}
+                                alt="Seaview Experience Banner"
+                                fill
+                                className="object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/15" />
+                        </div>
+                    )}
+
+                    <div className="bg-[#faf7f2] text-[#1c120c] py-24 px-6 text-center border-b border-[#e6c898]/30">
+                        <div className="max-w-3xl mx-auto space-y-6">
+                            <h2 className="text-3xl md:text-5xl font-light tracking-tight leading-snug text-[#1c120c]">
+                                {settings.story_heading_2 || "Step inside and discover a modern sanctuary — where heritage meets seaside tranquility."}
+                            </h2>
+                            <p className="text-xs md:text-sm text-[#2b1d14]/70 leading-relaxed font-light max-w-2xl mx-auto">
+                                {settings.story_body_2 || "Whether you are seeking a romantic weekend getaway, a peaceful solo retreat, or an unforgettable family vacation, Seaview is your home by the ocean."}
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Al Fresco Dining Section (#dining) */}
+                <section id="dining" className="py-16 max-w-7xl mx-auto px-5 scroll-mt-24 mb-16">
+                    <div className="bg-white p-8 md:p-12 rounded-3xl border border-[#e6c898]/40 shadow-xs grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                        <div className="md:col-span-2 space-y-3">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-2">
+                                <Utensils className="w-4 h-4" />
+                                Culinary Experience
+                            </span>
+                            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1c120c]">
+                                Beachfront Al Fresco Dining
+                            </h2>
+                            <p className="text-xs md:text-sm text-[#2b1d14]/70 leading-relaxed">
+                                Savor freshly caught seafood and authentic local delicacies under the starlit sky, served right at the water’s edge.
+                            </p>
+                        </div>
+                        <div className="bg-[#faf7f2] p-6 rounded-2xl border border-[#e6c898]/40 text-center space-y-2">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] block">Breakfast & Cocktails</span>
+                            <p className="text-xs font-bold text-[#1c120c]">Open Daily: 6:00 AM – 10:00 PM</p>
+                        </div>
+                    </div>
+                </section>
             </div>
 
             {/* Dynamic Footer Section */}
             <footer className="bg-[#1c120c] text-[#faf7f2] relative overflow-hidden pt-16 pb-8 border-t border-[#2b1d14] mt-20">
-                {/* Dynamic Watermark Background */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none overflow-hidden">
                     <span className="text-[110px] sm:text-[180px] md:text-[240px] font-black tracking-widest text-[#c89349] uppercase whitespace-nowrap">
                         {settings.footer_watermark || settings.site_name}
@@ -121,7 +285,6 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10 space-y-12">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {/* Column 1: Brand Info */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 font-bold tracking-widest text-xl uppercase text-[#faf7f2]">
                                 {settings.logo_url ? (
@@ -138,19 +301,23 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                             </p>
                         </div>
 
-                        {/* Column 2: Navigation Links */}
                         <div className="space-y-3">
                             <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Quick Links</h4>
                             <ul className="space-y-2 text-xs text-[#faf7f2]/80">
-                                {settings.nav_links.map((link, idx) => (
+                                {filteredNavLinks.map((link, idx) => (
                                     <li key={idx}>
-                                        <a href={link.href} className="hover:text-[#c89349] transition">{link.label}</a>
+                                        <a
+                                            href={link.href}
+                                            onClick={(e) => handleNavClick(e, link.href)}
+                                            className="hover:text-[#c89349] transition cursor-pointer"
+                                        >
+                                            {link.label}
+                                        </a>
                                     </li>
                                 ))}
                             </ul>
                         </div>
 
-                        {/* Column 3: Resort Contact Details */}
                         <div className="space-y-3">
                             <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Resort Desk</h4>
                             <div className="space-y-2 text-xs text-[#faf7f2]/80">
@@ -170,7 +337,6 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         </div>
                     </div>
 
-                    {/* Bottom Bar with Computer Icon & Developer Credit */}
                     <div className="pt-8 border-t border-[#2b1d14] flex flex-col sm:flex-row items-center justify-between text-xs text-[#faf7f2]/50 gap-3">
                         <p>© 2026 {settings.site_name}. All rights reserved.</p>
                         <p className="flex items-center gap-1.5 font-medium text-[#c89349]">

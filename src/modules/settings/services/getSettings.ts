@@ -18,7 +18,12 @@ export interface SiteSettings {
     footer_phone: string;
     footer_email: string;
     footer_watermark: string;
-    footer_credit: string;
+    hero_images?: string[];
+    story_heading_1?: string;
+    story_body_1?: string;
+    story_banner_image?: string;
+    story_heading_2?: string;
+    story_body_2?: string;
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
@@ -35,7 +40,6 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         console.error('Failed to fetch site settings:', err);
     }
 
-    // Fallback defaults if DB row is not found
     return {
         id: 'default',
         site_name: 'SEAVIEW',
@@ -44,15 +48,20 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         hero_title: 'Bamboo, Capiz & Unbroken Ocean Views.',
         hero_description: 'Handcrafted beachfront Kubo villas blending ancestral Philippine architecture with modern minimalist luxury.',
         reserve_button_text: 'Reserve Villa',
+        // Default links (The Sanctuary removed)
         nav_links: [
             { label: 'Kubo Villas', href: '#villas' },
-            { label: 'The Sanctuary', href: '#sanctuary' },
             { label: 'Al Fresco Dining', href: '#dining' },
         ],
         footer_address: 'Coastal Highway, Philippines',
         footer_phone: '+63 912 345 6789',
         footer_email: 'reservations@seaviewkubo.com',
         footer_watermark: 'SEAVIEW',
-        footer_credit: '@tijnara',
+        hero_images: [],
+        story_heading_1: "More than a stay — It's the Seaview Coastal Experience.",
+        story_body_1: "Nestled along the pristine shores of the Philippines, Seaview offers a fresh take on modern beachfront luxury.",
+        story_banner_image: "",
+        story_heading_2: "Step inside and discover a modern sanctuary — where heritage meets seaside tranquility.",
+        story_body_2: "Whether you are seeking a romantic weekend getaway, a peaceful solo retreat, or an unforgettable family vacation, Seaview is your home by the ocean.",
     };
 }
