@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Save, Loader2, Plus, Trash2, Upload, Images, BookOpen, Camera, Sparkles } from 'lucide-react';
+import { Save, Loader2, Plus, Trash2, Upload, Images, BookOpen, Camera } from 'lucide-react';
 import { createClient } from '@/modules/shared/lib/supabase/client';
 import { updateSiteSettingsAction } from '../actions/settingsActions';
 import type { SiteSettings, NavLinkItem, SanctuaryAmenity } from '@/modules/settings/services/getSettings';
@@ -16,6 +16,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
     const [uploading, setUploading] = useState(false);
     const [heroUploading, setHeroUploading] = useState(false);
     const [bannerUploading, setBannerUploading] = useState(false);
+    const [sancBannerUploading, setSancBannerUploading] = useState(false);
     const [galleryUploading, setGalleryUploading] = useState(false);
     const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -31,6 +32,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
     const [footerEmail, setFooterEmail] = useState(settings.footer_email || '');
     const [footerWatermark, setFooterWatermark] = useState(settings.footer_watermark || 'SEAVIEW');
 
+    // Home Page Story States
     const [heroImages, setHeroImages] = useState<string[]>(settings.hero_images || []);
     const [storyHeading1, setStoryHeading1] = useState(settings.story_heading_1 || '');
     const [storyBody1, setStoryBody1] = useState(settings.story_body_1 || '');
@@ -42,8 +44,15 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
     const [sancHeroSubtitle, setSancHeroSubtitle] = useState(settings.sanctuary_hero_subtitle || 'Coastal Wellness & Peace');
     const [sancHeroTitle, setSancHeroTitle] = useState(settings.sanctuary_hero_title || 'The Seaview Sanctuary');
     const [sancHeroDesc, setSancHeroDesc] = useState(settings.sanctuary_hero_description || '');
+    const [sancBannerImage, setSancBannerImage] = useState(settings.sanctuary_banner_image || '');
     const [sancAmenities, setSancAmenities] = useState<SanctuaryAmenity[]>(settings.sanctuary_amenities || []);
     const [sanctuaryGallery, setSanctuaryGallery] = useState<string[]>(settings.sanctuary_gallery || []);
+
+    // Independent Sanctuary Story Cards States
+    const [sancStoryHeading1, setSancStoryHeading1] = useState(settings.sanctuary_story_heading_1 || 'Your Next Unforgettable Family Beachfront Staycation.');
+    const [sancStoryBody1, setSancStoryBody1] = useState(settings.sanctuary_story_body_1 || '');
+    const [sancStoryHeading2, setSancStoryHeading2] = useState(settings.sanctuary_story_heading_2 || '');
+    const [sancStoryBody2, setSancStoryBody2] = useState(settings.sanctuary_story_body_2 || '');
 
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -102,7 +111,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
 
         const { error } = await supabase.storage.from('room-images').upload(filePath, file);
         if (error) {
-            setMsg({ type: 'error', text: `Banner upload failed: ${error.message}` });
+            setMsg({ type: 'error', text: `Home banner upload failed: ${error.message}` });
             setBannerUploading(false);
             return;
         }
@@ -110,6 +119,27 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
         const { data } = supabase.storage.from('room-images').getPublicUrl(filePath);
         if (data?.publicUrl) setStoryBannerImage(data.publicUrl);
         setBannerUploading(false);
+    };
+
+    const handleSanctuaryBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setSancBannerUploading(true);
+        setMsg(null);
+        const supabase = createClient();
+        const filePath = `sanctuary/banner-${Date.now()}.${file.name.split('.').pop()}`;
+
+        const { error } = await supabase.storage.from('room-images').upload(filePath, file);
+        if (error) {
+            setMsg({ type: 'error', text: `Sanctuary banner upload failed: ${error.message}` });
+            setSancBannerUploading(false);
+            return;
+        }
+
+        const { data } = supabase.storage.from('room-images').getPublicUrl(filePath);
+        if (data?.publicUrl) setSancBannerImage(data.publicUrl);
+        setSancBannerUploading(false);
     };
 
     const handleSanctuaryGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,7 +182,6 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
     };
     const handleRemoveNav = (index: number) => setNavLinks(navLinks.filter((_, i) => i !== index));
 
-    // Sanctuary Amenities Handlers
     const handleAddAmenity = () => {
         setSancAmenities([...sancAmenities, { icon: 'Sun', title: 'New Amenity', description: '' }]);
     };
@@ -191,8 +220,13 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
             sanctuary_hero_subtitle: sancHeroSubtitle,
             sanctuary_hero_title: sancHeroTitle,
             sanctuary_hero_description: sancHeroDesc,
+            sanctuary_banner_image: sancBannerImage,
             sanctuary_amenities: sancAmenities,
             sanctuary_gallery: sanctuaryGallery,
+            sanctuary_story_heading_1: sancStoryHeading1,
+            sanctuary_story_body_1: sancStoryBody1,
+            sanctuary_story_heading_2: sancStoryHeading2,
+            sanctuary_story_body_2: sancStoryBody2,
         });
 
         setLoading(false);
@@ -268,7 +302,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                             <button
                                 type="button"
                                 onClick={() => setLogoUrl('')}
-                                className="text-xs text-rose-700 underline font-medium"
+                                className="text-xs text-rose-700 underline font-medium cursor-pointer"
                             >
                                 Reset to Default
                             </button>
@@ -401,14 +435,14 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                 </div>
             </div>
 
-            {/* Brand Story / Experience Section (Bedbox Style) */}
+            {/* Home Brand Story / Experience Section */}
             <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
                 <div>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-1.5">
                         <BookOpen className="w-3.5 h-3.5" />
-                        Resort Story Section
+                        Home Page Resort Story Section
                     </span>
-                    <h3 className="text-lg font-bold text-[#1c120c]">Brand Experience Content & Photo Banner</h3>
+                    <h3 className="text-lg font-bold text-[#1c120c]">Home Brand Experience Content & Photo Banner</h3>
                 </div>
 
                 <div className="space-y-3">
@@ -436,12 +470,12 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
 
                 <div className="bg-[#faf7f2] p-4 rounded-2xl border border-[#e6c898]/40 space-y-3">
                     <label className="block text-[10px] font-bold text-[#2b1d14]/80 uppercase tracking-widest">
-                        Full-Width Divider Banner Photo
+                        Home Page Banner Photo
                     </label>
                     <div className="flex items-center gap-4">
                         {storyBannerImage ? (
                             <div className="relative w-28 h-16 rounded-xl overflow-hidden border border-[#c89349]">
-                                <Image src={storyBannerImage} alt="Story banner" fill className="object-cover" />
+                                <Image src={storyBannerImage} alt="Home story banner" fill className="object-cover" />
                             </div>
                         ) : (
                             <div className="w-28 h-16 bg-[#1c120c] text-[#c89349] rounded-xl flex items-center justify-center text-[10px] font-bold text-center px-2">
@@ -451,7 +485,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
 
                         <label className="cursor-pointer min-h-[40px] px-4 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase rounded-xl flex items-center gap-2 hover:bg-[#2b1d14] transition">
                             {bannerUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-[#c89349]" />}
-                            <span>{storyBannerImage ? 'Change Banner Photo' : 'Upload Custom Banner Photo'}</span>
+                            <span>{storyBannerImage ? 'Change Home Banner' : 'Upload Home Banner'}</span>
                             <input type="file" accept="image/*" onChange={handleStoryBannerUpload} disabled={bannerUploading} className="hidden" />
                         </label>
 
@@ -498,7 +532,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                         <Camera className="w-3.5 h-3.5" />
                         The Sanctuary Page Content
                     </span>
-                    <h3 className="text-lg font-bold text-[#1c120c]">Hero Header, Amenities Grid & Gallery</h3>
+                    <h3 className="text-lg font-bold text-[#1c120c]">Hero Header, Story Cards, Banner, Amenities & Gallery</h3>
                 </div>
 
                 {/* Sanctuary Hero Inputs */}
@@ -535,6 +569,99 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                     </div>
                 </div>
 
+                {/* Independent Sanctuary Story Section Cards */}
+                <div className="space-y-4 pb-4 border-b border-[#e6c898]/30">
+                    <h4 className="text-xs font-bold text-[#c89349] uppercase tracking-wider">Sanctuary Story Cards Content</h4>
+
+                    {/* Top Dark Card */}
+                    <div className="space-y-3">
+                        <span className="text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest">Top Dark Card</span>
+                        <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                            <label className="block text-[9px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Top Headline</label>
+                            <input
+                                type="text"
+                                value={sancStoryHeading1}
+                                onChange={(e) => setSancStoryHeading1(e.target.value)}
+                                className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                            />
+                        </div>
+
+                        <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                            <label className="block text-[9px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Top Description Paragraph</label>
+                            <textarea
+                                rows={3}
+                                value={sancStoryBody1}
+                                onChange={(e) => setSancStoryBody1(e.target.value)}
+                                className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Bottom Light Card */}
+                    <div className="space-y-3 pt-2">
+                        <span className="text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest">Bottom Light Card</span>
+                        <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                            <label className="block text-[9px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Bottom Headline</label>
+                            <input
+                                type="text"
+                                value={sancStoryHeading2}
+                                onChange={(e) => setSancStoryHeading2(e.target.value)}
+                                className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                            />
+                        </div>
+
+                        <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                            <label className="block text-[9px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Bottom Description Paragraph</label>
+                            <textarea
+                                rows={3}
+                                value={sancStoryBody2}
+                                onChange={(e) => setSancStoryBody2(e.target.value)}
+                                className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Dedicated Sanctuary Banner Image Upload */}
+                <div className="bg-[#faf7f2] p-4 rounded-2xl border border-[#e6c898]/40 space-y-3">
+                    <div>
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/80 uppercase tracking-widest">
+                            The Sanctuary Page Main Banner Photo
+                        </label>
+                        <p className="text-[11px] text-[#2b1d14]/60 mt-0.5">
+                            This photo is displayed exclusively on The Sanctuary page.
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        {sancBannerImage ? (
+                            <div className="relative w-32 h-20 rounded-xl overflow-hidden border border-[#c89349]">
+                                <Image src={sancBannerImage} alt="Sanctuary banner" fill className="object-cover" />
+                            </div>
+                        ) : (
+                            <div className="w-32 h-20 bg-[#1c120c] text-[#c89349] rounded-xl flex items-center justify-center text-[10px] font-bold text-center px-2">
+                                Auto Photo
+                            </div>
+                        )}
+
+                        <label className="cursor-pointer min-h-[40px] px-4 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase rounded-xl flex items-center gap-2 hover:bg-[#2b1d14] transition">
+                            {sancBannerUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-[#c89349]" />}
+                            <span>{sancBannerImage ? 'Change Sanctuary Banner' : 'Upload Sanctuary Banner'}</span>
+                            <input type="file" accept="image/*" onChange={handleSanctuaryBannerUpload} disabled={sancBannerUploading} className="hidden" />
+                        </label>
+
+                        {sancBannerImage && (
+                            <button
+                                type="button"
+                                onClick={() => setSancBannerImage('')}
+                                className="text-xs text-rose-700 underline font-medium cursor-pointer"
+                            >
+                                Use Default Photo
+                            </button>
+                        )}
+                    </div>
+                </div>
+
                 {/* Sanctuary Amenities Manager */}
                 <div className="space-y-4 pb-4 border-b border-[#e6c898]/30">
                     <div className="flex items-center justify-between">
@@ -567,7 +694,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                                         <select
                                             value={item.icon}
                                             onChange={(e) => handleUpdateAmenity(idx, 'icon', e.target.value)}
-                                            className="w-full text-xs font-bold text-[#1c120c] bg-white border border-[#e6c898]/50 p-2 rounded-lg outline-none"
+                                            className="w-full text-xs font-bold text-[#1c120c] bg-white border border-[#e6c898]/50 p-2 rounded-lg outline-none cursor-pointer"
                                         >
                                             <option value="Waves">Ocean Waves</option>
                                             <option value="Sun">Sun / Yoga</option>
@@ -703,7 +830,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
 
             <button
                 type="submit"
-                disabled={loading || uploading || heroUploading || bannerUploading || galleryUploading}
+                disabled={loading || uploading || heroUploading || bannerUploading || sancBannerUploading || galleryUploading}
                 className="w-full h-14 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-2xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition shadow-lg disabled:opacity-50 cursor-pointer"
             >
                 {loading ? (

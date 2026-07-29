@@ -31,12 +31,16 @@ export interface SiteSettings {
     story_heading_2?: string;
     story_body_2?: string;
     sanctuary_gallery?: string[];
-
-    // New Sanctuary Page Texts
     sanctuary_hero_subtitle?: string;
     sanctuary_hero_title?: string;
     sanctuary_hero_description?: string;
+    sanctuary_banner_image?: string;
     sanctuary_amenities?: SanctuaryAmenity[];
+    // Independent Sanctuary Story Section
+    sanctuary_story_heading_1?: string;
+    sanctuary_story_body_1?: string;
+    sanctuary_story_heading_2?: string;
+    sanctuary_story_body_2?: string;
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
@@ -80,10 +84,11 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         sanctuary_hero_subtitle: 'Coastal Wellness & Peace',
         sanctuary_hero_title: 'The Seaview Sanctuary',
         sanctuary_hero_description: 'Unwind in a secluded beachfront haven where natural sea salt breezes, bamboo architecture, and tranquil tide pools rejuvenate your senses.',
-        sanctuary_amenities: [
-            { icon: 'Waves', title: 'Seawater Infinity Plunge', description: 'Step into filtered ocean water pools overlooking the horizon, designed to relax muscles and soothe the mind.' },
-            { icon: 'Sun', title: 'Open-Air Meditation Deck', description: 'Greet sunrise yoga and evening sunsets on custom bamboo platforms nestled right along the palm groves.' },
-            { icon: 'ShieldCheck', title: 'Private Shoreline Access', description: 'Enjoy secluded beachfront lounger areas reserved exclusively for resort guests away from crowded public beaches.' }
-        ]
+        sanctuary_banner_image: '',
+        sanctuary_amenities: [],
+        sanctuary_story_heading_1: 'Your Next Unforgettable Family Beachfront Staycation.',
+        sanctuary_story_body_1: 'Escape to the serene shores of Seaside Laois, Labrador, Pangasinan. At Seaview Cabins, we offer a safe, kid-friendly environment designed to give your family the ultimate beach getaway. Unwind in comfort while the little ones make unforgettable memories by the sand and sea.',
+        sanctuary_story_heading_2: 'Step inside and discover a modern sanctuary — where heritage meets seaside tranquility.',
+        sanctuary_story_body_2: 'Whether you are seeking a romantic weekend getaway, a peaceful solo retreat, or an unforgettable family vacation, Seaview is your home by the ocean.',
     };
 }

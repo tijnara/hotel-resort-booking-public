@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Palmtree, MapPin, Phone, Mail, Laptop, ChevronLeft, ChevronRight, Utensils } from 'lucide-react';
+import { Palmtree, MapPin, Phone, Mail, Laptop, ChevronLeft, ChevronRight, Utensils, Menu, X } from 'lucide-react';
 import { AvailabilityBar } from '@/modules/rooms/components/AvailabilityBar';
 import { filterAvailableRoomsAction } from '@/modules/rooms/actions/filterRooms';
 import type { Room } from '@/modules/shared/types/database.types';
@@ -19,6 +19,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [isFiltered, setIsFiltered] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Collect all room images from uploaded Kubo Villas or custom hero images
     const allRoomImages = initialRooms.flatMap((room) => room.images || []).filter(Boolean);
@@ -39,16 +40,16 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
         return () => clearInterval(interval);
     }, [heroImages.length]);
 
-    // Router Navigation Click Handler
+    // Navigation Click Handler
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-        // Redirection for Kubo Villas
+        setIsMobileMenuOpen(false);
+
         if (href === '#villas' || href === '/villas' || href.includes('villas')) {
             e.preventDefault();
             router.push('/villas');
             return;
         }
 
-        // Redirection for The Sanctuary
         if (href === '#sanctuary' || href === '/sanctuary' || href.includes('sanctuary')) {
             e.preventDefault();
             router.push('/sanctuary');
@@ -92,24 +93,24 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
     return (
         <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between scroll-smooth">
             <div>
-                {/* Sticky Navigation Header */}
-                <header className="sticky top-0 z-40 bg-[#1c120c]/95 backdrop-blur-md text-[#faf7f2] px-6 h-20 flex items-center justify-between border-b border-[#2b1d14] shadow-lg transition-all duration-300">
+                {/* Sticky Header */}
+                <header className="sticky top-0 z-50 bg-[#1c120c] text-[#faf7f2] px-4 sm:px-6 h-20 flex items-center justify-between border-b border-[#2b1d14] shadow-lg">
                     <Link
                         href="/"
                         onClick={(e) => handleNavClick(e, '/')}
-                        className="flex items-center gap-2 font-bold tracking-widest text-xl uppercase text-[#faf7f2] hover:opacity-90 transition"
+                        className="flex items-center gap-2 font-bold tracking-widest text-lg sm:text-xl uppercase text-[#faf7f2] hover:opacity-90 transition"
                     >
                         {settings.logo_url ? (
-                            <div className="relative w-8 h-8">
+                            <div className="relative w-7 h-7 sm:w-8 sm:h-8">
                                 <Image src={settings.logo_url} alt={settings.site_name} fill className="object-contain" />
                             </div>
                         ) : (
-                            <Palmtree className="w-6 h-6 text-[#c89349]" />
+                            <Palmtree className="w-5 h-5 sm:w-6 sm:h-6 text-[#c89349]" />
                         )}
                         <span>{settings.site_name}</span>
                     </Link>
 
-                    {/* Navigation Links */}
+                    {/* Desktop Navigation Links */}
                     <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-[#faf7f2]/80">
                         {settings.nav_links.map((link, idx) => (
                             <a
@@ -123,18 +124,58 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         ))}
                     </nav>
 
-                    {/* Reserve Button - Directs to /villas */}
-                    <a
-                        href="/villas"
-                        onClick={(e) => handleNavClick(e, '/villas')}
-                        className="min-h-[44px] px-6 bg-[#c89349] text-[#1c120c] font-bold uppercase tracking-wider text-xs rounded-xl flex items-center justify-center hover:bg-[#b07d37] transition active:scale-95 cursor-pointer shadow-md"
-                    >
-                        {settings.reserve_button_text}
-                    </a>
+                    {/* Desktop Reserve Button & Mobile Hamburger Toggle */}
+                    <div className="flex items-center gap-3">
+                        <a
+                            href="/villas"
+                            onClick={(e) => handleNavClick(e, '/villas')}
+                            className="hidden sm:flex min-h-[40px] px-5 bg-[#c89349] text-[#1c120c] font-bold uppercase tracking-wider text-xs rounded-xl items-center justify-center hover:bg-[#b07d37] transition active:scale-95 cursor-pointer shadow-md"
+                        >
+                            {settings.reserve_button_text}
+                        </a>
+
+                        <button
+                            type="button"
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            className="md:hidden p-2 text-[#faf7f2] hover:text-[#c89349] transition focus:outline-none cursor-pointer"
+                            aria-label="Toggle menu"
+                        >
+                            {isMobileMenuOpen ? <X className="w-6 h-6 text-[#c89349]" /> : <Menu className="w-6 h-6" />}
+                        </button>
+                    </div>
                 </header>
 
+                {/* Opaque Mobile Navigation Drawer */}
+                {isMobileMenuOpen && (
+                    <div className="fixed inset-x-0 top-20 bottom-0 z-50 bg-[#1c120c] text-[#faf7f2] md:hidden flex flex-col justify-between p-6 overflow-y-auto border-t border-[#2b1d14]">
+                        <nav className="flex flex-col gap-5 pt-2">
+                            {settings.nav_links.map((link, idx) => (
+                                <a
+                                    key={idx}
+                                    href={link.href}
+                                    onClick={(e) => handleNavClick(e, link.href)}
+                                    className="text-base font-bold uppercase tracking-widest text-[#faf7f2] hover:text-[#c89349] transition border-b border-[#2b1d14] pb-4 flex items-center justify-between"
+                                >
+                                    <span>{link.label}</span>
+                                    <span className="text-[#c89349] text-sm">→</span>
+                                </a>
+                            ))}
+                        </nav>
+
+                        <div className="pt-8 pb-6">
+                            <a
+                                href="/villas"
+                                onClick={(e) => handleNavClick(e, '/villas')}
+                                className="w-full min-h-[50px] bg-[#c89349] text-[#1c120c] font-bold uppercase tracking-wider text-xs rounded-xl flex items-center justify-center hover:bg-[#b07d37] transition shadow-lg active:scale-95 cursor-pointer"
+                            >
+                                {settings.reserve_button_text}
+                            </a>
+                        </div>
+                    </div>
+                )}
+
                 {/* Hero Section */}
-                <section id="hero" className="bg-[#1c120c] text-[#faf7f2] pt-16 pb-20 px-5 text-center relative overflow-hidden min-h-[560px] flex flex-col justify-center">
+                <section id="hero" className="bg-[#1c120c] text-[#faf7f2] pt-12 pb-16 px-4 text-center relative overflow-hidden min-h-[500px] sm:min-h-[560px] flex flex-col justify-center">
                     {heroImages.length > 0 && (
                         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
                             {heroImages.map((img, idx) => (
@@ -158,17 +199,17 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                     )}
 
                     <div className="max-w-4xl mx-auto space-y-4 relative z-10">
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-[#c89349] block">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#c89349] block">
                             {settings.hero_subtitle}
                         </span>
-                        <h1 className="text-4xl md:text-6xl font-light tracking-tight text-[#faf7f2] leading-tight">
+                        <h1 className="text-3xl sm:text-5xl md:text-6xl font-light tracking-tight text-[#faf7f2] leading-tight">
                             {settings.hero_title}
                         </h1>
-                        <p className="text-xs md:text-sm text-[#e6c898]/90 max-w-xl mx-auto leading-relaxed drop-shadow-sm">
+                        <p className="text-xs sm:text-sm text-[#e6c898]/90 max-w-xl mx-auto leading-relaxed drop-shadow-sm px-2">
                             {settings.hero_description}
                         </p>
 
-                        <div className="pt-6">
+                        <div className="pt-4 sm:pt-6">
                             <AvailabilityBar
                                 onFilter={handleFilter}
                                 onReset={handleReset}
@@ -178,7 +219,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         </div>
 
                         {heroImages.length > 1 && (
-                            <div className="pt-4 flex items-center justify-center gap-2">
+                            <div className="pt-2 flex items-center justify-center gap-2">
                                 <button
                                     onClick={() => setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length)}
                                     className="p-1 rounded-full text-[#faf7f2]/60 hover:text-[#c89349] transition cursor-pointer"
@@ -210,20 +251,20 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                 </section>
 
                 {/* Bedbox-Style Experience Section */}
-                <section className="scroll-mt-20 my-12">
-                    <div className="bg-[#1c120c] text-[#faf7f2] py-24 px-6 text-center">
+                <section className="scroll-mt-20 my-8 sm:my-12">
+                    <div className="bg-[#1c120c] text-[#faf7f2] py-16 sm:py-24 px-6 text-center">
                         <div className="max-w-3xl mx-auto space-y-6">
-                            <h2 className="text-3xl md:text-5xl font-light tracking-tight leading-snug text-[#faf7f2]">
+                            <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-tight leading-snug text-[#faf7f2]">
                                 {settings.story_heading_1 || "More than a stay — It's the Seaview Coastal Experience."}
                             </h2>
-                            <p className="text-xs md:text-sm text-[#e6c898]/80 leading-relaxed font-light max-w-2xl mx-auto">
-                                {settings.story_body_1 || "Nestled along the pristine shores of the Philippines, Seaview offers a fresh take on modern beachfront luxury. We have thoughtfully crafted every Kubo villa to combine ancestral architectural details with modern minimalist comforts."}
+                            <p className="text-xs sm:text-sm text-[#e6c898]/80 leading-relaxed font-light max-w-2xl mx-auto">
+                                {settings.story_body_1 || "Nestled along the pristine shores of the Philippines, Seaview offers a fresh take on modern beachfront luxury."}
                             </p>
                         </div>
                     </div>
 
                     {storyBanner && (
-                        <div className="relative h-[320px] sm:h-[420px] w-full overflow-hidden">
+                        <div className="relative h-[280px] sm:h-[420px] w-full overflow-hidden">
                             <Image
                                 src={storyBanner}
                                 alt="Seaview Experience Banner"
@@ -234,12 +275,12 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         </div>
                     )}
 
-                    <div className="bg-[#faf7f2] text-[#1c120c] py-24 px-6 text-center border-b border-[#e6c898]/30">
+                    <div className="bg-[#faf7f2] text-[#1c120c] py-16 sm:py-24 px-6 text-center border-b border-[#e6c898]/30">
                         <div className="max-w-3xl mx-auto space-y-6">
-                            <h2 className="text-3xl md:text-5xl font-light tracking-tight leading-snug text-[#1c120c]">
+                            <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-tight leading-snug text-[#1c120c]">
                                 {settings.story_heading_2 || "Step inside and discover a modern sanctuary — where heritage meets seaside tranquility."}
                             </h2>
-                            <p className="text-xs md:text-sm text-[#2b1d14]/70 leading-relaxed font-light max-w-2xl mx-auto">
+                            <p className="text-xs sm:text-sm text-[#2b1d14]/70 leading-relaxed font-light max-w-2xl mx-auto">
                                 {settings.story_body_2 || "Whether you are seeking a romantic weekend getaway, a peaceful solo retreat, or an unforgettable family vacation, Seaview is your home by the ocean."}
                             </p>
                         </div>
@@ -247,8 +288,8 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                 </section>
 
                 {/* Al Fresco Dining Section (#dining) */}
-                <section id="dining" className="py-16 max-w-7xl mx-auto px-5 scroll-mt-24 mb-16">
-                    <div className="bg-white p-8 md:p-12 rounded-3xl border border-[#e6c898]/40 shadow-xs grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                <section id="dining" className="py-12 max-w-7xl mx-auto px-5 scroll-mt-24 mb-12">
+                    <div className="bg-white p-6 sm:p-12 rounded-3xl border border-[#e6c898]/40 shadow-xs grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                         <div className="md:col-span-2 space-y-3">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-2">
                                 <Utensils className="w-4 h-4" />
@@ -270,14 +311,14 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
             </div>
 
             {/* Dynamic Footer Section */}
-            <footer className="bg-[#1c120c] text-[#faf7f2] relative overflow-hidden pt-16 pb-8 border-t border-[#2b1d14] mt-20">
+            <footer className="bg-[#1c120c] text-[#faf7f2] relative overflow-hidden pt-12 sm:pt-16 pb-8 border-t border-[#2b1d14] mt-12">
                 <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none overflow-hidden">
-                    <span className="text-[110px] sm:text-[180px] md:text-[240px] font-black tracking-widest text-[#c89349] uppercase whitespace-nowrap">
+                    <span className="text-[80px] sm:text-[180px] md:text-[240px] font-black tracking-widest text-[#c89349] uppercase whitespace-nowrap">
                         {settings.footer_watermark || settings.site_name}
                     </span>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-6 relative z-10 space-y-12">
+                <div className="max-w-7xl mx-auto px-6 relative z-10 space-y-10">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 font-bold tracking-widest text-xl uppercase text-[#faf7f2]">
@@ -331,7 +372,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         </div>
                     </div>
 
-                    <div className="pt-8 border-t border-[#2b1d14] flex flex-col sm:flex-row items-center justify-between text-xs text-[#faf7f2]/50 gap-3">
+                    <div className="pt-6 border-t border-[#2b1d14] flex flex-col sm:flex-row items-center justify-between text-xs text-[#faf7f2]/50 gap-3">
                         <p>© 2026 {settings.site_name}. All rights reserved.</p>
                         <p className="flex items-center gap-1.5 font-medium text-[#c89349]">
                             <Laptop className="w-4 h-4 text-[#c89349]" />
