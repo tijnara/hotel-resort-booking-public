@@ -10,6 +10,14 @@ import { filterAvailableRoomsAction } from '@/modules/rooms/actions/filterRooms'
 import type { Room } from '@/modules/shared/types/database.types';
 import type { SiteSettings } from '@/modules/settings/services/getSettings';
 
+const DEFAULT_HERO_IMAGES = [
+    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=80',
+    'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1600&q=80',
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80',
+];
+
+const DEFAULT_STORY_BANNER = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1600&q=80';
+
 interface HomeClientProps {
     initialRooms: Room[];
     settings: SiteSettings;
@@ -21,13 +29,13 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
     const [isFiltered, setIsFiltered] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // Collect all room images from uploaded Kubo Villas or custom hero images
+    // Collect room images or custom hero images or fallback mock images
     const allRoomImages = initialRooms.flatMap((room) => room.images || []).filter(Boolean);
     const heroImages = (settings.hero_images && settings.hero_images.length > 0)
         ? settings.hero_images
-        : allRoomImages;
+        : (allRoomImages.length > 0 ? allRoomImages : DEFAULT_HERO_IMAGES);
 
-    const storyBanner = settings.story_banner_image || heroImages[0] || '';
+    const storyBanner = settings.story_banner_image || heroImages[0] || DEFAULT_STORY_BANNER;
 
     // Slideshow State
     const [currentSlide, setCurrentSlide] = useState(0);

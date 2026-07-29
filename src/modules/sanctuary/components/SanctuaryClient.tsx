@@ -11,6 +11,20 @@ const ICON_MAP: Record<string, React.ElementType> = {
     Waves, Sun, ShieldCheck, Leaf, Wind, Droplets, Heart
 };
 
+// Default high-resolution coastal resort mock photos
+const DEFAULT_SANCTUARY_BANNER = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=80';
+
+const DEFAULT_SANCTUARY_GALLERY = [
+    'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=800&q=80',
+];
+
 interface SanctuaryClientProps {
     initialRooms: Room[];
     settings: SiteSettings;
@@ -19,15 +33,14 @@ interface SanctuaryClientProps {
 export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const allRoomImages = initialRooms.flatMap((room) => room.images || []).filter(Boolean);
-    const heroImages = (settings.hero_images && settings.hero_images.length > 0)
-        ? settings.hero_images
-        : allRoomImages;
+    // Banner image resolution: settings banner > default banner
+    const storyBanner = settings.sanctuary_banner_image || DEFAULT_SANCTUARY_BANNER;
 
-    const storyBanner = settings.sanctuary_banner_image || settings.story_banner_image || heroImages[0] || '';
+    // Gallery images resolution: settings gallery > default gallery
+    const galleryImages = (settings.sanctuary_gallery && settings.sanctuary_gallery.length > 0)
+        ? settings.sanctuary_gallery
+        : DEFAULT_SANCTUARY_GALLERY;
 
-    // Gallery Pagination State
-    const galleryImages = settings.sanctuary_gallery || [];
     const [visiblePhotos, setVisiblePhotos] = useState(12);
 
     const loadMorePhotos = () => {
