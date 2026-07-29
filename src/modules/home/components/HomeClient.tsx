@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Palmtree, MapPin, Phone, Mail, Laptop, ChevronLeft, ChevronRight, Utensils } from 'lucide-react';
 import { AvailabilityBar } from '@/modules/rooms/components/AvailabilityBar';
-import { RoomCarousel } from '@/modules/rooms/components/RoomCarousel';
 import { filterAvailableRoomsAction } from '@/modules/rooms/actions/filterRooms';
 import type { Room } from '@/modules/shared/types/database.types';
 import type { SiteSettings } from '@/modules/settings/services/getSettings';
@@ -16,7 +16,7 @@ interface HomeClientProps {
 }
 
 export function HomeClient({ initialRooms, settings }: HomeClientProps) {
-    const [displayedRooms, setDisplayedRooms] = useState<Room[]>(initialRooms);
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [isFiltered, setIsFiltered] = useState(false);
 
@@ -28,7 +28,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
 
     const storyBanner = settings.story_banner_image || heroImages[0] || '';
 
-    // Filter out "The Sanctuary" from header and footer navigation
+    // Filter out "The Sanctuary" from navigation
     const filteredNavLinks = (settings.nav_links || []).filter(
         (link) => link.href !== '#sanctuary' && link.label.toLowerCase() !== 'the sanctuary'
     );
@@ -44,8 +44,15 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
         return () => clearInterval(interval);
     }, [heroImages.length]);
 
-    // Smooth Scroll Handler
+    // Enhanced Navigation Click Handler with Route Redirection
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        // If the link is for Kubo Villas or Reserve Villa (whether saved as #villas or /villas)
+        if (href === '#villas' || href === '/villas' || href.includes('villas')) {
+            e.preventDefault();
+            router.push('/villas');
+            return;
+        }
+
         if (href === '/' || href === '#' || href === '') {
             e.preventDefault();
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -71,14 +78,12 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
         setLoading(false);
 
         if (res.success) {
-            setDisplayedRooms(res.rooms);
             setIsFiltered(true);
-            document.getElementById('villas')?.scrollIntoView({ behavior: 'smooth' });
+            router.push(`/villas?checkIn=${checkIn}&checkOut=${checkOut}`);
         }
     };
 
     const handleReset = () => {
-        setDisplayedRooms(initialRooms);
         setIsFiltered(false);
     };
 
@@ -102,7 +107,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         <span>{settings.site_name}</span>
                     </Link>
 
-                    {/* Navigation Links (Excludes The Sanctuary) */}
+                    {/* Navigation Links */}
                     <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-[#faf7f2]/80">
                         {filteredNavLinks.map((link, idx) => (
                             <a
@@ -116,10 +121,10 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         ))}
                     </nav>
 
-                    {/* Dynamic Smooth-Scroll Reserve Button */}
+                    {/* Reserve Button - Directs to /villas */}
                     <a
-                        href="#villas"
-                        onClick={(e) => handleNavClick(e, '#villas')}
+                        href="/villas"
+                        onClick={(e) => handleNavClick(e, '/villas')}
                         className="min-h-[44px] px-6 bg-[#c89349] text-[#1c120c] font-bold uppercase tracking-wider text-xs rounded-xl flex items-center justify-center hover:bg-[#b07d37] transition active:scale-95 cursor-pointer shadow-md"
                     >
                         {settings.reserve_button_text}
@@ -200,19 +205,6 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                             </div>
                         )}
                     </div>
-                </section>
-
-                {/* Accommodations Section (#villas) */}
-                <section id="villas" className="py-16 max-w-7xl mx-auto px-5 scroll-mt-24">
-                    <div className="flex items-end justify-between mb-8">
-                        <div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Accommodations</span>
-                            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1c120c] mt-1">Handcrafted Kubo Villas</h2>
-                        </div>
-                        <span className="text-xs text-[#2b1d14]/50 hidden sm:inline">Swipe to view suites →</span>
-                    </div>
-
-                    <RoomCarousel rooms={displayedRooms} />
                 </section>
 
                 {/* Bedbox-Style Experience Section */}

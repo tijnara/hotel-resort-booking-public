@@ -50,8 +50,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         reserve_button_text: 'Reserve Villa',
         // Default links (The Sanctuary removed)
         nav_links: [
-            { label: 'Kubo Villas', href: '#villas' },
-            { label: 'Al Fresco Dining', href: '#dining' },
+            { label: 'Kubo Villas', href: '/villas' },
+            { label: 'Al Fresco Dining', href: '/#dining' },
         ],
         footer_address: 'Coastal Highway, Philippines',
         footer_phone: '+63 912 345 6789',

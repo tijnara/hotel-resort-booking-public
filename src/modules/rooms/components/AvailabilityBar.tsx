@@ -8,11 +8,20 @@ interface AvailabilityBarProps {
     onReset: () => void;
     isFiltered: boolean;
     loading: boolean;
+    initialCheckIn?: string;
+    initialCheckOut?: string;
 }
 
-export function AvailabilityBar({ onFilter, onReset, isFiltered, loading }: AvailabilityBarProps) {
-    const [checkIn, setCheckIn] = useState('');
-    const [checkOut, setCheckOut] = useState('');
+export function AvailabilityBar({
+                                    onFilter,
+                                    onReset,
+                                    isFiltered,
+                                    loading,
+                                    initialCheckIn = '',
+                                    initialCheckOut = '',
+                                }: AvailabilityBarProps) {
+    const [checkIn, setCheckIn] = useState(initialCheckIn);
+    const [checkOut, setCheckOut] = useState(initialCheckOut);
     const [error, setError] = useState('');
 
     const handleSearch = (e: React.FormEvent) => {
@@ -76,7 +85,7 @@ export function AvailabilityBar({ onFilter, onReset, isFiltered, loading }: Avai
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex-1 md:flex-none h-14 px-8 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition active:scale-95 disabled:opacity-50"
+                        className="flex-1 md:flex-none h-14 px-8 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                         {loading ? <RefreshCw className="w-4 h-4 animate-spin text-[#c89349]" /> : <Search className="w-4 h-4 text-[#c89349]" />}
                         <span>Check Rates</span>
@@ -86,7 +95,7 @@ export function AvailabilityBar({ onFilter, onReset, isFiltered, loading }: Avai
                         <button
                             type="button"
                             onClick={handleClear}
-                            className="h-14 px-4 bg-[#faf7f2] border border-[#e6c898]/40 text-[#1c120c] text-xs font-bold rounded-2xl hover:bg-slate-100 transition"
+                            className="h-14 px-4 bg-[#faf7f2] border border-[#e6c898]/40 text-[#1c120c] text-xs font-bold rounded-2xl hover:bg-slate-100 transition cursor-pointer"
                             title="Show All Rooms"
                         >
                             Reset
@@ -102,11 +111,10 @@ export function AvailabilityBar({ onFilter, onReset, isFiltered, loading }: Avai
             {isFiltered && !error && (
                 <div className="mt-3 text-center md:text-left flex items-center justify-between text-xs text-[#2b1d14]/70 px-2 pt-2 border-t border-[#faf7f2]">
           <span className="flex items-center gap-1.5 text-[#2d5a43] font-bold">
-            {/* Replaced Sparkles with Seaview Palm Tree Logo */}
-              <Palmtree className="w-4 h-4 text-[#c89349]" />
+            <Palmtree className="w-4 h-4 text-[#c89349]" />
             Showing available villas for {checkIn} to {checkOut}
           </span>
-                    <button onClick={handleClear} className="underline text-[11px] text-[#c89349]">
+                    <button onClick={handleClear} className="underline text-[11px] text-[#c89349] cursor-pointer">
                         Show all villas
                     </button>
                 </div>
