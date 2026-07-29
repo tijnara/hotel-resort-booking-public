@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Save, Loader2, Plus, Trash2, Upload, Images, BookOpen } from 'lucide-react';
+import { Save, Loader2, Plus, Trash2, Upload, Images, BookOpen, Camera, Sparkles } from 'lucide-react';
 import { createClient } from '@/modules/shared/lib/supabase/client';
 import { updateSiteSettingsAction } from '../actions/settingsActions';
-import type { SiteSettings, NavLinkItem } from '@/modules/settings/services/getSettings';
+import type { SiteSettings, NavLinkItem, SanctuaryAmenity } from '@/modules/settings/services/getSettings';
 
 interface SiteSettingsFormProps {
     settings: SiteSettings;
@@ -16,6 +16,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
     const [uploading, setUploading] = useState(false);
     const [heroUploading, setHeroUploading] = useState(false);
     const [bannerUploading, setBannerUploading] = useState(false);
+    const [galleryUploading, setGalleryUploading] = useState(false);
     const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     const [siteName, setSiteName] = useState(settings.site_name || 'SEAVIEW');
@@ -29,16 +30,21 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
     const [footerPhone, setFooterPhone] = useState(settings.footer_phone || '');
     const [footerEmail, setFooterEmail] = useState(settings.footer_email || '');
     const [footerWatermark, setFooterWatermark] = useState(settings.footer_watermark || 'SEAVIEW');
-    const [heroImages, setHeroImages] = useState<string[]>(settings.hero_images || []);
 
-    // Story / Experience States
+    const [heroImages, setHeroImages] = useState<string[]>(settings.hero_images || []);
     const [storyHeading1, setStoryHeading1] = useState(settings.story_heading_1 || '');
     const [storyBody1, setStoryBody1] = useState(settings.story_body_1 || '');
     const [storyBannerImage, setStoryBannerImage] = useState(settings.story_banner_image || '');
     const [storyHeading2, setStoryHeading2] = useState(settings.story_heading_2 || '');
     const [storyBody2, setStoryBody2] = useState(settings.story_body_2 || '');
 
-    // Handle Logo Upload
+    // Sanctuary Page Editable States
+    const [sancHeroSubtitle, setSancHeroSubtitle] = useState(settings.sanctuary_hero_subtitle || 'Coastal Wellness & Peace');
+    const [sancHeroTitle, setSancHeroTitle] = useState(settings.sanctuary_hero_title || 'The Seaview Sanctuary');
+    const [sancHeroDesc, setSancHeroDesc] = useState(settings.sanctuary_hero_description || '');
+    const [sancAmenities, setSancAmenities] = useState<SanctuaryAmenity[]>(settings.sanctuary_amenities || []);
+    const [sanctuaryGallery, setSanctuaryGallery] = useState<string[]>(settings.sanctuary_gallery || []);
+
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -61,7 +67,6 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
         setUploading(false);
     };
 
-    // Handle Hero Upload
     const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
@@ -86,7 +91,6 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
         setHeroUploading(false);
     };
 
-    // Handle Story Banner Upload
     const handleStoryBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -108,17 +112,58 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
         setBannerUploading(false);
     };
 
+    const handleSanctuaryGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        setGalleryUploading(true);
+        setMsg(null);
+        const supabase = createClient();
+        const uploadedUrls: string[] = [];
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const filePath = `sanctuary/gallery-${Date.now()}-${i}.${file.name.split('.').pop()}`;
+            const { error } = await supabase.storage.from('room-images').upload(filePath, file);
+
+            if (!error) {
+                const { data } = supabase.storage.from('room-images').getPublicUrl(filePath);
+                if (data?.publicUrl) uploadedUrls.push(data.publicUrl);
+            }
+        }
+
+        setSanctuaryGallery([...sanctuaryGallery, ...uploadedUrls]);
+        setGalleryUploading(false);
+    };
+
+    const handleRemoveGalleryImage = (index: number) => {
+        setSanctuaryGallery(sanctuaryGallery.filter((_, i) => i !== index));
+    };
+
     const handleRemoveHeroImage = (index: number) => {
         setHeroImages(heroImages.filter((_, i) => i !== index));
     };
 
-    const handleAddNav = () => setNavLinks([...navLinks, { label: 'New Link', href: '#villas' }]);
+    const handleAddNav = () => setNavLinks([...navLinks, { label: 'New Link', href: '/villas' }]);
     const handleUpdateNav = (index: number, key: 'label' | 'href', value: string) => {
         const updated = [...navLinks];
         updated[index][key] = value;
         setNavLinks(updated);
     };
     const handleRemoveNav = (index: number) => setNavLinks(navLinks.filter((_, i) => i !== index));
+
+    // Sanctuary Amenities Handlers
+    const handleAddAmenity = () => {
+        setSancAmenities([...sancAmenities, { icon: 'Sun', title: 'New Amenity', description: '' }]);
+    };
+    const handleUpdateAmenity = (index: number, key: keyof SanctuaryAmenity, value: string) => {
+        const updated = [...sancAmenities];
+        updated[index][key] = value;
+        setSancAmenities(updated);
+    };
+    const handleRemoveAmenity = (index: number) => {
+        setSancAmenities(sancAmenities.filter((_, i) => i !== index));
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -143,6 +188,11 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
             story_banner_image: storyBannerImage,
             story_heading_2: storyHeading2,
             story_body_2: storyBody2,
+            sanctuary_hero_subtitle: sancHeroSubtitle,
+            sanctuary_hero_title: sancHeroTitle,
+            sanctuary_hero_description: sancHeroDesc,
+            sanctuary_amenities: sancAmenities,
+            sanctuary_gallery: sanctuaryGallery,
         });
 
         setLoading(false);
@@ -227,99 +277,6 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                 </div>
             </div>
 
-            {/* Brand Story / Experience Section Manager (Bedbox Style) */}
-            <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
-                <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5" />
-            Resort Story Section (Bedbox Style)
-          </span>
-                    <h3 className="text-lg font-bold text-[#1c120c]">Brand Experience Content & Photo Banner</h3>
-                </div>
-
-                {/* Section 1: Dark Card Text */}
-                <div className="space-y-3">
-                    <h4 className="text-xs font-bold text-[#c89349] uppercase tracking-wider">Top Dark Card Content</h4>
-                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
-                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Headline 1</label>
-                        <input
-                            type="text"
-                            value={storyHeading1}
-                            onChange={(e) => setStoryHeading1(e.target.value)}
-                            className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
-                        />
-                    </div>
-
-                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
-                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Description Paragraph 1</label>
-                        <textarea
-                            rows={3}
-                            value={storyBody1}
-                            onChange={(e) => setStoryBody1(e.target.value)}
-                            className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
-                        />
-                    </div>
-                </div>
-
-                {/* Story Banner Photo Upload */}
-                <div className="bg-[#faf7f2] p-4 rounded-2xl border border-[#e6c898]/40 space-y-3">
-                    <label className="block text-[10px] font-bold text-[#2b1d14]/80 uppercase tracking-widest">
-                        Full-Width Divider Banner Photo
-                    </label>
-                    <div className="flex items-center gap-4">
-                        {storyBannerImage ? (
-                            <div className="relative w-28 h-16 rounded-xl overflow-hidden border border-[#c89349]">
-                                <Image src={storyBannerImage} alt="Story banner" fill className="object-cover" />
-                            </div>
-                        ) : (
-                            <div className="w-28 h-16 bg-[#1c120c] text-[#c89349] rounded-xl flex items-center justify-center text-[10px] font-bold text-center px-2">
-                                Auto Room Photo
-                            </div>
-                        )}
-
-                        <label className="cursor-pointer min-h-[40px] px-4 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase rounded-xl flex items-center gap-2 hover:bg-[#2b1d14] transition">
-                            {bannerUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-[#c89349]" />}
-                            <span>{storyBannerImage ? 'Change Banner Photo' : 'Upload Custom Banner Photo'}</span>
-                            <input type="file" accept="image/*" onChange={handleStoryBannerUpload} disabled={bannerUploading} className="hidden" />
-                        </label>
-
-                        {storyBannerImage && (
-                            <button
-                                type="button"
-                                onClick={() => setStoryBannerImage('')}
-                                className="text-xs text-rose-700 underline font-medium"
-                            >
-                                Use Default Photo
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Section 2: Light Card Text */}
-                <div className="space-y-3 pt-2">
-                    <h4 className="text-xs font-bold text-[#c89349] uppercase tracking-wider">Bottom Light Card Content</h4>
-                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
-                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Headline 2</label>
-                        <input
-                            type="text"
-                            value={storyHeading2}
-                            onChange={(e) => setStoryHeading2(e.target.value)}
-                            className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
-                        />
-                    </div>
-
-                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
-                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Description Paragraph 2</label>
-                        <textarea
-                            rows={3}
-                            value={storyBody2}
-                            onChange={(e) => setStoryBody2(e.target.value)}
-                            className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
-                        />
-                    </div>
-                </div>
-            </div>
-
             {/* Navigation Links */}
             <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-4">
                 <div className="flex items-center justify-between">
@@ -330,7 +287,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                     <button
                         type="button"
                         onClick={handleAddNav}
-                        className="min-h-[38px] px-4 bg-[#c89349] text-[#1c120c] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-1.5 hover:bg-[#b07d37] transition"
+                        className="min-h-[38px] px-4 bg-[#c89349] text-[#1c120c] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-1.5 hover:bg-[#b07d37] transition cursor-pointer"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Add Link</span>
@@ -342,14 +299,14 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                         <div key={idx} className="flex items-center gap-3 bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
                             <input
                                 type="text"
-                                placeholder="Label"
+                                placeholder="Label (e.g. Kubo Villas)"
                                 value={item.label}
                                 onChange={(e) => handleUpdateNav(idx, 'label', e.target.value)}
                                 className="w-1/2 text-xs font-bold text-[#1c120c] bg-transparent outline-none"
                             />
                             <input
                                 type="text"
-                                placeholder="#section or URL"
+                                placeholder="URL (e.g. /villas or /#dining)"
                                 value={item.href}
                                 onChange={(e) => handleUpdateNav(idx, 'href', e.target.value)}
                                 className="w-1/2 text-xs font-mono text-[#1c120c] bg-transparent outline-none"
@@ -357,7 +314,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                             <button
                                 type="button"
                                 onClick={() => handleRemoveNav(idx)}
-                                className="p-2 text-rose-700 hover:bg-rose-100 rounded-xl transition"
+                                className="p-2 text-rose-700 hover:bg-rose-100 rounded-xl transition cursor-pointer"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -366,10 +323,10 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                 </div>
             </div>
 
-            {/* Hero Section & Hero Images Manager */}
+            {/* Home Hero Section */}
             <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
                 <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Hero Banner</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Home Hero Banner</span>
                     <h3 className="text-lg font-bold text-[#1c120c]">Main Headline & Hero Background Photos</h3>
                 </div>
 
@@ -433,12 +390,262 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                                     <button
                                         type="button"
                                         onClick={() => handleRemoveHeroImage(idx)}
-                                        className="absolute top-1.5 right-1.5 bg-rose-600/90 text-white p-1 rounded-lg opacity-0 group-hover:opacity-100 transition"
+                                        className="absolute top-1.5 right-1.5 bg-rose-600/90 text-white p-1 rounded-lg opacity-0 group-hover:opacity-100 transition cursor-pointer"
                                     >
                                         <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
                             ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Brand Story / Experience Section (Bedbox Style) */}
+            <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
+                <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-1.5">
+                        <BookOpen className="w-3.5 h-3.5" />
+                        Resort Story Section
+                    </span>
+                    <h3 className="text-lg font-bold text-[#1c120c]">Brand Experience Content & Photo Banner</h3>
+                </div>
+
+                <div className="space-y-3">
+                    <h4 className="text-xs font-bold text-[#c89349] uppercase tracking-wider">Top Dark Card Content</h4>
+                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Headline 1</label>
+                        <input
+                            type="text"
+                            value={storyHeading1}
+                            onChange={(e) => setStoryHeading1(e.target.value)}
+                            className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                        />
+                    </div>
+
+                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Description Paragraph 1</label>
+                        <textarea
+                            rows={3}
+                            value={storyBody1}
+                            onChange={(e) => setStoryBody1(e.target.value)}
+                            className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
+                        />
+                    </div>
+                </div>
+
+                <div className="bg-[#faf7f2] p-4 rounded-2xl border border-[#e6c898]/40 space-y-3">
+                    <label className="block text-[10px] font-bold text-[#2b1d14]/80 uppercase tracking-widest">
+                        Full-Width Divider Banner Photo
+                    </label>
+                    <div className="flex items-center gap-4">
+                        {storyBannerImage ? (
+                            <div className="relative w-28 h-16 rounded-xl overflow-hidden border border-[#c89349]">
+                                <Image src={storyBannerImage} alt="Story banner" fill className="object-cover" />
+                            </div>
+                        ) : (
+                            <div className="w-28 h-16 bg-[#1c120c] text-[#c89349] rounded-xl flex items-center justify-center text-[10px] font-bold text-center px-2">
+                                Auto Room Photo
+                            </div>
+                        )}
+
+                        <label className="cursor-pointer min-h-[40px] px-4 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase rounded-xl flex items-center gap-2 hover:bg-[#2b1d14] transition">
+                            {bannerUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-[#c89349]" />}
+                            <span>{storyBannerImage ? 'Change Banner Photo' : 'Upload Custom Banner Photo'}</span>
+                            <input type="file" accept="image/*" onChange={handleStoryBannerUpload} disabled={bannerUploading} className="hidden" />
+                        </label>
+
+                        {storyBannerImage && (
+                            <button
+                                type="button"
+                                onClick={() => setStoryBannerImage('')}
+                                className="text-xs text-rose-700 underline font-medium cursor-pointer"
+                            >
+                                Use Default Photo
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                    <h4 className="text-xs font-bold text-[#c89349] uppercase tracking-wider">Bottom Light Card Content</h4>
+                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Headline 2</label>
+                        <input
+                            type="text"
+                            value={storyHeading2}
+                            onChange={(e) => setStoryHeading2(e.target.value)}
+                            className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                        />
+                    </div>
+
+                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Description Paragraph 2</label>
+                        <textarea
+                            rows={3}
+                            value={storyBody2}
+                            onChange={(e) => setStoryBody2(e.target.value)}
+                            className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* THE SANCTUARY PAGE EDITABLE CONTENT & GALLERY MANAGER */}
+            <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
+                <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-1.5">
+                        <Camera className="w-3.5 h-3.5" />
+                        The Sanctuary Page Content
+                    </span>
+                    <h3 className="text-lg font-bold text-[#1c120c]">Hero Header, Amenities Grid & Gallery</h3>
+                </div>
+
+                {/* Sanctuary Hero Inputs */}
+                <div className="space-y-3 pb-4 border-b border-[#e6c898]/30">
+                    <h4 className="text-xs font-bold text-[#c89349] uppercase tracking-wider">Hero Header Content</h4>
+                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Hero Subtitle</label>
+                        <input
+                            type="text"
+                            value={sancHeroSubtitle}
+                            onChange={(e) => setSancHeroSubtitle(e.target.value)}
+                            className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                        />
+                    </div>
+
+                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Hero Main Title</label>
+                        <input
+                            type="text"
+                            value={sancHeroTitle}
+                            onChange={(e) => setSancHeroTitle(e.target.value)}
+                            className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                        />
+                    </div>
+
+                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Hero Description Paragraph</label>
+                        <textarea
+                            rows={3}
+                            value={sancHeroDesc}
+                            onChange={(e) => setSancHeroDesc(e.target.value)}
+                            className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
+                        />
+                    </div>
+                </div>
+
+                {/* Sanctuary Amenities Manager */}
+                <div className="space-y-4 pb-4 border-b border-[#e6c898]/30">
+                    <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-[#c89349] uppercase tracking-wider">Sanctuary Amenities Grid</h4>
+                        <button
+                            type="button"
+                            onClick={handleAddAmenity}
+                            className="min-h-[38px] px-4 bg-[#c89349] text-[#1c120c] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-1.5 hover:bg-[#b07d37] transition cursor-pointer"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>Add Amenity Card</span>
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        {sancAmenities.map((item, idx) => (
+                            <div key={idx} className="bg-[#faf7f2] p-4 rounded-2xl border border-[#e6c898]/40 relative space-y-3">
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveAmenity(idx)}
+                                    className="absolute top-3 right-3 p-1.5 bg-rose-100 text-rose-700 rounded-lg hover:bg-rose-200 transition cursor-pointer"
+                                    title="Delete Amenity"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+
+                                <div className="grid grid-cols-2 gap-3 pr-10">
+                                    <div>
+                                        <label className="block text-[9px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Icon Graphic</label>
+                                        <select
+                                            value={item.icon}
+                                            onChange={(e) => handleUpdateAmenity(idx, 'icon', e.target.value)}
+                                            className="w-full text-xs font-bold text-[#1c120c] bg-white border border-[#e6c898]/50 p-2 rounded-lg outline-none"
+                                        >
+                                            <option value="Waves">Ocean Waves</option>
+                                            <option value="Sun">Sun / Yoga</option>
+                                            <option value="ShieldCheck">Private / Secure</option>
+                                            <option value="Leaf">Nature / Eco</option>
+                                            <option value="Wind">Breeze</option>
+                                            <option value="Droplets">Water / Pool</option>
+                                            <option value="Heart">Wellness / Spa</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[9px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Amenity Title</label>
+                                        <input
+                                            type="text"
+                                            value={item.title}
+                                            onChange={(e) => handleUpdateAmenity(idx, 'title', e.target.value)}
+                                            className="w-full text-xs font-bold text-[#1c120c] bg-transparent border-b border-[#e6c898]/50 p-1 outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[9px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Description Paragraph</label>
+                                    <textarea
+                                        rows={2}
+                                        value={item.description}
+                                        onChange={(e) => handleUpdateAmenity(idx, 'description', e.target.value)}
+                                        className="w-full text-xs font-medium text-[#1c120c] bg-transparent border-b border-[#e6c898]/50 p-1 outline-none resize-none"
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Sanctuary Gallery Photo Uploads */}
+                <div className="space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h4 className="text-xs font-bold text-[#c89349] uppercase tracking-wider">Sanctuary Photo Gallery</h4>
+                            <p className="text-[11px] text-[#2b1d14]/60 mt-0.5">
+                                Upload unlimited photos to populate the luxury grid on The Sanctuary page.
+                            </p>
+                        </div>
+
+                        <label className="cursor-pointer min-h-[44px] px-5 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase rounded-xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition shrink-0 shadow-md">
+                            {galleryUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Images className="w-4 h-4 text-[#c89349]" />}
+                            <span>Upload Gallery Photos</span>
+                            <input type="file" multiple accept="image/*" onChange={handleSanctuaryGalleryUpload} disabled={galleryUploading} className="hidden" />
+                        </label>
+                    </div>
+
+                    {sanctuaryGallery.length > 0 ? (
+                        <div className="bg-[#faf7f2] p-4 rounded-2xl border border-[#e6c898]/40">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#2b1d14]/60 block mb-3">
+                                Uploaded Photos ({sanctuaryGallery.length})
+                            </span>
+
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                                {sanctuaryGallery.map((img, idx) => (
+                                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-[#e6c898]/60 group bg-white shadow-sm">
+                                        <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover" />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveGalleryImage(idx)}
+                                            className="absolute top-1.5 right-1.5 bg-rose-600/90 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm cursor-pointer"
+                                            title="Delete Photo"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-[#faf7f2] border border-dashed border-[#e6c898] rounded-2xl p-8 text-center text-xs text-[#2b1d14]/60 font-medium">
+                            No gallery photos uploaded yet.
                         </div>
                     )}
                 </div>
@@ -496,10 +703,12 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
 
             <button
                 type="submit"
-                disabled={loading || uploading || heroUploading || bannerUploading}
+                disabled={loading || uploading || heroUploading || bannerUploading || galleryUploading}
                 className="w-full h-14 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-2xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition shadow-lg disabled:opacity-50 cursor-pointer"
             >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                {loading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
                     <>
                         <Save className="w-5 h-5 text-[#c89349]" />
                         <span>Save All Landing Page Changes</span>

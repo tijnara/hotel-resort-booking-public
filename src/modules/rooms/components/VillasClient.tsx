@@ -70,7 +70,7 @@ export function VillasClient({
                     </Link>
 
                     <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-[#faf7f2]/80">
-                        {filteredNavLinks.map((link, idx) => (
+                        {settings.nav_links.map((link, idx) => (
                             <Link key={idx} href={link.href} className="hover:text-[#c89349] transition">
                                 {link.label}
                             </Link>

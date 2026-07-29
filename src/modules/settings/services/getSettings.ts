@@ -5,6 +5,12 @@ export interface NavLinkItem {
     href: string;
 }
 
+export interface SanctuaryAmenity {
+    icon: string;
+    title: string;
+    description: string;
+}
+
 export interface SiteSettings {
     id: string;
     site_name: string;
@@ -24,6 +30,13 @@ export interface SiteSettings {
     story_banner_image?: string;
     story_heading_2?: string;
     story_body_2?: string;
+    sanctuary_gallery?: string[];
+
+    // New Sanctuary Page Texts
+    sanctuary_hero_subtitle?: string;
+    sanctuary_hero_title?: string;
+    sanctuary_hero_description?: string;
+    sanctuary_amenities?: SanctuaryAmenity[];
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
@@ -48,9 +61,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         hero_title: 'Bamboo, Capiz & Unbroken Ocean Views.',
         hero_description: 'Handcrafted beachfront Kubo villas blending ancestral Philippine architecture with modern minimalist luxury.',
         reserve_button_text: 'Reserve Villa',
-        // Default links (The Sanctuary removed)
         nav_links: [
             { label: 'Kubo Villas', href: '/villas' },
+            { label: 'The Sanctuary', href: '/sanctuary' },
             { label: 'Al Fresco Dining', href: '/#dining' },
         ],
         footer_address: 'Coastal Highway, Philippines',
@@ -63,5 +76,14 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         story_banner_image: "",
         story_heading_2: "Step inside and discover a modern sanctuary — where heritage meets seaside tranquility.",
         story_body_2: "Whether you are seeking a romantic weekend getaway, a peaceful solo retreat, or an unforgettable family vacation, Seaview is your home by the ocean.",
+        sanctuary_gallery: [],
+        sanctuary_hero_subtitle: 'Coastal Wellness & Peace',
+        sanctuary_hero_title: 'The Seaview Sanctuary',
+        sanctuary_hero_description: 'Unwind in a secluded beachfront haven where natural sea salt breezes, bamboo architecture, and tranquil tide pools rejuvenate your senses.',
+        sanctuary_amenities: [
+            { icon: 'Waves', title: 'Seawater Infinity Plunge', description: 'Step into filtered ocean water pools overlooking the horizon, designed to relax muscles and soothe the mind.' },
+            { icon: 'Sun', title: 'Open-Air Meditation Deck', description: 'Greet sunrise yoga and evening sunsets on custom bamboo platforms nestled right along the palm groves.' },
+            { icon: 'ShieldCheck', title: 'Private Shoreline Access', description: 'Enjoy secluded beachfront lounger areas reserved exclusively for resort guests away from crowded public beaches.' }
+        ]
     };
 }

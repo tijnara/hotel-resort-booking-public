@@ -28,11 +28,6 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
 
     const storyBanner = settings.story_banner_image || heroImages[0] || '';
 
-    // Filter out "The Sanctuary" from navigation
-    const filteredNavLinks = (settings.nav_links || []).filter(
-        (link) => link.href !== '#sanctuary' && link.label.toLowerCase() !== 'the sanctuary'
-    );
-
     // Slideshow State
     const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -44,12 +39,19 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
         return () => clearInterval(interval);
     }, [heroImages.length]);
 
-    // Enhanced Navigation Click Handler with Route Redirection
+    // Router Navigation Click Handler
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-        // If the link is for Kubo Villas or Reserve Villa (whether saved as #villas or /villas)
+        // Redirection for Kubo Villas
         if (href === '#villas' || href === '/villas' || href.includes('villas')) {
             e.preventDefault();
             router.push('/villas');
+            return;
+        }
+
+        // Redirection for The Sanctuary
+        if (href === '#sanctuary' || href === '/sanctuary' || href.includes('sanctuary')) {
+            e.preventDefault();
+            router.push('/sanctuary');
             return;
         }
 
@@ -109,7 +111,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
 
                     {/* Navigation Links */}
                     <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-[#faf7f2]/80">
-                        {filteredNavLinks.map((link, idx) => (
+                        {settings.nav_links.map((link, idx) => (
                             <a
                                 key={idx}
                                 href={link.href}
@@ -208,7 +210,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                 </section>
 
                 {/* Bedbox-Style Experience Section */}
-                <section id="sanctuary" className="scroll-mt-20 my-12">
+                <section className="scroll-mt-20 my-12">
                     <div className="bg-[#1c120c] text-[#faf7f2] py-24 px-6 text-center">
                         <div className="max-w-3xl mx-auto space-y-6">
                             <h2 className="text-3xl md:text-5xl font-light tracking-tight leading-snug text-[#faf7f2]">
@@ -296,7 +298,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         <div className="space-y-3">
                             <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Quick Links</h4>
                             <ul className="space-y-2 text-xs text-[#faf7f2]/80">
-                                {filteredNavLinks.map((link, idx) => (
+                                {settings.nav_links.map((link, idx) => (
                                     <li key={idx}>
                                         <a
                                             href={link.href}
