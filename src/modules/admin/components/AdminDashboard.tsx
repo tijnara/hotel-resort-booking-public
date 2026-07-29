@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2, Sliders } from 'lucide-react';
+import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2, Sliders, Save } from 'lucide-react';
 import { updateBookingStatusAction } from '../actions/adminActions';
 import { createStaffUserAction } from '../actions/userActions';
+import { updateSiteSettingsAction } from '../actions/settingsActions';
 import { EditRoomModal } from './EditRoomModal';
 import { SiteSettingsForm } from './SiteSettingsForm';
 import type { Room } from '@/modules/shared/types/database.types';
@@ -17,16 +18,24 @@ interface AdminDashboardProps {
     siteSettings?: SiteSettings;
 }
 
-export function AdminDashboard({
-                                   initialBookings,
-                                   initialStaff,
-                                   initialRooms = [],
-                                   siteSettings,
-                               }: AdminDashboardProps) {
+export function AdminDashboardComponent({
+                                            initialBookings,
+                                            initialStaff,
+                                            initialRooms = [],
+                                            siteSettings,
+                                        }: AdminDashboardProps) {
     const [mainTab, setMainTab] = useState<'bookings' | 'users' | 'villas' | 'settings'>('bookings');
     const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
     const [loadingId, setLoadingId] = useState<string | null>(null);
     const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+
+    // Villas Page Header Edit States
+    const [villasTitle, setVillasTitle] = useState(siteSettings?.villas_title || 'Handcrafted Kubo Villas');
+    const [villasDescription, setVillasDescription] = useState(
+        siteSettings?.villas_description || 'Explore our executive beachfront suites combining traditional Filipino craftsmanship with modern minimalist luxury.'
+    );
+    const [savingVillasHeader, setSavingVillasHeader] = useState(false);
+    const [villasHeaderMsg, setVillasHeaderMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     // User Form State
     const [fullName, setFullName] = useState('');
@@ -62,6 +71,25 @@ export function AdminDashboard({
         setLoadingId(null);
     };
 
+    const handleSaveVillasHeader = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSavingVillasHeader(true);
+        setVillasHeaderMsg(null);
+
+        const res = await updateSiteSettingsAction({
+            ...siteSettings,
+            villas_title: villasTitle,
+            villas_description: villasDescription,
+        });
+
+        setSavingVillasHeader(false);
+        if (res.success) {
+            setVillasHeaderMsg({ type: 'success', text: 'Kubo Villas page header updated successfully!' });
+        } else {
+            setVillasHeaderMsg({ type: 'error', text: res.message || 'Failed to update page header.' });
+        }
+    };
+
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
         setUserLoading(true);
@@ -86,7 +114,7 @@ export function AdminDashboard({
             <div className="flex items-center gap-3 border-b border-[#e6c898]/40 pb-4 overflow-x-auto [scrollbar-width:none]">
                 <button
                     onClick={() => setMainTab('bookings')}
-                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider transition whitespace-nowrap ${
+                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider transition whitespace-nowrap cursor-pointer ${
                         mainTab === 'bookings'
                             ? 'bg-[#1c120c] text-[#faf7f2]'
                             : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
@@ -97,7 +125,7 @@ export function AdminDashboard({
 
                 <button
                     onClick={() => setMainTab('villas')}
-                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap ${
+                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
                         mainTab === 'villas'
                             ? 'bg-[#1c120c] text-[#faf7f2]'
                             : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
@@ -109,7 +137,7 @@ export function AdminDashboard({
 
                 <button
                     onClick={() => setMainTab('settings')}
-                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap ${
+                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
                         mainTab === 'settings'
                             ? 'bg-[#1c120c] text-[#faf7f2]'
                             : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
@@ -121,7 +149,7 @@ export function AdminDashboard({
 
                 <button
                     onClick={() => setMainTab('users')}
-                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap ${
+                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
                         mainTab === 'users'
                             ? 'bg-[#1c120c] text-[#faf7f2]'
                             : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
@@ -178,7 +206,7 @@ export function AdminDashboard({
                                     <button
                                         key={tab}
                                         onClick={() => setFilter(tab)}
-                                        className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+                                        className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer ${
                                             filter === tab ? 'bg-[#1c120c] text-[#faf7f2]' : 'bg-[#faf7f2] text-[#2b1d14]/60'
                                         }`}
                                     >
@@ -199,8 +227,8 @@ export function AdminDashboard({
                                                     b.status === 'pending' ? 'bg-amber-100 text-amber-800' :
                                                         'bg-rose-100 text-rose-800'
                                             }`}>
-                        {b.status}
-                      </span>
+                                                {b.status}
+                                            </span>
                                         </div>
 
                                         <h4 className="font-bold text-base text-[#1c120c]">{b.guest_name}</h4>
@@ -223,7 +251,7 @@ export function AdminDashboard({
                                                 <button
                                                     onClick={() => handleStatusUpdate(b.id, 'confirmed')}
                                                     disabled={loadingId === b.id}
-                                                    className="min-h-[40px] px-3 bg-[#2d5a43] text-white text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-[#234734] transition active:scale-95"
+                                                    className="min-h-[40px] px-3 bg-[#2d5a43] text-white text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-[#234734] transition active:scale-95 cursor-pointer"
                                                 >
                                                     {loadingId === b.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                                     <span>Confirm</span>
@@ -233,7 +261,7 @@ export function AdminDashboard({
                                                 <button
                                                     onClick={() => handleStatusUpdate(b.id, 'cancelled')}
                                                     disabled={loadingId === b.id}
-                                                    className="min-h-[40px] px-3 bg-rose-100 text-rose-800 text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-rose-200 transition active:scale-95"
+                                                    className="min-h-[40px] px-3 bg-rose-100 text-rose-800 text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-rose-200 transition active:scale-95 cursor-pointer"
                                                 >
                                                     <X className="w-4 h-4" />
                                                     <span>Cancel</span>
@@ -248,62 +276,118 @@ export function AdminDashboard({
                 </>
             ) : mainTab === 'villas' ? (
                 /* Kubo Villa Management Section */
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {initialRooms.map((room) => (
-                        <div key={room.id} className="bg-white rounded-3xl border border-[#e6c898]/40 overflow-hidden shadow-xs flex flex-col justify-between">
-                            <div>
-                                <div className="relative aspect-16/9 w-full bg-[#faf7f2]">
-                                    {room.images?.[0] && (
-                                        <Image
-                                            src={room.images[0]}
-                                            alt={room.name}
-                                            fill
-                                            className="object-cover"
-                                        />
-                                    )}
-                                    <div className="absolute top-3 right-3 bg-[#1c120c]/85 backdrop-blur-md text-[#faf7f2] text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-[#c89349]/30">
-                                        {room.bed_type}
-                                    </div>
-                                </div>
-
-                                <div className="p-5">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] block mb-1">
-                    {room.tagline || 'Kubo Villa'}
-                  </span>
-                                    <h3 className="font-bold text-lg text-[#1c120c]">{room.name}</h3>
-                                    <p className="text-xs text-[#2b1d14]/70 mt-2 line-clamp-2 leading-relaxed">
-                                        {room.description}
-                                    </p>
-
-                                    <div className="flex items-center gap-4 mt-4 pt-4 border-t border-[#faf7f2] text-xs font-medium text-[#2b1d14]/70">
-                    <span className="flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-[#c89349]" />
-                      Max {room.max_guests} Guests
-                    </span>
-                                        <span className="flex items-center gap-1.5">
-                      <Maximize2 className="w-3.5 h-3.5 text-[#c89349]" />
-                                            {room.size_sqm} m²
-                    </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="p-5 pt-0 border-t border-[#faf7f2] mt-2 flex items-center justify-between">
-                                <div>
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#2b1d14]/50 block">Nightly Rate</span>
-                                    <span className="font-extrabold text-xl text-[#1c120c]">₱{Number(room.price_per_night).toLocaleString()}</span>
-                                </div>
-
-                                <button
-                                    onClick={() => setEditingRoom(room)}
-                                    className="min-h-[44px] px-5 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 hover:bg-[#2b1d14] active:scale-95 transition"
-                                >
-                                    <Edit3 className="w-4 h-4 text-[#c89349]" />
-                                    <span>Edit Villa</span>
-                                </button>
-                            </div>
+                <div className="space-y-6">
+                    {/* Page Header Content Editor Card */}
+                    <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-4">
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Villas Page Content</span>
+                            <h3 className="text-lg font-bold text-[#1c120c]">Main Heading Title & Description Paragraph</h3>
                         </div>
-                    ))}
+
+                        {villasHeaderMsg && (
+                            <div className={`p-3 text-xs rounded-xl font-bold ${
+                                villasHeaderMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
+                            }`}>
+                                {villasHeaderMsg.text}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSaveVillasHeader} className="space-y-3">
+                            <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                                <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Main Heading Title</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={villasTitle}
+                                    onChange={(e) => setVillasTitle(e.target.value)}
+                                    className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                                />
+                            </div>
+
+                            <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                                <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Description Paragraph</label>
+                                <textarea
+                                    rows={2}
+                                    required
+                                    value={villasDescription}
+                                    onChange={(e) => setVillasDescription(e.target.value)}
+                                    className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={savingVillasHeader}
+                                className="min-h-[42px] px-6 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition cursor-pointer"
+                            >
+                                {savingVillasHeader ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                    <>
+                                        <Save className="w-4 h-4 text-[#c89349]" />
+                                        <span>Save Header Content</span>
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    </div>
+
+                    {/* Villa Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {initialRooms.map((room) => (
+                            <div key={room.id} className="bg-white rounded-3xl border border-[#e6c898]/40 overflow-hidden shadow-xs flex flex-col justify-between">
+                                <div>
+                                    <div className="relative aspect-16/9 w-full bg-[#faf7f2]">
+                                        {room.images?.[0] && (
+                                            <Image
+                                                src={room.images[0]}
+                                                alt={room.name}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        )}
+                                        <div className="absolute top-3 right-3 bg-[#1c120c]/85 backdrop-blur-md text-[#faf7f2] text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-[#c89349]/30">
+                                            {room.bed_type}
+                                        </div>
+                                    </div>
+
+                                    <div className="p-5">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] block mb-1">
+                                            {room.tagline || 'Kubo Villa'}
+                                        </span>
+                                        <h3 className="font-bold text-lg text-[#1c120c]">{room.name}</h3>
+                                        <p className="text-xs text-[#2b1d14]/70 mt-2 line-clamp-2 leading-relaxed">
+                                            {room.description}
+                                        </p>
+
+                                        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-[#faf7f2] text-xs font-medium text-[#2b1d14]/70">
+                                            <span className="flex items-center gap-1.5">
+                                                <Users className="w-3.5 h-3.5 text-[#c89349]" />
+                                                Max {room.max_guests} Guests
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <Maximize2 className="w-3.5 h-3.5 text-[#c89349]" />
+                                                {room.size_sqm} m²
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-5 pt-0 border-t border-[#faf7f2] mt-2 flex items-center justify-between">
+                                    <div>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#2b1d14]/50 block">Nightly Rate</span>
+                                        <span className="font-extrabold text-xl text-[#1c120c]">₱{Number(room.price_per_night).toLocaleString()}</span>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setEditingRoom(room)}
+                                        className="min-h-[44px] px-5 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 hover:bg-[#2b1d14] active:scale-95 transition cursor-pointer"
+                                    >
+                                        <Edit3 className="w-4 h-4 text-[#c89349]" />
+                                        <span>Edit Villa</span>
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             ) : mainTab === 'settings' ? (
                 /* Site Content & Settings Tab */
@@ -371,7 +455,7 @@ export function AdminDashboard({
                                 <select
                                     value={role}
                                     onChange={(e) => setRole(e.target.value)}
-                                    className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none"
+                                    className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none cursor-pointer"
                                 >
                                     <option value="staff">Front Desk Staff</option>
                                     <option value="manager">Resort Manager</option>
@@ -382,7 +466,7 @@ export function AdminDashboard({
                             <button
                                 type="submit"
                                 disabled={userLoading}
-                                className="w-full h-12 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition"
+                                className="w-full h-12 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition cursor-pointer"
                             >
                                 {userLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Register User'}
                             </button>
@@ -404,14 +488,14 @@ export function AdminDashboard({
                                                 {u.user_metadata?.full_name || u.email}
                                             </h4>
                                             <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#c89349]/20 text-[#1c120c]">
-                        {u.user_metadata?.role || 'Staff'}
-                      </span>
+                                                {u.user_metadata?.role || 'Staff'}
+                                            </span>
                                         </div>
                                         <p className="text-xs text-[#2b1d14]/60 mt-0.5">{u.email}</p>
                                     </div>
                                     <span className="text-[10px] text-[#2b1d14]/40 font-mono">
-                    Added: {new Date(u.created_at).toLocaleDateString()}
-                  </span>
+                                        Added: {new Date(u.created_at).toLocaleDateString()}
+                                    </span>
                                 </div>
                             ))}
                         </div>

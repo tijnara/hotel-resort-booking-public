@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getRooms } from '@/modules/rooms/services/getRooms';
 import { getSiteSettings } from '@/modules/settings/services/getSettings';
 import { VillasClient } from '@/modules/rooms/components/VillasClient';
@@ -31,7 +33,6 @@ export default async function VillasPage({ searchParams }: VillasPageProps) {
     let displayedRooms = allRooms;
     let isFiltered = false;
 
-    // Filter available rooms on server if checkIn & checkOut are provided
     if (checkIn && checkOut) {
         const res = await filterAvailableRoomsAction(checkIn, checkOut);
         if (res.success) {

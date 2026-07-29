@@ -36,11 +36,13 @@ export interface SiteSettings {
     sanctuary_hero_description?: string;
     sanctuary_banner_image?: string;
     sanctuary_amenities?: SanctuaryAmenity[];
-    // Independent Sanctuary Story Section
     sanctuary_story_heading_1?: string;
     sanctuary_story_body_1?: string;
     sanctuary_story_heading_2?: string;
     sanctuary_story_body_2?: string;
+    // Dynamic Villas Page Header Fields
+    villas_title?: string;
+    villas_description?: string;
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
@@ -90,5 +92,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         sanctuary_story_body_1: 'Escape to the serene shores of Seaside Laois, Labrador, Pangasinan. At Seaview Cabins, we offer a safe, kid-friendly environment designed to give your family the ultimate beach getaway. Unwind in comfort while the little ones make unforgettable memories by the sand and sea.',
         sanctuary_story_heading_2: 'Step inside and discover a modern sanctuary — where heritage meets seaside tranquility.',
         sanctuary_story_body_2: 'Whether you are seeking a romantic weekend getaway, a peaceful solo retreat, or an unforgettable family vacation, Seaview is your home by the ocean.',
+        villas_title: 'Handcrafted Kubo Villas',
+        villas_description: 'Explore our executive beachfront suites combining traditional Filipino craftsmanship with modern minimalist luxury.',
     };
 }

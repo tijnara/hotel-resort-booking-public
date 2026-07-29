@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Palmtree, MapPin, Phone, Mail, Laptop, ChevronLeft, ChevronRight, Utensils, Menu, X } from 'lucide-react';
+import { Palmtree, MapPin, Phone, Mail, Laptop, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
 import { AvailabilityBar } from '@/modules/rooms/components/AvailabilityBar';
 import { filterAvailableRoomsAction } from '@/modules/rooms/actions/filterRooms';
 import type { Room } from '@/modules/shared/types/database.types';
@@ -286,32 +286,10 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         </div>
                     </div>
                 </section>
-
-                {/* Al Fresco Dining Section (#dining) */}
-                <section id="dining" className="py-12 max-w-7xl mx-auto px-5 scroll-mt-24 mb-12">
-                    <div className="bg-white p-6 sm:p-12 rounded-3xl border border-[#e6c898]/40 shadow-xs grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                        <div className="md:col-span-2 space-y-3">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-2">
-                                <Utensils className="w-4 h-4" />
-                                Culinary Experience
-                            </span>
-                            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1c120c]">
-                                Beachfront Al Fresco Dining
-                            </h2>
-                            <p className="text-xs md:text-sm text-[#2b1d14]/70 leading-relaxed">
-                                Savor freshly caught seafood and authentic local delicacies under the starlit sky, served right at the water’s edge.
-                            </p>
-                        </div>
-                        <div className="bg-[#faf7f2] p-6 rounded-2xl border border-[#e6c898]/40 text-center space-y-2">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] block">Breakfast & Cocktails</span>
-                            <p className="text-xs font-bold text-[#1c120c]">Open Daily: 6:00 AM – 10:00 PM</p>
-                        </div>
-                    </div>
-                </section>
             </div>
 
             {/* Dynamic Footer Section */}
-            <footer className="bg-[#1c120c] text-[#faf7f2] relative overflow-hidden pt-12 sm:pt-16 pb-8 border-t border-[#2b1d14] mt-12">
+            <footer className="bg-[#1c120c] text-[#faf7f2] relative overflow-hidden pt-12 sm:pt-16 pb-8 border-t border-[#2b1d14]">
                 <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none overflow-hidden">
                     <span className="text-[80px] sm:text-[180px] md:text-[240px] font-black tracking-widest text-[#c89349] uppercase whitespace-nowrap">
                         {settings.footer_watermark || settings.site_name}

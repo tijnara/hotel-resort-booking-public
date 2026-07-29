@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Save, Loader2, Plus, Trash2, Upload, Images, BookOpen, Camera } from 'lucide-react';
+import { Save, Loader2, Plus, Trash2, Upload, Images, BookOpen, Camera, Laptop } from 'lucide-react';
 import { createClient } from '@/modules/shared/lib/supabase/client';
 import { updateSiteSettingsAction } from '../actions/settingsActions';
 import type { SiteSettings, NavLinkItem, SanctuaryAmenity } from '@/modules/settings/services/getSettings';

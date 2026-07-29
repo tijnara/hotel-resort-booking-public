@@ -128,9 +128,11 @@ export function VillasClient({
                 <main className="py-12 max-w-7xl mx-auto px-5">
                     <div className="mb-8">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Accommodations</span>
-                        <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-[#1c120c] mt-1">Handcrafted Kubo Villas</h1>
+                        <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-[#1c120c] mt-1">
+                            {settings?.villas_title || 'Handcrafted Kubo Villas'}
+                        </h1>
                         <p className="text-xs md:text-sm text-[#2b1d14]/70 mt-2">
-                            Explore our executive beachfront suites combining traditional Filipino craftsmanship with modern minimalist luxury.
+                            {settings?.villas_description || 'Explore our executive beachfront suites combining traditional Filipino craftsmanship with modern minimalist luxury.'}
                         </p>
                     </div>
 
@@ -152,9 +154,9 @@ export function VillasClient({
             {/* Footer */}
             <footer className="bg-[#1c120c] text-[#faf7f2] relative overflow-hidden pt-12 sm:pt-16 pb-8 border-t border-[#2b1d14] mt-20">
                 <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none overflow-hidden">
-          <span className="text-[80px] sm:text-[180px] md:text-[240px] font-black tracking-widest text-[#c89349] uppercase whitespace-nowrap">
-            {settings.footer_watermark || settings.site_name}
-          </span>
+                    <span className="text-[80px] sm:text-[180px] md:text-[240px] font-black tracking-widest text-[#c89349] uppercase whitespace-nowrap">
+                        {settings.footer_watermark || settings.site_name}
+                    </span>
                 </div>
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10 space-y-10">

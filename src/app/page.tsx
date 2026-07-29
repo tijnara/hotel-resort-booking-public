@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getRooms } from '@/modules/rooms/services/getRooms';
 import { getSiteSettings } from '@/modules/settings/services/getSettings';
 import { HomeClient } from '@/modules/home/components/HomeClient';

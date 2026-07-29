@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  allowedDevOrigins: ['interconsonantal-mahalia-roentgenoscopic.ngrok-free.dev'],
 };
 
 export default nextConfig;
