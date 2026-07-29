@@ -2,24 +2,28 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Check, X, Clock, DollarSign, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2 } from 'lucide-react';
+import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2, Sliders } from 'lucide-react';
 import { updateBookingStatusAction } from '../actions/adminActions';
 import { createStaffUserAction } from '../actions/userActions';
 import { EditRoomModal } from './EditRoomModal';
+import { SiteSettingsForm } from './SiteSettingsForm';
 import type { Room } from '@/modules/shared/types/database.types';
+import type { SiteSettings } from '@/modules/settings/services/getSettings';
 
 interface AdminDashboardProps {
     initialBookings: any[];
     initialStaff: any[];
-    initialRooms?: Room[]; // Add the '?' to make it optional
+    initialRooms?: Room[];
+    siteSettings?: SiteSettings;
 }
 
 export function AdminDashboard({
                                    initialBookings,
                                    initialStaff,
-                                   initialRooms = [], // Default to an empty array
+                                   initialRooms = [],
+                                   siteSettings,
                                }: AdminDashboardProps) {
-    const [mainTab, setMainTab] = useState<'bookings' | 'users' | 'villas'>('bookings');
+    const [mainTab, setMainTab] = useState<'bookings' | 'users' | 'villas' | 'settings'>('bookings');
     const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
     const [loadingId, setLoadingId] = useState<string | null>(null);
     const [editingRoom, setEditingRoom] = useState<Room | null>(null);
@@ -104,6 +108,18 @@ export function AdminDashboard({
                 </button>
 
                 <button
+                    onClick={() => setMainTab('settings')}
+                    className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap ${
+                        mainTab === 'settings'
+                            ? 'bg-[#1c120c] text-[#faf7f2]'
+                            : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
+                    }`}
+                >
+                    <Sliders className="w-4 h-4 text-[#c89349]" />
+                    <span>Site Content & Branding</span>
+                </button>
+
+                <button
                     onClick={() => setMainTab('users')}
                     className={`min-h-[44px] px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap ${
                         mainTab === 'users'
@@ -123,7 +139,7 @@ export function AdminDashboard({
                         <div className="bg-white p-5 rounded-2xl border border-[#e6c898]/40 shadow-xs">
                             <div className="flex items-center justify-between text-[#c89349] mb-2">
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#2b1d14]/60">Total Revenue</span>
-                                <DollarSign className="w-5 h-5" />
+                                <span className="text-base font-black text-[#c89349] leading-none bg-[#c89349]/10 w-7 h-7 rounded-full flex items-center justify-center">₱</span>
                             </div>
                             <p className="text-2xl font-black text-[#1c120c]">₱{totalRevenue.toLocaleString()}</p>
                         </div>
@@ -289,6 +305,13 @@ export function AdminDashboard({
                         </div>
                     ))}
                 </div>
+            ) : mainTab === 'settings' ? (
+                /* Site Content & Settings Tab */
+                siteSettings ? (
+                    <SiteSettingsForm settings={siteSettings} />
+                ) : (
+                    <div className="p-8 text-center text-xs text-[#2b1d14]/60">Loading site settings...</div>
+                )
             ) : (
                 /* Staff & User Section */
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

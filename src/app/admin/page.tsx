@@ -5,6 +5,7 @@ import { createClient } from '@/modules/shared/lib/supabase/server';
 import { getAdminBookings } from '@/modules/admin/actions/adminActions';
 import { getStaffUsersAction } from '@/modules/admin/actions/userActions';
 import { getRooms } from '@/modules/rooms/services/getRooms';
+import { getSiteSettings } from '@/modules/settings/services/getSettings';
 import { AdminDashboard } from '@/modules/admin/components/AdminDashboard';
 
 export const metadata = {
@@ -19,11 +20,11 @@ export default async function AdminPage() {
         redirect('/admin/login');
     }
 
-    // Fetch bookings, staff, and rooms in parallel
-    const [bookings, staffUsers, rooms] = await Promise.all([
+    const [bookings, staffUsers, rooms, settings] = await Promise.all([
         getAdminBookings(),
         getStaffUsersAction(),
         getRooms(),
+        getSiteSettings(),
     ]);
 
     return (
@@ -54,11 +55,11 @@ export default async function AdminPage() {
                     <h1 className="text-3xl font-bold tracking-tight text-[#1c120c] mt-1">Dashboard & Administration</h1>
                 </div>
 
-                {/* Pass initialRooms here */}
                 <AdminDashboard
                     initialBookings={bookings}
                     initialStaff={staffUsers}
                     initialRooms={rooms}
+                    siteSettings={settings}
                 />
             </main>
         </div>

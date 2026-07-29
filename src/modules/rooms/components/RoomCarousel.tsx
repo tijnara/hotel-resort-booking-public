@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Users, Maximize2 } from 'lucide-react';
+import { Users, Maximize2, Sparkles } from 'lucide-react';
 import { CheckoutDrawer } from '@/modules/bookings/components/CheckoutDrawer';
 import type { Room } from '@/modules/shared/types/database.types';
 
@@ -12,6 +12,20 @@ interface RoomCarouselProps {
 
 export function RoomCarousel({ rooms }: RoomCarouselProps) {
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+
+    if (rooms.length === 0) {
+        return (
+            <div className="bg-white rounded-3xl border border-[#e6c898]/40 p-12 text-center max-w-lg mx-auto space-y-3 shadow-sm">
+                <div className="w-12 h-12 bg-amber-100 text-[#c89349] rounded-full flex items-center justify-center mx-auto">
+                    <Sparkles className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-lg text-[#1c120c]">No Villas Available</h3>
+                <p className="text-xs text-[#2b1d14]/70 leading-relaxed">
+                    All our Executive Kubo Villas are fully reserved for these selected dates. Please try adjusting your check-in or check-out dates above.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <>
@@ -31,13 +45,15 @@ export function RoomCarousel({ rooms }: RoomCarouselProps) {
                     >
                         <div>
                             <div className="relative aspect-4/3 w-full overflow-hidden bg-[#faf7f2]">
-                                <Image
-                                    src={room.images[0]}
-                                    alt={room.name}
-                                    fill
-                                    sizes="(max-width: 768px) 88vw, 33vw"
-                                    className="object-cover group-hover:scale-105 transition duration-500"
-                                />
+                                {room.images?.[0] && (
+                                    <Image
+                                        src={room.images[0]}
+                                        alt={room.name}
+                                        fill
+                                        sizes="(max-width: 768px) 88vw, 33vw"
+                                        className="object-cover group-hover:scale-105 transition duration-500"
+                                    />
+                                )}
                                 <div className="absolute top-3 right-3 bg-[#1c120c]/85 backdrop-blur-md text-[#faf7f2] text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full border border-[#c89349]/30">
                                     {room.bed_type}
                                 </div>
@@ -76,7 +92,7 @@ export function RoomCarousel({ rooms }: RoomCarouselProps) {
 
                             <button
                                 onClick={() => setSelectedRoom(room)}
-                                className="min-h-[44px] px-5 flex items-center justify-center bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#2b1d14] active:scale-95 transition"
+                                className="min-h-[44px] px-5 flex items-center justify-center bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#2b1d14] active:scale-95 transition cursor-pointer"
                             >
                                 Reserve
                             </button>
