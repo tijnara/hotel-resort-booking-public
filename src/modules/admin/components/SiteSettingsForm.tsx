@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Save, Loader2, Plus, Trash2, Upload, Images, BookOpen, Camera, Laptop } from 'lucide-react';
+import { Save, Loader2, Plus, Trash2, Upload, Images, BookOpen, Camera, Phone } from 'lucide-react';
 import { createClient } from '@/modules/shared/lib/supabase/client';
 import { updateSiteSettingsAction } from '../actions/settingsActions';
 import type { SiteSettings, NavLinkItem, SanctuaryAmenity } from '@/modules/settings/services/getSettings';
@@ -18,6 +18,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
     const [bannerUploading, setBannerUploading] = useState(false);
     const [sancBannerUploading, setSancBannerUploading] = useState(false);
     const [galleryUploading, setGalleryUploading] = useState(false);
+    const [contactBannerUploading, setContactBannerUploading] = useState(false);
     const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     const [siteName, setSiteName] = useState(settings.site_name || 'SEAVIEW');
@@ -53,6 +54,13 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
     const [sancStoryBody1, setSancStoryBody1] = useState(settings.sanctuary_story_body_1 || '');
     const [sancStoryHeading2, setSancStoryHeading2] = useState(settings.sanctuary_story_heading_2 || '');
     const [sancStoryBody2, setSancStoryBody2] = useState(settings.sanctuary_story_body_2 || '');
+
+    // Contact Us Page Editable States
+    const [contactBannerImage, setContactBannerImage] = useState(settings.contact_banner_image || '');
+    const [contactTitle, setContactTitle] = useState(settings.contact_title || 'Connect with Our Resort Desk');
+    const [contactSubtitle, setContactSubtitle] = useState(settings.contact_subtitle || 'We are here to assist with your beachfront villa reservations, private staycations, and custom coastal experience inquiries.');
+    const [contactLandline, setContactLandline] = useState(settings.contact_landline || '(075) 632-8888');
+    const [inquiryEmail, setInquiryEmail] = useState(settings.inquiry_email || 'aranjitarchita@gmail.com');
 
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -142,6 +150,27 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
         setSancBannerUploading(false);
     };
 
+    const handleContactBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setContactBannerUploading(true);
+        setMsg(null);
+        const supabase = createClient();
+        const filePath = `contact/banner-${Date.now()}.${file.name.split('.').pop()}`;
+
+        const { error } = await supabase.storage.from('room-images').upload(filePath, file);
+        if (error) {
+            setMsg({ type: 'error', text: `Contact banner upload failed: ${error.message}` });
+            setContactBannerUploading(false);
+            return;
+        }
+
+        const { data } = supabase.storage.from('room-images').getPublicUrl(filePath);
+        if (data?.publicUrl) setContactBannerImage(data.publicUrl);
+        setContactBannerUploading(false);
+    };
+
     const handleSanctuaryGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
@@ -227,6 +256,11 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
             sanctuary_story_body_1: sancStoryBody1,
             sanctuary_story_heading_2: sancStoryHeading2,
             sanctuary_story_body_2: sancStoryBody2,
+            contact_banner_image: contactBannerImage,
+            contact_title: contactTitle,
+            contact_subtitle: contactSubtitle,
+            contact_landline: contactLandline,
+            inquiry_email: inquiryEmail,
         });
 
         setLoading(false);
@@ -340,7 +374,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                             />
                             <input
                                 type="text"
-                                placeholder="URL (e.g. /villas or /#dining)"
+                                placeholder="URL (e.g. /villas or /contact)"
                                 value={item.href}
                                 onChange={(e) => handleUpdateNav(idx, 'href', e.target.value)}
                                 className="w-1/2 text-xs font-mono text-[#1c120c] bg-transparent outline-none"
@@ -405,7 +439,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                             <p className="text-[11px] text-[#2b1d14]/60 mt-0.5">
                                 {heroImages.length > 0
                                     ? 'Custom hero slideshow photos enabled.'
-                                    : 'ℹ️ No custom photos uploaded. Hero slideshow automatically displays all room photos uploaded under the Kubo Villas tab.'}
+                                    : 'ℹ️ No custom photos uploaded. Hero slideshow automatically displays default luxury photos.'}
                             </p>
                         </div>
 
@@ -479,7 +513,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                             </div>
                         ) : (
                             <div className="w-28 h-16 bg-[#1c120c] text-[#c89349] rounded-xl flex items-center justify-center text-[10px] font-bold text-center px-2">
-                                Auto Room Photo
+                                Auto Photo
                             </div>
                         )}
 
@@ -772,9 +806,97 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                         </div>
                     ) : (
                         <div className="bg-[#faf7f2] border border-dashed border-[#e6c898] rounded-2xl p-8 text-center text-xs text-[#2b1d14]/60 font-medium">
-                            No gallery photos uploaded yet.
+                            No gallery photos uploaded yet. Default luxury photos active.
                         </div>
                     )}
+                </div>
+            </div>
+
+            {/* CONTACT PAGE EDITABLE CONTENT */}
+            <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
+                <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5" />
+                        Contact Us Page Content
+                    </span>
+                    <h3 className="text-lg font-bold text-[#1c120c]">Banner Image, Headlines & Hotlines</h3>
+                </div>
+
+                <div className="space-y-3">
+                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Overlay Card Title</label>
+                        <input
+                            type="text"
+                            value={contactTitle}
+                            onChange={(e) => setContactTitle(e.target.value)}
+                            className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                        />
+                    </div>
+
+                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Overlay Card Subtitle</label>
+                        <textarea
+                            rows={2}
+                            value={contactSubtitle}
+                            onChange={(e) => setContactSubtitle(e.target.value)}
+                            className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
+                        />
+                    </div>
+
+                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Inquiry Recipient Email (Inquiry Form Notifications)</label>
+                        <input
+                            type="email"
+                            required
+                            value={inquiryEmail}
+                            onChange={(e) => setInquiryEmail(e.target.value)}
+                            className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                            placeholder="aranjitarchita@gmail.com"
+                        />
+                    </div>
+
+                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Landline Telephone Number</label>
+                        <input
+                            type="text"
+                            value={contactLandline}
+                            onChange={(e) => setContactLandline(e.target.value)}
+                            className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                        />
+                    </div>
+                </div>
+
+                <div className="bg-[#faf7f2] p-4 rounded-2xl border border-[#e6c898]/40 space-y-3">
+                    <label className="block text-[10px] font-bold text-[#2b1d14]/80 uppercase tracking-widest">
+                        Contact Page Hero Banner Photo
+                    </label>
+                    <div className="flex items-center gap-4">
+                        {contactBannerImage ? (
+                            <div className="relative w-32 h-20 rounded-xl overflow-hidden border border-[#c89349]">
+                                <Image src={contactBannerImage} alt="Contact banner" fill className="object-cover" />
+                            </div>
+                        ) : (
+                            <div className="w-32 h-20 bg-[#1c120c] text-[#c89349] rounded-xl flex items-center justify-center text-[10px] font-bold text-center px-2">
+                                Auto Photo
+                            </div>
+                        )}
+
+                        <label className="cursor-pointer min-h-[40px] px-4 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase rounded-xl flex items-center gap-2 hover:bg-[#2b1d14] transition">
+                            {contactBannerUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-[#c89349]" />}
+                            <span>{contactBannerImage ? 'Change Contact Banner' : 'Upload Contact Banner'}</span>
+                            <input type="file" accept="image/*" onChange={handleContactBannerUpload} disabled={contactBannerUploading} className="hidden" />
+                        </label>
+
+                        {contactBannerImage && (
+                            <button
+                                type="button"
+                                onClick={() => setContactBannerImage('')}
+                                className="text-xs text-rose-700 underline font-medium cursor-pointer"
+                            >
+                                Use Default Photo
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -830,7 +952,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
 
             <button
                 type="submit"
-                disabled={loading || uploading || heroUploading || bannerUploading || sancBannerUploading || galleryUploading}
+                disabled={loading || uploading || heroUploading || bannerUploading || sancBannerUploading || galleryUploading || contactBannerUploading}
                 className="w-full h-14 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-2xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition shadow-lg disabled:opacity-50 cursor-pointer"
             >
                 {loading ? (

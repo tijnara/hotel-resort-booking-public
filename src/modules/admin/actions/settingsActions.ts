@@ -19,7 +19,12 @@ export async function updateSiteSettingsAction(payload: Partial<SiteSettings>) {
         return { success: false, message: error.message };
     }
 
+    // Revalidate all public pages so changes reflect instantly
     revalidatePath('/');
+    revalidatePath('/sanctuary');
+    revalidatePath('/villas');
+    revalidatePath('/contact');
     revalidatePath('/admin');
+
     return { success: true };
 }

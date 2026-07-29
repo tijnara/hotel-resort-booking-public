@@ -29,7 +29,6 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
     const [isFiltered, setIsFiltered] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // Collect room images or custom hero images or fallback mock images
     const allRoomImages = initialRooms.flatMap((room) => room.images || []).filter(Boolean);
     const heroImages = (settings.hero_images && settings.hero_images.length > 0)
         ? settings.hero_images
@@ -37,18 +36,16 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
 
     const storyBanner = settings.story_banner_image || heroImages[0] || DEFAULT_STORY_BANNER;
 
-    // Slideshow State
     const [currentSlide, setCurrentSlide] = useState(0);
 
     useEffect(() => {
         if (heroImages.length <= 1) return;
         const interval = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-        }, 5000);
+        }, 6000);
         return () => clearInterval(interval);
     }, [heroImages.length]);
 
-    // Navigation Click Handler
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
         setIsMobileMenuOpen(false);
 
@@ -61,6 +58,12 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
         if (href === '#sanctuary' || href === '/sanctuary' || href.includes('sanctuary')) {
             e.preventDefault();
             router.push('/sanctuary');
+            return;
+        }
+
+        if (href === '#contact' || href === '/contact' || href.includes('contact')) {
+            e.preventDefault();
+            router.push('/contact');
             return;
         }
 
@@ -182,38 +185,39 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                     </div>
                 )}
 
-                {/* Hero Section */}
-                <section id="hero" className="bg-[#1c120c] text-[#faf7f2] pt-12 pb-16 px-4 text-center relative overflow-hidden min-h-[500px] sm:min-h-[560px] flex flex-col justify-center">
+                {/* Hero Section with Enhanced Visibility & Smooth Crossfade */}
+                <section id="hero" className="bg-[#1c120c] text-[#faf7f2] pt-16 pb-20 px-4 text-center relative overflow-hidden min-h-[540px] sm:min-h-[620px] flex flex-col justify-center">
                     {heroImages.length > 0 && (
                         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
                             {heroImages.map((img, idx) => (
                                 <div
                                     key={idx}
-                                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                                        idx === currentSlide ? 'opacity-35 scale-105' : 'opacity-0 scale-100'
-                                    } transition-transform duration-[7000ms]`}
+                                    className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                                        idx === currentSlide ? 'opacity-90 scale-105' : 'opacity-0 scale-100'
+                                    }`}
                                 >
                                     <Image
                                         src={img}
-                                        alt={`Kubo Room Photo ${idx + 1}`}
+                                        alt={`Hero Resort Photo ${idx + 1}`}
                                         fill
                                         priority={idx === 0}
                                         className="object-cover"
                                     />
                                 </div>
                             ))}
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#1c120c] via-[#1c120c]/85 to-[#1c120c]/70" />
+                            {/* Balanced Vignette & Soft Gradient for High Photo Visibility + Crisp Text Readability */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#1c120c] via-[#1c120c]/35 to-[#1c120c]/65" />
                         </div>
                     )}
 
                     <div className="max-w-4xl mx-auto space-y-4 relative z-10">
-                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#c89349] block">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#c89349] block bg-[#1c120c]/60 backdrop-blur-xs w-fit mx-auto px-4 py-1 rounded-full border border-[#c89349]/30">
                             {settings.hero_subtitle}
                         </span>
-                        <h1 className="text-3xl sm:text-5xl md:text-6xl font-light tracking-tight text-[#faf7f2] leading-tight">
+                        <h1 className="text-3xl sm:text-5xl md:text-6xl font-light tracking-tight text-[#faf7f2] leading-tight drop-shadow-md">
                             {settings.hero_title}
                         </h1>
-                        <p className="text-xs sm:text-sm text-[#e6c898]/90 max-w-xl mx-auto leading-relaxed drop-shadow-sm px-2">
+                        <p className="text-xs sm:text-sm text-[#faf7f2]/90 max-w-xl mx-auto leading-relaxed drop-shadow-sm px-2 font-medium">
                             {settings.hero_description}
                         </p>
 
@@ -227,29 +231,32 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         </div>
 
                         {heroImages.length > 1 && (
-                            <div className="pt-2 flex items-center justify-center gap-2">
+                            <div className="pt-3 flex items-center justify-center gap-3">
                                 <button
                                     onClick={() => setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length)}
-                                    className="p-1 rounded-full text-[#faf7f2]/60 hover:text-[#c89349] transition cursor-pointer"
+                                    className="p-1.5 rounded-full bg-[#1c120c]/60 backdrop-blur-md text-[#faf7f2] hover:text-[#c89349] transition cursor-pointer border border-[#c89349]/30"
+                                    aria-label="Previous image"
                                 >
                                     <ChevronLeft className="w-4 h-4" />
                                 </button>
 
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-1.5 bg-[#1c120c]/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-[#c89349]/30">
                                     {heroImages.map((_, idx) => (
                                         <button
                                             key={idx}
                                             onClick={() => setCurrentSlide(idx)}
-                                            className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                                                idx === currentSlide ? 'w-6 bg-[#c89349]' : 'w-1.5 bg-[#faf7f2]/30 hover:bg-[#faf7f2]/60'
+                                            className={`h-1.5 rounded-full transition-all duration-500 cursor-pointer ${
+                                                idx === currentSlide ? 'w-6 bg-[#c89349]' : 'w-1.5 bg-[#faf7f2]/40 hover:bg-[#faf7f2]'
                                             }`}
+                                            aria-label={`Slide ${idx + 1}`}
                                         />
                                     ))}
                                 </div>
 
                                 <button
                                     onClick={() => setCurrentSlide((prev) => (prev + 1) % heroImages.length)}
-                                    className="p-1 rounded-full text-[#faf7f2]/60 hover:text-[#c89349] transition cursor-pointer"
+                                    className="p-1.5 rounded-full bg-[#1c120c]/60 backdrop-blur-md text-[#faf7f2] hover:text-[#c89349] transition cursor-pointer border border-[#c89349]/30"
+                                    aria-label="Next image"
                                 >
                                     <ChevronRight className="w-4 h-4" />
                                 </button>

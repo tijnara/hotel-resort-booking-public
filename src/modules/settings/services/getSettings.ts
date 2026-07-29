@@ -42,9 +42,13 @@ export interface SiteSettings {
     sanctuary_story_body_2?: string;
     villas_title?: string;
     villas_description?: string;
+    contact_banner_image?: string;
+    contact_title?: string;
+    contact_subtitle?: string;
+    contact_landline?: string;
+    inquiry_email?: string; // New editable field
 }
 
-// Curated Tropical Luxury Mock Photos for Home Page Fallbacks
 const DEFAULT_HERO_IMAGES = [
     'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=80',
     'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1600&q=80',
@@ -52,9 +56,8 @@ const DEFAULT_HERO_IMAGES = [
 ];
 
 const DEFAULT_STORY_BANNER = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1600&q=80';
-
-// Sanctuary Fallbacks
 const DEFAULT_SANCTUARY_BANNER = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=80';
+const DEFAULT_CONTACT_BANNER = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80';
 
 const DEFAULT_SANCTUARY_GALLERY = [
     'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80',
@@ -79,14 +82,12 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         if (data) {
             return {
                 ...data,
-                hero_images: (data.hero_images && data.hero_images.length > 0)
-                    ? data.hero_images
-                    : DEFAULT_HERO_IMAGES,
+                hero_images: (data.hero_images && data.hero_images.length > 0) ? data.hero_images : DEFAULT_HERO_IMAGES,
                 story_banner_image: data.story_banner_image || DEFAULT_STORY_BANNER,
                 sanctuary_banner_image: data.sanctuary_banner_image || DEFAULT_SANCTUARY_BANNER,
-                sanctuary_gallery: (data.sanctuary_gallery && data.sanctuary_gallery.length > 0)
-                    ? data.sanctuary_gallery
-                    : DEFAULT_SANCTUARY_GALLERY,
+                sanctuary_gallery: (data.sanctuary_gallery && data.sanctuary_gallery.length > 0) ? data.sanctuary_gallery : DEFAULT_SANCTUARY_GALLERY,
+                contact_banner_image: data.contact_banner_image || DEFAULT_CONTACT_BANNER,
+                inquiry_email: data.inquiry_email || 'aranjitarchita@gmail.com',
             } as SiteSettings;
         }
     } catch (err) {
@@ -104,6 +105,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         nav_links: [
             { label: 'Kubo Villas', href: '/villas' },
             { label: 'The Sanctuary', href: '/sanctuary' },
+            { label: 'Contact Us', href: '/contact' },
         ],
         footer_address: 'Coastal Highway, Philippines',
         footer_phone: '+63 912 345 6789',
@@ -125,11 +127,12 @@ export async function getSiteSettings(): Promise<SiteSettings> {
             { icon: 'Sun', title: 'Sunset Yoga Pavilion', description: 'Open-air bamboo deck tailored for sunrise meditation and evening sea-breeze stretches.' },
             { icon: 'Leaf', title: 'Eco-Crafted Sanctuaries', description: 'Built with locally harvested bamboo, capiz shells, and indigenous sustainable materials.' },
         ],
-        sanctuary_story_heading_1: 'Your Next Unforgettable Family Beachfront Staycation.',
-        sanctuary_story_body_1: 'Escape to the serene shores of Seaside Laois, Labrador, Pangasinan. At Seaview Cabins, we offer a safe, kid-friendly environment designed to give your family the ultimate beach getaway.',
-        sanctuary_story_heading_2: 'Step inside and discover a modern sanctuary — where heritage meets seaside tranquility.',
-        sanctuary_story_body_2: 'Whether you are seeking a romantic weekend getaway, a peaceful solo retreat, or an unforgettable family vacation, Seaview is your home by the ocean.',
         villas_title: 'Handcrafted Kubo Villas',
         villas_description: 'Explore our executive beachfront suites combining traditional Filipino craftsmanship with modern minimalist luxury.',
+        contact_banner_image: DEFAULT_CONTACT_BANNER,
+        contact_title: 'Connect with Our Resort Desk',
+        contact_subtitle: 'We are here to assist with your beachfront villa reservations, private staycations, and custom coastal experience inquiries.',
+        contact_landline: '(075) 632-8888',
+        inquiry_email: 'aranjitarchita@gmail.com',
     };
 }
