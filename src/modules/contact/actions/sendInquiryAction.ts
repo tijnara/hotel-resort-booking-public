@@ -81,8 +81,12 @@ export async function sendInquiryAction(payload: InquiryPayload) {
         });
 
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Inquiry processing error:', error);
-        return { success: false, message: error.message || 'Failed to submit inquiry.' };
+        let errorMessage = 'Failed to submit inquiry.';
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        return { success: false, message: errorMessage };
     }
 }

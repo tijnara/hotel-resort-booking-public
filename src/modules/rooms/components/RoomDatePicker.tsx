@@ -19,19 +19,33 @@ export function RoomDatePicker({ roomId, onSelectDates }: RoomDatePickerProps) {
     const [checkOut, setCheckOut] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    // Track previous roomId to adjust loading and selection state during render
+    const [prevRoomId, setPrevRoomId] = useState(roomId);
+
+    if (roomId !== prevRoomId) {
+        setPrevRoomId(roomId);
+        setLoading(true);
+        setCheckIn(null);
+        setCheckOut(null);
+        setErrorMessage(null);
+    }
+
     // Fetch booked dates whenever roomId changes
     useEffect(() => {
         let isMounted = true;
-        setLoading(true);
 
         getBookedDatesForRoomAction(roomId).then((res) => {
-            if (isMounted && res.success) {
-                setBookedRanges(res.bookedRanges);
+            if (isMounted) {
+                if (res.success) {
+                    setBookedRanges(res.bookedRanges);
+                }
                 setLoading(false);
             }
         });
 
-        return () => { isMounted = false; };
+        return () => {
+            isMounted = false;
+        };
     }, [roomId]);
 
     const occupiedSet = getOccupiedDatesSet(bookedRanges);
@@ -100,18 +114,18 @@ export function RoomDatePicker({ roomId, onSelectDates }: RoomDatePickerProps) {
 
             {/* Legend */}
             <div className="flex items-center justify-center gap-4 text-[10px] font-bold uppercase tracking-wider text-[#2b1d14]/70 pt-1 pb-2 border-y border-[#e6c898]/30">
-        <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-white border border-[#2b1d14]/30" />
-          Available
-        </span>
                 <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#1c120c]/20 line-through" />
-          Booked
-        </span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-white border border-[#2b1d14]/30" />
+                    Available
+                </span>
                 <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#c89349]" />
-          Selected
-        </span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#1c120c]/20 line-through" />
+                    Booked
+                </span>
+                <span className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#c89349]" />
+                    Selected
+                </span>
             </div>
 
             {/* Days of Week Header */}
