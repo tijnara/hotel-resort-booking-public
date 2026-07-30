@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/modules/shared/lib/supabase/server';
-import { sendConfirmationEmail } from '@/modules/bookings/services/emailService';
+import { sendConfirmationEmail, sendCancellationEmail, sendRefundEmail } from '@/modules/bookings/services/emailService';
 import { revalidatePath } from 'next/cache';
 
 export async function getAdminBookings() {
@@ -18,20 +18,29 @@ export async function getAdminBookings() {
       `)
             .order('created_at', { ascending: false });
 
-        if (error) return [];
+        if (error) {
+            console.error('Error fetching admin bookings:', error);
+            return [];
+        }
+
         return data || [];
-    } catch {
+    } catch (err) {
+        console.error('Unexpected error fetching admin bookings:', err);
         return [];
     }
 }
 
 export async function updateBookingStatusAction(
     bookingId: string,
-    newStatus: 'pending' | 'confirmed' | 'cancelled'
+    newStatus: 'pending' | 'confirmed' | 'cancelled' | 'refunded'
 ) {
+    if (!bookingId) {
+        return { success: false, message: 'Invalid booking ID.' };
+    }
+
     const supabase = await createClient();
 
-    // Fetch current booking details
+    // 1. Fetch current booking details along with room information
     const { data: booking, error: fetchError } = await supabase
         .from('bookings')
         .select(`
@@ -42,34 +51,67 @@ export async function updateBookingStatusAction(
         .single();
 
     if (fetchError || !booking) {
-        return { success: false, message: 'Booking not found.' };
+        return { success: false, message: 'Booking record not found.' };
     }
 
-    // Update status in Supabase
+    // 2. Update status in Supabase
     const { error: updateError } = await supabase
         .from('bookings')
-        .update({ status: newStatus })
+        .update({
+            status: newStatus
+        })
         .eq('id', bookingId);
 
     if (updateError) {
+        console.error('Failed to update booking status in Supabase:', updateError);
         return { success: false, message: updateError.message };
     }
 
-    // 📩 STAGE 2: Send "Booking Confirmed" Email when admin approves
-    if (newStatus === 'confirmed' && booking.status !== 'confirmed') {
-        const bookingRef = booking.id.slice(0, 8).toUpperCase();
-        await sendConfirmationEmail({
-            to: booking.guest_email,
-            guestName: booking.guest_name,
-            bookingRef,
-            roomName: booking.rooms?.name || 'Kubo Villa',
-            checkIn: booking.check_in,
-            checkOut: booking.check_out,
-            totalPrice: booking.total_price,
-        });
+    const bookingRef = booking.id.slice(0, 8).toUpperCase();
+    const roomData = Array.isArray(booking.rooms) ? booking.rooms[0] : booking.rooms;
+    const roomName = roomData?.name || 'Kubo Villa';
+
+    // 3. 📩 Await email dispatch matching the new status transition
+    try {
+        if (newStatus === 'confirmed' && booking.status !== 'confirmed') {
+            await sendConfirmationEmail({
+                to: booking.guest_email,
+                guestName: booking.guest_name,
+                bookingRef,
+                roomName,
+                checkIn: booking.check_in,
+                checkOut: booking.check_out,
+                totalPrice: Number(booking.total_price),
+            });
+        } else if (newStatus === 'cancelled' && booking.status !== 'cancelled') {
+            await sendCancellationEmail({
+                to: booking.guest_email,
+                guestName: booking.guest_name,
+                bookingRef,
+                roomName,
+                checkIn: booking.check_in,
+                checkOut: booking.check_out,
+                totalPrice: Number(booking.total_price),
+            });
+        } else if (newStatus === 'refunded' && booking.status !== 'refunded') {
+            await sendRefundEmail({
+                to: booking.guest_email,
+                guestName: booking.guest_name,
+                bookingRef,
+                roomName,
+                checkIn: booking.check_in,
+                checkOut: booking.check_out,
+                totalPrice: Number(booking.total_price),
+            });
+        }
+    } catch (emailErr) {
+        console.error('Failed to dispatch status update email:', emailErr);
     }
 
+    // 4. Revalidate paths to refresh calendars and dashboard views
     revalidatePath('/admin');
+    revalidatePath('/villas');
     revalidatePath('/');
+
     return { success: true };
 }

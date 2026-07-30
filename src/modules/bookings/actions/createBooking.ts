@@ -2,8 +2,8 @@
 
 import { z } from 'zod';
 import { createClient } from '@/modules/shared/lib/supabase/server';
+import { sendRequestReceivedEmail } from '@/modules/bookings/services/emailService';
 
-// 1. Define input validation schema
 const CreateBookingSchema = z.object({
     roomId: z.string().uuid('Invalid room selected.'),
     guestName: z.string().trim().min(2, 'Name must be at least 2 characters.'),
@@ -33,7 +33,7 @@ interface CreateBookingPayload {
 }
 
 export async function createBookingAction(rawData: CreateBookingPayload) {
-    // 2. Validate incoming payload with Zod
+    // 1. Validate payload
     const validation = CreateBookingSchema.safeParse(rawData);
     if (!validation.success) {
         return {
@@ -45,23 +45,35 @@ export async function createBookingAction(rawData: CreateBookingPayload) {
     const data = validation.data;
     const supabase = await createClient();
 
-    // 3. Attempt insertion into Supabase
-    const { error } = await supabase.from('bookings').insert([
-        {
-            room_id: data.roomId,
-            guest_name: data.guestName,
-            guest_email: data.guestEmail,
-            guest_phone: data.guestPhone,
-            check_in: data.checkIn,
-            check_out: data.checkOut,
-            guests_count: data.guestsCount,
-            total_price: data.totalPrice,
-            status: 'confirmed',
-        },
-    ]);
+    // 2. Fetch room details
+    const { data: roomData } = await supabase
+        .from('rooms')
+        .select('name')
+        .eq('id', data.roomId)
+        .single();
+
+    const roomName = roomData?.name || 'Kubo Villa';
+
+    // 3. Insert reservation into Supabase with 'pending' status
+    const { data: insertedBooking, error } = await supabase
+        .from('bookings')
+        .insert([
+            {
+                room_id: data.roomId,
+                guest_name: data.guestName,
+                guest_email: data.guestEmail,
+                guest_phone: data.guestPhone,
+                check_in: data.checkIn,
+                check_out: data.checkOut,
+                guests_count: data.guestsCount,
+                total_price: data.totalPrice,
+                status: 'pending', // Initial status set to pending
+            },
+        ])
+        .select('id')
+        .single();
 
     if (error) {
-        // Intercept PostgreSQL exclusion constraint violation (23P01)
         if (error.code === '23P01') {
             return {
                 success: false,
@@ -73,5 +85,18 @@ export async function createBookingAction(rawData: CreateBookingPayload) {
         return { success: false, message: error.message || 'Failed to complete booking.' };
     }
 
-    return { success: true };
+    const bookingRef = insertedBooking?.id ? insertedBooking.id.slice(0, 8).toUpperCase() : 'SEAVIEW';
+
+    // 4. Send Stage 1 "Request Received (Pending Review)" Email
+    sendRequestReceivedEmail({
+        to: data.guestEmail,
+        guestName: data.guestName,
+        bookingRef,
+        roomName,
+        checkIn: data.checkIn,
+        checkOut: data.checkOut,
+        totalPrice: data.totalPrice,
+    }).catch((err) => console.error('Stage 1 Email Error:', err));
+
+    return { success: true, bookingRef };
 }

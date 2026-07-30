@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2, Sliders, Save } from 'lucide-react';
+import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2, Sliders, Save, CheckCircle2 } from 'lucide-react';
 import { updateBookingStatusAction } from '../actions/adminActions';
 import { createStaffUserAction } from '../actions/userActions';
 import { updateSiteSettingsAction } from '../actions/settingsActions';
@@ -11,9 +11,36 @@ import { SiteSettingsForm } from './SiteSettingsForm';
 import type { Room } from '@/modules/shared/types/database.types';
 import type { SiteSettings } from '@/modules/settings/services/getSettings';
 
+export interface AdminBooking {
+    id: string;
+    guest_name: string;
+    guest_email: string;
+    guest_phone: string;
+    check_in: string;
+    check_out: string;
+    guests_count?: number;
+    total_price: number | string;
+    status: 'pending' | 'confirmed' | 'cancelled' | 'refunded';
+    created_at: string;
+    rooms?: {
+        name?: string;
+        price_per_night?: number;
+    } | null;
+}
+
+export interface StaffUser {
+    id: string;
+    email: string;
+    created_at: string;
+    user_metadata?: {
+        full_name?: string;
+        role?: string;
+    };
+}
+
 interface AdminDashboardProps {
-    initialBookings: any[];
-    initialStaff: any[];
+    initialBookings: AdminBooking[];
+    initialStaff: StaffUser[];
     initialRooms?: Room[];
     siteSettings?: SiteSettings;
 }
@@ -25,7 +52,7 @@ export function AdminDashboardComponent({
                                             siteSettings,
                                         }: AdminDashboardProps) {
     const [mainTab, setMainTab] = useState<'bookings' | 'users' | 'villas' | 'settings'>('bookings');
-    const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
+    const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'refunded'>('all');
     const [loadingId, setLoadingId] = useState<string | null>(null);
     const [editingRoom, setEditingRoom] = useState<Room | null>(null);
 
@@ -65,10 +92,14 @@ export function AdminDashboardComponent({
         });
     };
 
-    const handleStatusUpdate = async (id: string, status: 'confirmed' | 'cancelled' | 'pending') => {
+    const handleStatusUpdate = async (id: string, status: 'confirmed' | 'cancelled' | 'pending' | 'refunded') => {
         setLoadingId(id);
-        await updateBookingStatusAction(id, status);
+        const res = await updateBookingStatusAction(id, status);
         setLoadingId(null);
+
+        if (!res.success) {
+            alert(`Error updating reservation: ${res.message}`);
+        }
     };
 
     const handleSaveVillasHeader = async (e: React.FormEvent) => {
@@ -199,10 +230,10 @@ export function AdminDashboardComponent({
 
                     {/* Bookings Table */}
                     <div className="bg-white rounded-2xl border border-[#e6c898]/40 shadow-xs overflow-hidden">
-                        <div className="p-5 border-b border-[#e6c898]/30 flex items-center justify-between">
+                        <div className="p-5 border-b border-[#e6c898]/30 flex items-center justify-between flex-wrap gap-3">
                             <h3 className="font-bold text-lg text-[#1c120c]">Reservations & Payment Status</h3>
-                            <div className="flex gap-2">
-                                {(['all', 'pending', 'confirmed', 'cancelled'] as const).map((tab) => (
+                            <div className="flex gap-2 flex-wrap">
+                                {(['all', 'pending', 'confirmed', 'cancelled', 'refunded'] as const).map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setFilter(tab)}
@@ -225,7 +256,8 @@ export function AdminDashboardComponent({
                                             <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
                                                 b.status === 'confirmed' ? 'bg-[#2d5a43]/10 text-[#2d5a43]' :
                                                     b.status === 'pending' ? 'bg-amber-100 text-amber-800' :
-                                                        'bg-rose-100 text-rose-800'
+                                                        b.status === 'refunded' ? 'bg-purple-100 text-purple-800 border border-purple-200' :
+                                                            'bg-rose-100 text-rose-800'
                                             }`}>
                                                 {b.status}
                                             </span>
@@ -247,25 +279,52 @@ export function AdminDashboardComponent({
                                     <div className="flex items-center gap-4">
                                         <span className="font-extrabold text-lg text-[#1c120c]">₱{Number(b.total_price).toLocaleString()}</span>
                                         <div className="flex gap-2">
-                                            {b.status !== 'confirmed' && (
-                                                <button
-                                                    onClick={() => handleStatusUpdate(b.id, 'confirmed')}
-                                                    disabled={loadingId === b.id}
-                                                    className="min-h-[40px] px-3 bg-[#2d5a43] text-white text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-[#234734] transition active:scale-95 cursor-pointer"
-                                                >
-                                                    {loadingId === b.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                                                    <span>Confirm</span>
-                                                </button>
-                                            )}
-                                            {b.status !== 'cancelled' && (
-                                                <button
-                                                    onClick={() => handleStatusUpdate(b.id, 'cancelled')}
-                                                    disabled={loadingId === b.id}
-                                                    className="min-h-[40px] px-3 bg-rose-100 text-rose-800 text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-rose-200 transition active:scale-95 cursor-pointer"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                    <span>Cancel</span>
-                                                </button>
+                                            {loadingId === b.id ? (
+                                                <div className="px-4 py-2 bg-gray-100 rounded-xl flex items-center gap-2 text-xs font-bold text-gray-500">
+                                                    <Loader2 className="w-4 h-4 animate-spin text-[#c89349]" />
+                                                    <span>Updating...</span>
+                                                </div>
+                                            ) : b.status === 'refunded' ? (
+                                                /* Non-editable, non-clickable final refunded status badge */
+                                                <span className="px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-xl border border-purple-200 flex items-center gap-1.5 cursor-not-allowed select-none opacity-90">
+                                                    <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />
+                                                    <span>Refunded (Final)</span>
+                                                </span>
+                                            ) : (
+                                                <>
+                                                    {/* Confirm button for pending stays */}
+                                                    {b.status === 'pending' && (
+                                                        <button
+                                                            onClick={() => handleStatusUpdate(b.id, 'confirmed')}
+                                                            className="min-h-[40px] px-3 bg-[#2d5a43] text-white text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-[#234734] transition active:scale-95 cursor-pointer"
+                                                        >
+                                                            <Check className="w-4 h-4" />
+                                                            <span>Confirm</span>
+                                                        </button>
+                                                    )}
+
+                                                    {/* Cancel button for active stays */}
+                                                    {b.status !== 'cancelled' && (
+                                                        <button
+                                                            onClick={() => handleStatusUpdate(b.id, 'cancelled')}
+                                                            className="min-h-[40px] px-3 bg-rose-100 text-rose-800 text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-rose-200 transition active:scale-95 cursor-pointer border border-rose-200"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                            <span>Cancel</span>
+                                                        </button>
+                                                    )}
+
+                                                    {/* Process Refund button for cancelled stays */}
+                                                    {b.status === 'cancelled' && (
+                                                        <button
+                                                            onClick={() => handleStatusUpdate(b.id, 'refunded')}
+                                                            className="min-h-[40px] px-3 bg-purple-100 text-purple-900 text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-purple-200 transition active:scale-95 cursor-pointer border border-purple-300"
+                                                        >
+                                                            <RefreshCw className="w-4 h-4" />
+                                                            <span>Process Refund</span>
+                                                        </button>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     </div>
@@ -277,7 +336,6 @@ export function AdminDashboardComponent({
             ) : mainTab === 'villas' ? (
                 /* Kubo Villa Management Section */
                 <div className="space-y-6">
-                    {/* Page Header Content Editor Card */}
                     <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-4">
                         <div>
                             <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Villas Page Content</span>
@@ -330,7 +388,6 @@ export function AdminDashboardComponent({
                         </form>
                     </div>
 
-                    {/* Villa Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {initialRooms.map((room) => (
                             <div key={room.id} className="bg-white rounded-3xl border border-[#e6c898]/40 overflow-hidden shadow-xs flex flex-col justify-between">
@@ -390,14 +447,12 @@ export function AdminDashboardComponent({
                     </div>
                 </div>
             ) : mainTab === 'settings' ? (
-                /* Site Content & Settings Tab */
                 siteSettings ? (
                     <SiteSettingsForm settings={siteSettings} />
                 ) : (
                     <div className="p-8 text-center text-xs text-[#2b1d14]/60">Loading site settings...</div>
                 )
             ) : (
-                /* Staff & User Section */
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-4">
                         <div>
