@@ -132,9 +132,9 @@ export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps
                     </div>
                 )}
 
-                {/* Unified Continuous Dark Section */}
+                {/* Continuous Dark Canvas (Eliminates All White Gaps & Stark Divider Lines) */}
                 <div className="bg-[#1c120c] text-[#faf7f2]">
-                    {/* Hero Section with Full Gallery Slideshow (Same Behavior as Home Page) */}
+                    {/* Hero Section */}
                     <section id="sanctuary-hero" className="bg-[#1c120c] text-[#faf7f2] pt-16 pb-20 px-4 text-center relative overflow-hidden min-h-[540px] sm:min-h-[620px] flex flex-col justify-center">
                         {sanctuaryImages.length > 0 && (
                             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
@@ -154,7 +154,6 @@ export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps
                                         />
                                     </div>
                                 ))}
-                                {/* Balanced Vignette & Soft Gradient for High Photo Visibility + Crisp Text Readability */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#1c120c] via-[#1c120c]/35 to-[#1c120c]/65" />
                             </div>
                         )}
@@ -178,7 +177,7 @@ export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps
                                 {settings.sanctuary_hero_description || 'Escape to a peaceful beachfront sanctuary. Relax in our modern minimalist villas and enjoy a memorable seaside getaway.'}
                             </p>
 
-                            {/* Interactive Slide Controls */}
+                            {/* Slide Controls */}
                             {sanctuaryImages.length > 1 && (
                                 <div className="pt-6 flex items-center justify-center gap-3">
                                     <button
@@ -214,41 +213,44 @@ export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps
                         </div>
                     </section>
 
-                    {/* First Story Card */}
-                    <section className="py-12 sm:py-16 px-6 text-center border-t border-[#2b1d14]">
-                        <div className="max-w-3xl mx-auto space-y-4">
-                            <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-tight leading-snug text-[#faf7f2]">
-                                {settings.sanctuary_story_heading_1 || settings.story_heading_1}
-                            </h2>
-                            <p className="text-xs md:text-sm text-[#e6c898]/80 leading-relaxed font-light max-w-2xl mx-auto">
-                                {settings.sanctuary_story_body_1 || settings.story_body_1}
-                            </p>
+                    {/* Seamless Story Section */}
+                    <section className="bg-[#1c120c]">
+                        {/* First Story Card */}
+                        <div className="py-16 sm:py-24 px-6 text-center">
+                            <div className="max-w-3xl mx-auto space-y-4">
+                                <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-tight leading-snug text-[#faf7f2]">
+                                    {settings.sanctuary_story_heading_1 || settings.story_heading_1}
+                                </h2>
+                                <p className="text-xs md:text-sm text-[#e6c898]/80 leading-relaxed font-light max-w-2xl mx-auto">
+                                    {settings.sanctuary_story_body_1 || settings.story_body_1}
+                                </p>
+                            </div>
                         </div>
-                    </section>
 
-                    {/* Featured Sanctuary Banner Photo with Feathered Gradients */}
-                    {storyBanner && (
-                        <section className="relative h-[320px] sm:h-[500px] w-full overflow-hidden">
-                            <Image
-                                src={storyBanner}
-                                alt="Sanctuary Coastal View"
-                                fill
-                                className="object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-b from-[#1c120c] via-transparent to-[#1c120c]" />
-                        </section>
-                    )}
+                        {/* Featured Sanctuary Banner Photo with Feathered Gradients */}
+                        {storyBanner && (
+                            <div className="relative h-[320px] sm:h-[500px] w-full overflow-hidden">
+                                <Image
+                                    src={storyBanner}
+                                    alt="Sanctuary Coastal View"
+                                    fill
+                                    className="object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-b from-[#1c120c] via-transparent to-[#1c120c]" />
+                            </div>
+                        )}
 
-                    {/* Second Story Card */}
-                    <section className="py-16 sm:py-24 px-6 text-center relative">
-                        <div className="max-w-3xl mx-auto space-y-6">
-                            <div className="w-12 h-0.5 bg-[#c89349]/50 mx-auto rounded-full mb-6" />
-                            <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-tight leading-snug text-[#faf7f2]">
-                                {settings.sanctuary_story_heading_2 || settings.story_heading_2}
-                            </h2>
-                            <p className="text-xs md:text-sm text-[#e6c898]/80 leading-relaxed font-light max-w-2xl mx-auto">
-                                {settings.sanctuary_story_body_2 || settings.story_body_2}
-                            </p>
+                        {/* Second Story Card with Gold Accent Separator */}
+                        <div className="py-16 sm:py-24 px-6 text-center">
+                            <div className="max-w-3xl mx-auto space-y-6">
+                                <div className="w-12 h-0.5 bg-[#c89349]/50 mx-auto rounded-full mb-6" />
+                                <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-tight leading-snug text-[#faf7f2]">
+                                    {settings.sanctuary_story_heading_2 || settings.story_heading_2}
+                                </h2>
+                                <p className="text-xs md:text-sm text-[#e6c898]/80 leading-relaxed font-light max-w-2xl mx-auto">
+                                    {settings.sanctuary_story_body_2 || settings.story_body_2}
+                                </p>
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -280,9 +282,9 @@ export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps
                     </section>
                 )}
 
-                {/* Sanctuary Gallery Section */}
+                {/* Gallery Section */}
                 {sanctuaryImages.length > 0 && (
-                    <section className="bg-white border-t border-[#e6c898]/30 py-16 sm:py-20">
+                    <section className="bg-white py-16 sm:py-20">
                         <div className="max-w-7xl mx-auto px-6">
                             <div className="text-center mb-10 space-y-2">
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Visual Tour</span>
