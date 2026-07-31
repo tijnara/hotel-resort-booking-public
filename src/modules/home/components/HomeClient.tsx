@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Palmtree, MapPin, Phone, Mail, Laptop, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
+import { Palmtree, MapPin, Phone, Mail, Laptop, ChevronLeft, ChevronRight, Menu, X, ArrowRight } from 'lucide-react';
 import { AvailabilityBar } from '@/modules/rooms/components/AvailabilityBar';
 import { filterAvailableRoomsAction } from '@/modules/rooms/actions/filterRooms';
 import type { Room } from '@/modules/shared/types/database.types';
@@ -17,6 +17,7 @@ const DEFAULT_HERO_IMAGES = [
 ];
 
 const DEFAULT_STORY_BANNER = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1600&q=80';
+const DEFAULT_ABOUT_IMAGE = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80';
 
 interface HomeClientProps {
     initialRooms: Room[];
@@ -52,6 +53,12 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
         if (href === '#villas' || href === '/villas' || href.includes('villas')) {
             e.preventDefault();
             router.push('/villas');
+            return;
+        }
+
+        if (href === '#about' || href === '/about' || href.includes('about')) {
+            e.preventDefault();
+            router.push('/about');
             return;
         }
 
@@ -185,7 +192,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                     </div>
                 )}
 
-                {/* Continuous Dark Canvas (Eliminates All White Gaps & Section Dividers) */}
+                {/* Continuous Dark Canvas */}
                 <div className="bg-[#1c120c] text-[#faf7f2]">
                     {/* Hero Section */}
                     <section id="hero" className="bg-[#1c120c] text-[#faf7f2] pt-16 pb-20 px-4 text-center relative overflow-hidden min-h-[540px] sm:min-h-[620px] flex flex-col justify-center">
@@ -263,6 +270,41 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                                     </button>
                                 </div>
                             )}
+                        </div>
+                    </section>
+
+                    {/* About Us Preview Section */}
+                    <section id="about-preview" className="py-16 sm:py-24 px-6 bg-[#1c120c] border-t border-[#2b1d14]">
+                        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                            <div className="space-y-6">
+                                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#c89349] block">
+                                    About {settings.site_name}
+                                </span>
+                                <h2 className="text-2xl sm:text-4xl font-extrabold text-[#faf7f2] tracking-tight leading-snug">
+                                    {settings.about_title || 'Crafted for Serenity & Luxury'}
+                                </h2>
+                                <p className="text-xs sm:text-sm text-[#e6c898]/80 leading-relaxed font-light">
+                                    {settings.about_story_body || 'Founded with a passion for modern Filipino hospitality, Seaview Resort combines hand-carved local timber, traditional bahay kubo architecture, and minimalist oceanfront luxury.'}
+                                </p>
+                                <div className="pt-2">
+                                    <Link
+                                        href="/about"
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#c89349] text-[#1c120c] text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#b07d37] transition active:scale-95 shadow-md cursor-pointer"
+                                    >
+                                        <span>Read Our Full Story</span>
+                                        <ArrowRight className="w-4 h-4 text-[#1c120c]" />
+                                    </Link>
+                                </div>
+                            </div>
+
+                            <div className="relative aspect-4/3 rounded-3xl overflow-hidden border border-[#e6c898]/30 shadow-xl">
+                                <Image
+                                    src={settings.about_image_url || DEFAULT_ABOUT_IMAGE}
+                                    alt="About Seaview Resort"
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
                         </div>
                     </section>
 

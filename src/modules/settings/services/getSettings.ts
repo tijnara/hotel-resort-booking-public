@@ -11,6 +11,12 @@ export interface SanctuaryAmenity {
     description: string;
 }
 
+export interface AboutFeature {
+    icon: string;
+    title: string;
+    description: string;
+}
+
 export interface SiteSettings {
     id: string;
     site_name: string;
@@ -46,7 +52,18 @@ export interface SiteSettings {
     contact_title?: string;
     contact_subtitle?: string;
     contact_landline?: string;
-    inquiry_email?: string; // New editable field
+    inquiry_email?: string;
+    // About Page Settings
+    about_title?: string;
+    about_subtitle?: string;
+    about_story_title?: string;
+    about_story_body?: string;
+    about_mission?: string;
+    about_vision?: string;
+    about_image_url?: string;
+    about_features_subtitle?: string;
+    about_features_title?: string;
+    about_features?: AboutFeature[];
 }
 
 const DEFAULT_HERO_IMAGES = [
@@ -58,6 +75,7 @@ const DEFAULT_HERO_IMAGES = [
 const DEFAULT_STORY_BANNER = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1600&q=80';
 const DEFAULT_SANCTUARY_BANNER = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=80';
 const DEFAULT_CONTACT_BANNER = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80';
+const DEFAULT_ABOUT_IMAGE = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=80';
 
 const DEFAULT_SANCTUARY_GALLERY = [
     'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80',
@@ -68,6 +86,24 @@ const DEFAULT_SANCTUARY_GALLERY = [
     'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=800&q=80',
+];
+
+const DEFAULT_ABOUT_FEATURES: AboutFeature[] = [
+    {
+        icon: 'ShieldCheck',
+        title: 'Eco-Conscious Architecture',
+        description: 'Built with sustainably sourced local timber and traditional bamboo weaving for natural coastal ventilation.',
+    },
+    {
+        icon: 'Palmtree',
+        title: 'Private Oceanfront Access',
+        description: 'Enjoy peaceful beachfront views far from crowded commercial tourist strips.',
+    },
+    {
+        icon: 'Heart',
+        title: 'Warm Filipino Hospitality',
+        description: 'Our front desk and resort staff provide personalized service to make every stay feel like home.',
+    },
 ];
 
 export async function getSiteSettings(): Promise<SiteSettings> {
@@ -88,6 +124,16 @@ export async function getSiteSettings(): Promise<SiteSettings> {
                 sanctuary_gallery: (data.sanctuary_gallery && data.sanctuary_gallery.length > 0) ? data.sanctuary_gallery : DEFAULT_SANCTUARY_GALLERY,
                 contact_banner_image: data.contact_banner_image || DEFAULT_CONTACT_BANNER,
                 inquiry_email: data.inquiry_email || 'aranjitarchita@gmail.com',
+                about_title: data.about_title || 'Crafted for Serenity & Luxury',
+                about_subtitle: data.about_subtitle || 'A sanctuary tucked away along the pristine coastal waters of Pangasinan.',
+                about_story_title: data.about_story_title || 'The Seaview Story',
+                about_story_body: data.about_story_body || 'Founded with a passion for modern Filipino hospitality, Seaview Resort combines hand-carved local timber, traditional bahay kubo architecture, and minimalist oceanfront luxury. Every suite is designed to reconnect you with nature while providing modern comfort.',
+                about_mission: data.about_mission || 'To deliver authentic Filipino warmth and unforgettable beachfront relaxation in an eco-friendly sanctuary.',
+                about_vision: data.about_vision || 'To be Pangasinans premier destination for eco-luxury kubo living and coastal wellness.',
+                about_image_url: data.about_image_url || DEFAULT_ABOUT_IMAGE,
+                about_features_subtitle: data.about_features_subtitle || 'WHY CHOOSE US',
+                about_features_title: data.about_features_title || 'The Seaview Difference',
+                about_features: (data.about_features && data.about_features.length > 0) ? data.about_features : DEFAULT_ABOUT_FEATURES,
             } as SiteSettings;
         }
     } catch (err) {
@@ -104,6 +150,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         reserve_button_text: 'Reserve Villa',
         nav_links: [
             { label: 'Kubo Villas', href: '/villas' },
+            { label: 'About Us', href: '/about' },
             { label: 'The Sanctuary', href: '/sanctuary' },
             { label: 'Contact Us', href: '/contact' },
         ],
@@ -134,5 +181,15 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         contact_subtitle: 'We are here to assist with your beachfront villa reservations, private staycations, and custom coastal experience inquiries.',
         contact_landline: '(075) 632-8888',
         inquiry_email: 'aranjitarchita@gmail.com',
+        about_title: 'Crafted for Serenity & Luxury',
+        about_subtitle: 'A sanctuary tucked away along the pristine coastal waters of Pangasinan.',
+        about_story_title: 'The Seaview Story',
+        about_story_body: 'Founded with a passion for modern Filipino hospitality, Seaview Resort combines hand-carved local timber, traditional bahay kubo architecture, and minimalist oceanfront luxury. Every suite is designed to reconnect you with nature while providing modern comfort.',
+        about_mission: 'To deliver authentic Filipino warmth and unforgettable beachfront relaxation in an eco-friendly sanctuary.',
+        about_vision: 'To be Pangasinans premier destination for eco-luxury kubo living and coastal wellness.',
+        about_image_url: DEFAULT_ABOUT_IMAGE,
+        about_features_subtitle: 'WHY CHOOSE US',
+        about_features_title: 'The Seaview Difference',
+        about_features: DEFAULT_ABOUT_FEATURES,
     };
 }

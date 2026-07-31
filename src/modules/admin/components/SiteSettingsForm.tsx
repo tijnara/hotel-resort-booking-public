@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Save, Loader2, Plus, Trash2, Upload, Images, BookOpen, Camera, Phone, Palette, Home, MapPin } from 'lucide-react';
+import { Save, Loader2, Plus, Trash2, Upload, Images, BookOpen, Camera, Phone, Palette, Home, MapPin, Info } from 'lucide-react';
 import { createClient } from '@/modules/shared/lib/supabase/client';
 import { updateSiteSettingsAction } from '../actions/settingsActions';
-import type { SiteSettings, NavLinkItem, SanctuaryAmenity } from '@/modules/settings/services/getSettings';
+import type { SiteSettings, NavLinkItem, SanctuaryAmenity, AboutFeature } from '@/modules/settings/services/getSettings';
 
 interface SiteSettingsFormProps {
     settings: SiteSettings;
@@ -13,7 +13,7 @@ interface SiteSettingsFormProps {
 
 export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
     // Internal Section Sub-Tabs State
-    const [subTab, setSubTab] = useState<'branding' | 'home' | 'sanctuary' | 'contact' | 'footer'>('branding');
+    const [subTab, setSubTab] = useState<'branding' | 'home' | 'about' | 'sanctuary' | 'contact' | 'footer'>('branding');
 
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -22,6 +22,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
     const [sancBannerUploading, setSancBannerUploading] = useState(false);
     const [galleryUploading, setGalleryUploading] = useState(false);
     const [contactBannerUploading, setContactBannerUploading] = useState(false);
+    const [aboutImageUploading, setAboutImageUploading] = useState(false);
     const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     const [siteName, setSiteName] = useState(settings.site_name || 'SEAVIEW');
@@ -43,6 +44,18 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
     const [storyBannerImage, setStoryBannerImage] = useState(settings.story_banner_image || '');
     const [storyHeading2, setStoryHeading2] = useState(settings.story_heading_2 || '');
     const [storyBody2, setStoryBody2] = useState(settings.story_body_2 || '');
+
+    // About Page States
+    const [aboutTitle, setAboutTitle] = useState(settings.about_title || 'Crafted for Serenity & Luxury');
+    const [aboutSubtitle, setAboutSubtitle] = useState(settings.about_subtitle || 'A sanctuary tucked away along the pristine coastal waters of Pangasinan.');
+    const [aboutStoryTitle, setAboutStoryTitle] = useState(settings.about_story_title || 'The Seaview Story');
+    const [aboutStoryBody, setAboutStoryBody] = useState(settings.about_story_body || '');
+    const [aboutMission, setAboutMission] = useState(settings.about_mission || '');
+    const [aboutVision, setAboutVision] = useState(settings.about_vision || '');
+    const [aboutImageUrl, setAboutImageUrl] = useState(settings.about_image_url || '');
+    const [aboutFeaturesSubtitle, setAboutFeaturesSubtitle] = useState(settings.about_features_subtitle || 'WHY CHOOSE US');
+    const [aboutFeaturesTitle, setAboutFeaturesTitle] = useState(settings.about_features_title || 'The Seaview Difference');
+    const [aboutFeatures, setAboutFeatures] = useState<AboutFeature[]>(settings.about_features || []);
 
     // Sanctuary Page Editable States
     const [sancHeroSubtitle, setSancHeroSubtitle] = useState(settings.sanctuary_hero_subtitle || 'Coastal Wellness & Peace');
@@ -130,6 +143,27 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
         const { data } = supabase.storage.from('room-images').getPublicUrl(filePath);
         if (data?.publicUrl) setStoryBannerImage(data.publicUrl);
         setBannerUploading(false);
+    };
+
+    const handleAboutImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setAboutImageUploading(true);
+        setMsg(null);
+        const supabase = createClient();
+        const filePath = `about/hero-${Date.now()}.${file.name.split('.').pop()}`;
+
+        const { error } = await supabase.storage.from('room-images').upload(filePath, file);
+        if (error) {
+            setMsg({ type: 'error', text: `About image upload failed: ${error.message}` });
+            setAboutImageUploading(false);
+            return;
+        }
+
+        const { data } = supabase.storage.from('room-images').getPublicUrl(filePath);
+        if (data?.publicUrl) setAboutImageUrl(data.publicUrl);
+        setAboutImageUploading(false);
     };
 
     const handleSanctuaryBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -226,6 +260,18 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
         setSancAmenities(sancAmenities.filter((_, i) => i !== index));
     };
 
+    const handleAddAboutFeature = () => {
+        setAboutFeatures([...aboutFeatures, { icon: 'ShieldCheck', title: 'New Feature', description: '' }]);
+    };
+    const handleUpdateAboutFeature = (index: number, key: keyof AboutFeature, value: string) => {
+        const updated = [...aboutFeatures];
+        updated[index][key] = value;
+        setAboutFeatures(updated);
+    };
+    const handleRemoveAboutFeature = (index: number) => {
+        setAboutFeatures(aboutFeatures.filter((_, i) => i !== index));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -249,6 +295,16 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
             story_banner_image: storyBannerImage,
             story_heading_2: storyHeading2,
             story_body_2: storyBody2,
+            about_title: aboutTitle,
+            about_subtitle: aboutSubtitle,
+            about_story_title: aboutStoryTitle,
+            about_story_body: aboutStoryBody,
+            about_mission: aboutMission,
+            about_vision: aboutVision,
+            about_image_url: aboutImageUrl,
+            about_features_subtitle: aboutFeaturesSubtitle,
+            about_features_title: aboutFeaturesTitle,
+            about_features: aboutFeatures,
             sanctuary_hero_subtitle: sancHeroSubtitle,
             sanctuary_hero_title: sancHeroTitle,
             sanctuary_hero_description: sancHeroDesc,
@@ -311,6 +367,19 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                 >
                     <Home className="w-3.5 h-3.5 text-[#c89349]" />
                     <span>Home Page</span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => setSubTab('about')}
+                    className={`min-h-[40px] px-4 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+                        subTab === 'about'
+                            ? 'bg-[#1c120c] text-[#faf7f2] shadow-xs'
+                            : 'text-[#2b1d14]/70 hover:bg-white/60'
+                    }`}
+                >
+                    <Info className="w-3.5 h-3.5 text-[#c89349]" />
+                    <span>About Page</span>
                 </button>
 
                 <button
@@ -640,7 +709,212 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                 </div>
             )}
 
-            {/* TAB 3: THE SANCTUARY PAGE CONTENT */}
+            {/* TAB 3: ABOUT US PAGE CONTENT */}
+            {subTab === 'about' && (
+                <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
+                    <div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-1.5">
+                            <Info className="w-3.5 h-3.5" />
+                            About Us Page Content
+                        </span>
+                        <h3 className="text-lg font-bold text-[#1c120c]">Hero Header, Story, Mission, Vision, Feature Photo & Feature Cards</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                            <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Main Heading Title</label>
+                            <input
+                                type="text"
+                                value={aboutTitle}
+                                onChange={(e) => setAboutTitle(e.target.value)}
+                                className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                            />
+                        </div>
+
+                        <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                            <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Subtitle / Hero Subheading</label>
+                            <input
+                                type="text"
+                                value={aboutSubtitle}
+                                onChange={(e) => setAboutSubtitle(e.target.value)}
+                                className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                            <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Story Section Title</label>
+                            <input
+                                type="text"
+                                value={aboutStoryTitle}
+                                onChange={(e) => setAboutStoryTitle(e.target.value)}
+                                className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                            />
+                        </div>
+
+                        <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                            <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Story Body Paragraph</label>
+                            <textarea
+                                rows={4}
+                                value={aboutStoryBody}
+                                onChange={(e) => setAboutStoryBody(e.target.value)}
+                                className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                            <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Resort Mission Statement</label>
+                            <textarea
+                                rows={3}
+                                value={aboutMission}
+                                onChange={(e) => setAboutMission(e.target.value)}
+                                className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
+                            />
+                        </div>
+
+                        <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                            <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Resort Vision Statement</label>
+                            <textarea
+                                rows={3}
+                                value={aboutVision}
+                                onChange={(e) => setAboutVision(e.target.value)}
+                                className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="bg-[#faf7f2] p-4 rounded-2xl border border-[#e6c898]/40 space-y-3">
+                        <label className="block text-[10px] font-bold text-[#2b1d14]/80 uppercase tracking-widest">
+                            About Page Feature Photo
+                        </label>
+                        <div className="flex items-center gap-4">
+                            {aboutImageUrl ? (
+                                <div className="relative w-32 h-20 rounded-xl overflow-hidden border border-[#c89349]">
+                                    <Image src={aboutImageUrl} alt="About feature" fill className="object-cover" />
+                                </div>
+                            ) : (
+                                <div className="w-32 h-20 bg-[#1c120c] text-[#c89349] rounded-xl flex items-center justify-center text-[10px] font-bold text-center px-2">
+                                    Auto Photo
+                                </div>
+                            )}
+
+                            <label className="cursor-pointer min-h-[40px] px-4 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase rounded-xl flex items-center gap-2 hover:bg-[#2b1d14] transition">
+                                {aboutImageUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-[#c89349]" />}
+                                <span>{aboutImageUrl ? 'Change Feature Photo' : 'Upload Feature Photo'}</span>
+                                <input type="file" accept="image/*" onChange={handleAboutImageUpload} disabled={aboutImageUploading} className="hidden" />
+                            </label>
+
+                            {aboutImageUrl && (
+                                <button
+                                    type="button"
+                                    onClick={() => setAboutImageUrl('')}
+                                    className="text-xs text-rose-700 underline font-medium cursor-pointer"
+                                >
+                                    Use Default Photo
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* EDITABLE FEATURE CARDS SECTION (WHY CHOOSE US / THE SEAVIEW DIFFERENCE) */}
+                    <div className="space-y-4 pt-4 border-t border-[#e6c898]/30">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-bold text-[#c89349] uppercase tracking-wider">Features Section ("The Seaview Difference")</h4>
+                            <button
+                                type="button"
+                                onClick={handleAddAboutFeature}
+                                className="min-h-[38px] px-4 bg-[#c89349] text-[#1c120c] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-1.5 hover:bg-[#b07d37] transition cursor-pointer"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span>Add Feature Card</span>
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                                <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Small Tagline Subtitle</label>
+                                <input
+                                    type="text"
+                                    value={aboutFeaturesSubtitle}
+                                    onChange={(e) => setAboutFeaturesSubtitle(e.target.value)}
+                                    className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none uppercase"
+                                />
+                            </div>
+
+                            <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                                <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Section Main Title</label>
+                                <input
+                                    type="text"
+                                    value={aboutFeaturesTitle}
+                                    onChange={(e) => setAboutFeaturesTitle(e.target.value)}
+                                    className="w-full text-xs font-bold text-[#1c120c] bg-transparent outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 pt-2">
+                            {aboutFeatures.map((item, idx) => (
+                                <div key={idx} className="bg-[#faf7f2] p-4 rounded-2xl border border-[#e6c898]/40 relative space-y-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveAboutFeature(idx)}
+                                        className="absolute top-3 right-3 p-1.5 bg-rose-100 text-rose-700 rounded-lg hover:bg-rose-200 transition cursor-pointer"
+                                        title="Delete Feature"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+
+                                    <div className="grid grid-cols-2 gap-3 pr-10">
+                                        <div>
+                                            <label className="block text-[9px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Icon Graphic</label>
+                                            <select
+                                                value={item.icon}
+                                                onChange={(e) => handleUpdateAboutFeature(idx, 'icon', e.target.value)}
+                                                className="w-full text-xs font-bold text-[#1c120c] bg-white border border-[#e6c898]/50 p-2 rounded-lg outline-none cursor-pointer"
+                                            >
+                                                <option value="ShieldCheck">Shield / Eco</option>
+                                                <option value="Palmtree">Palmtree / Beach</option>
+                                                <option value="Heart">Heart / Hospitality</option>
+                                                <option value="Compass">Compass / Location</option>
+                                                <option value="Sun">Sun / Warmth</option>
+                                                <option value="Waves">Waves / Ocean</option>
+                                                <option value="Leaf">Leaf / Nature</option>
+                                                <option value="Wind">Wind / Breeze</option>
+                                                <option value="Home">Home / Sanctuary</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[9px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Feature Card Title</label>
+                                            <input
+                                                type="text"
+                                                value={item.title}
+                                                onChange={(e) => handleUpdateAboutFeature(idx, 'title', e.target.value)}
+                                                className="w-full text-xs font-bold text-[#1c120c] bg-transparent border-b border-[#e6c898]/50 p-1 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[9px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Description Paragraph</label>
+                                        <textarea
+                                            rows={2}
+                                            value={item.description}
+                                            onChange={(e) => handleUpdateAboutFeature(idx, 'description', e.target.value)}
+                                            className="w-full text-xs font-medium text-[#1c120c] bg-transparent border-b border-[#e6c898]/50 p-1 outline-none resize-none"
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* TAB 4: THE SANCTUARY PAGE CONTENT */}
             {subTab === 'sanctuary' && (
                 <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
                     <div>
@@ -893,7 +1167,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                 </div>
             )}
 
-            {/* TAB 4: CONTACT PAGE CONTENT */}
+            {/* TAB 5: CONTACT PAGE CONTENT */}
             {subTab === 'contact' && (
                 <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
                     <div>
@@ -983,7 +1257,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
                 </div>
             )}
 
-            {/* TAB 5: FOOTER INFORMATION */}
+            {/* TAB 6: FOOTER INFORMATION */}
             {subTab === 'footer' && (
                 <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-4">
                     <div>
@@ -1038,7 +1312,7 @@ export function SiteSettingsForm({ settings }: SiteSettingsFormProps) {
             {/* Pinned Save Action Button */}
             <button
                 type="submit"
-                disabled={loading || uploading || heroUploading || bannerUploading || sancBannerUploading || galleryUploading || contactBannerUploading}
+                disabled={loading || uploading || heroUploading || bannerUploading || sancBannerUploading || galleryUploading || contactBannerUploading || aboutImageUploading}
                 className="w-full h-14 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-2xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition shadow-lg disabled:opacity-50 cursor-pointer"
             >
                 {loading ? (
