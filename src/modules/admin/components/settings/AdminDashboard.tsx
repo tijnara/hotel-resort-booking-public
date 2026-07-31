@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2, Sliders, Save, CheckCircle2 } from 'lucide-react';
-import { updateBookingStatusAction } from '../actions/adminActions';
-import { createStaffUserAction } from '../actions/userActions';
-import { updateSiteSettingsAction } from '../actions/settingsActions';
+import { updateBookingStatusAction } from '../../actions/adminActions';
+import { createStaffUserAction } from '../../actions/userActions';
+import { updateSiteSettingsAction } from '../../actions/settingsActions';
 import { EditRoomModal } from './EditRoomModal';
-import { SiteSettingsForm } from './SiteSettingsForm';
+import { SiteSettingsForm } from '../SiteSettingsForm';
 import type { Room } from '@/modules/shared/types/database.types';
 import type { SiteSettings } from '@/modules/settings/services/getSettings';
 

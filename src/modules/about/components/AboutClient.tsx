@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Palmtree, Compass, Heart, ShieldCheck, ArrowRight, MapPin, Phone, Mail, Laptop, Sun, Waves, Leaf, Wind, Home, Droplets, Menu, X } from 'lucide-react';
+import { Compass, Heart, ShieldCheck, ArrowRight, MapPin, Phone, Mail, Laptop, Sun, Waves, Leaf, Wind, Home, Droplets, Menu, X } from 'lucide-react';
+import { BrandIcon } from '@/modules/shared/components/BrandIcon';
 import type { SiteSettings, NavLinkItem } from '@/modules/settings/services/getSettings';
 
 export function AboutClient({ settings }: { settings: SiteSettings }) {
@@ -15,7 +16,7 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
     const renderIcon = (iconName: string) => {
         switch (iconName) {
             case 'ShieldCheck': return <ShieldCheck className="w-6 h-6 text-[#c89349]" />;
-            case 'Palmtree': return <Palmtree className="w-6 h-6 text-[#c89349]" />;
+            case 'Palmtree': return <BrandIcon iconName="Palmtree" className="w-6 h-6 text-[#c89349]" />;
             case 'Heart': return <Heart className="w-6 h-6 text-[#c89349]" />;
             case 'Compass': return <Compass className="w-6 h-6 text-[#c89349]" />;
             case 'Sun': return <Sun className="w-6 h-6 text-[#c89349]" />;
@@ -24,7 +25,7 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
             case 'Wind': return <Wind className="w-6 h-6 text-[#c89349]" />;
             case 'Droplets': return <Droplets className="w-6 h-6 text-[#c89349]" />;
             case 'Home': return <Home className="w-6 h-6 text-[#c89349]" />;
-            default: return <ShieldCheck className="w-6 h-6 text-[#c89349]" />;
+            default: return <BrandIcon iconName={iconName} className="w-6 h-6 text-[#c89349]" />;
         }
     };
 
@@ -87,6 +88,14 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
         }
     };
 
+    const watermarkText = (settings.footer_watermark && settings.footer_watermark.trim() !== '')
+        ? settings.footer_watermark
+        : (settings.site_name || 'SEAVIEW');
+
+    // 🚀 Dynamic Auto-Fit Font Size Calculation
+    const len = Math.max(watermarkText.length, 3);
+    const dynamicFontSize = Math.min(210, Math.floor(1100 / (len * 0.62)));
+
     return (
         <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between">
             <div>
@@ -102,7 +111,7 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
                                 <Image src={settings.logo_url} alt={settings.site_name} fill className="object-contain" />
                             </div>
                         ) : (
-                            <Palmtree className="w-5 h-5 sm:w-6 sm:h-6 text-[#c89349]" />
+                            <BrandIcon iconName={settings.site_icon} className="w-5 h-5 sm:w-6 sm:h-6 text-[#c89349]" />
                         )}
                         <span>{settings.site_name}</span>
                     </Link>
@@ -174,15 +183,15 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
                 {/* Hero Section */}
                 <section className="relative bg-[#1c120c] text-[#faf7f2] pt-20 pb-20 px-6 text-center">
                     <div className="max-w-5xl mx-auto space-y-4">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#c89349] flex items-center justify-center gap-2">
-              <Palmtree className="w-4 h-4" />
-              <span>Discover {settings.site_name}</span>
-            </span>
+                        <span className="text-xs font-bold uppercase tracking-widest text-[#c89349] flex items-center justify-center gap-2">
+                            <BrandIcon iconName={settings.site_icon} className="w-4 h-4 text-[#c89349]" />
+                            <span>{settings.about_badge_text || `Discover ${settings.site_name || 'SEAVIEW'}`}</span>
+                        </span>
                         <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-[#faf7f2]">
-                            {settings.about_title || 'Crafted for Serenity & Luxury'}
+                            {settings.about_title || 'Crafted for Serenity & Comfort'}
                         </h1>
                         <p className="text-sm md:text-base text-[#faf7f2]/70 max-w-2xl mx-auto leading-relaxed font-light">
-                            {settings.about_subtitle || 'A sanctuary tucked away along the pristine coastal waters of Pangasinan.'}
+                            {settings.about_subtitle || 'A beachfront staycation tucked away along the pristine coastal waters of Pangasinan.'}
                         </p>
                     </div>
                 </section>
@@ -211,7 +220,7 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
                     <div className="relative aspect-4/3 rounded-3xl overflow-hidden border border-[#e6c898]/40 shadow-lg">
                         <Image
                             src={settings.about_image_url || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=1200'}
-                            alt="Seaview Resort Grounds"
+                            alt={`${settings.site_name || 'Resort'} Grounds`}
                             fill
                             className="object-cover"
                         />
@@ -242,9 +251,9 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
                 {/* Dynamic Features Section ("The Seaview Difference") */}
                 <section className="max-w-6xl mx-auto px-6 py-16 space-y-12 text-center">
                     <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-[#c89349]">
-              {settings.about_features_subtitle || 'WHY CHOOSE US'}
-            </span>
+                        <span className="text-xs font-bold uppercase tracking-widest text-[#c89349]">
+                            {settings.about_features_subtitle || 'WHY CHOOSE US'}
+                        </span>
                         <h2 className="text-2xl md:text-3xl font-extrabold text-[#1c120c] mt-1">
                             {settings.about_features_title || 'The Seaview Difference'}
                         </h2>
@@ -266,10 +275,27 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
 
             {/* Dynamic Footer Section */}
             <footer className="bg-[#1c120c] text-[#faf7f2] relative overflow-hidden pt-12 sm:pt-16 pb-8 border-t border-[#2b1d14]">
-                <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none overflow-hidden">
-          <span className="text-[80px] sm:text-[180px] md:text-[240px] font-black tracking-widest text-[#c89349] uppercase whitespace-nowrap">
-            {settings.footer_watermark || settings.site_name}
-          </span>
+                {/* Adaptive SVG Watermark Engine */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none select-none overflow-hidden px-2 sm:px-6">
+                    <svg
+                        viewBox="0 0 1000 220"
+                        className="w-full h-full max-h-[180px] sm:max-h-[260px] md:max-h-[320px]"
+                        preserveAspectRatio="xMidYMid meet"
+                    >
+                        <text
+                            x="50%"
+                            y="50%"
+                            dominantBaseline="central"
+                            textAnchor="middle"
+                            fill="#c89349"
+                            fontWeight="900"
+                            fontSize={dynamicFontSize}
+                            letterSpacing="4"
+                            className="uppercase font-black"
+                        >
+                            {watermarkText}
+                        </text>
+                    </svg>
                 </div>
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10 space-y-10">
@@ -281,12 +307,12 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
                                         <Image src={settings.logo_url} alt={settings.site_name} fill className="object-contain" />
                                     </div>
                                 ) : (
-                                    <Palmtree className="w-6 h-6 text-[#c89349]" />
+                                    <BrandIcon iconName={settings.site_icon} className="w-6 h-6 text-[#c89349]" />
                                 )}
                                 <span>{settings.site_name}</span>
                             </div>
                             <p className="text-xs text-[#e6c898]/70 leading-relaxed max-w-sm">
-                                Executive coastal Kubo suites where traditional Filipino craftsmanship meets contemporary beachfront luxury.
+                                {settings.footer_description || 'Executive coastal Kubo suites where traditional Filipino craftsmanship meets contemporary beachfront luxury.'}
                             </p>
                         </div>
 

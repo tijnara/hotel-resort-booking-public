@@ -8,7 +8,7 @@ import { getAdminBookings } from '@/modules/admin/actions/adminActions';
 import { getStaffUsersAction } from '@/modules/admin/actions/userActions';
 import { getRooms } from '@/modules/rooms/services/getRooms';
 import { getSiteSettings } from '@/modules/settings/services/getSettings';
-import { AdminDashboardComponent } from '@/modules/admin/components/AdminDashboard';
+import { AdminDashboardComponent } from '@/modules/admin/components/settings/AdminDashboard';
 
 export const metadata = {
     title: 'Admin Desk | Seaview Resort',

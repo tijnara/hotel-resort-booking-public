@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Palmtree, MapPin, Phone, Mail, Laptop, ChevronLeft, ChevronRight, Menu, X, ArrowRight } from 'lucide-react';
+import { MapPin, Phone, Mail, Laptop, ChevronLeft, ChevronRight, Menu, X, ArrowRight } from 'lucide-react';
+import { BrandIcon } from '@/modules/shared/components/BrandIcon';
 import { AvailabilityBar } from '@/modules/rooms/components/AvailabilityBar';
 import { filterAvailableRoomsAction } from '@/modules/rooms/actions/filterRooms';
 import type { Room } from '@/modules/shared/types/database.types';
@@ -108,6 +109,14 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
         setIsFiltered(false);
     };
 
+    const watermarkText = (settings.footer_watermark && settings.footer_watermark.trim() !== '')
+        ? settings.footer_watermark
+        : (settings.site_name || 'SEAVIEW');
+
+    // 🚀 Dynamic Auto-Fit Font Size Calculation
+    const len = Math.max(watermarkText.length, 3);
+    const dynamicFontSize = Math.min(210, Math.floor(1100 / (len * 0.62)));
+
     return (
         <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between scroll-smooth">
             <div>
@@ -123,7 +132,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                                 <Image src={settings.logo_url} alt={settings.site_name} fill className="object-contain" />
                             </div>
                         ) : (
-                            <Palmtree className="w-5 h-5 sm:w-6 sm:h-6 text-[#c89349]" />
+                            <BrandIcon iconName={settings.site_icon} className="w-5 h-5 sm:w-6 sm:h-6 text-[#c89349]" />
                         )}
                         <span>{settings.site_name}</span>
                     </Link>
@@ -300,7 +309,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                             <div className="relative aspect-4/3 rounded-3xl overflow-hidden border border-[#e6c898]/30 shadow-xl">
                                 <Image
                                     src={settings.about_image_url || DEFAULT_ABOUT_IMAGE}
-                                    alt="About Seaview Resort"
+                                    alt={`About ${settings.site_name}`}
                                     fill
                                     className="object-cover"
                                 />
@@ -353,10 +362,27 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
 
             {/* Dynamic Footer Section */}
             <footer className="bg-[#1c120c] text-[#faf7f2] relative overflow-hidden pt-12 sm:pt-16 pb-8 border-t border-[#2b1d14]">
-                <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none overflow-hidden">
-                    <span className="text-[80px] sm:text-[180px] md:text-[240px] font-black tracking-widest text-[#c89349] uppercase whitespace-nowrap">
-                        {settings.footer_watermark || settings.site_name}
-                    </span>
+                {/* Adaptive SVG Watermark Engine */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none select-none overflow-hidden px-2 sm:px-6">
+                    <svg
+                        viewBox="0 0 1000 220"
+                        className="w-full h-full max-h-[180px] sm:max-h-[260px] md:max-h-[320px]"
+                        preserveAspectRatio="xMidYMid meet"
+                    >
+                        <text
+                            x="50%"
+                            y="50%"
+                            dominantBaseline="central"
+                            textAnchor="middle"
+                            fill="#c89349"
+                            fontWeight="900"
+                            fontSize={dynamicFontSize}
+                            letterSpacing="4"
+                            className="uppercase font-black"
+                        >
+                            {watermarkText}
+                        </text>
+                    </svg>
                 </div>
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10 space-y-10">
@@ -368,12 +394,12 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                                         <Image src={settings.logo_url} alt={settings.site_name} fill className="object-contain" />
                                     </div>
                                 ) : (
-                                    <Palmtree className="w-6 h-6 text-[#c89349]" />
+                                    <BrandIcon iconName={settings.site_icon} className="w-6 h-6 text-[#c89349]" />
                                 )}
                                 <span>{settings.site_name}</span>
                             </div>
                             <p className="text-xs text-[#e6c898]/70 leading-relaxed max-w-sm">
-                                Executive coastal Kubo suites where traditional Filipino craftsmanship meets contemporary beachfront luxury.
+                                {settings.footer_description || 'Executive coastal Kubo suites where traditional Filipino craftsmanship meets contemporary beachfront luxury.'}
                             </p>
                         </div>
 

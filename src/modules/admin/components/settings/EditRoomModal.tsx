@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { X, Loader2, Save, Upload, Trash2, Plus, Image as ImageIcon } from 'lucide-react';
 import { createClient } from '@/modules/shared/lib/supabase/client';
-import { updateRoomAction } from '../actions/roomActions';
+import { updateRoomAction } from '../../actions/roomActions';
 import type { Room } from '@/modules/shared/types/database.types';
 
 interface EditRoomModalProps {

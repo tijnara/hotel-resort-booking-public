@@ -21,12 +21,8 @@ export async function updateSiteSettingsAction(newSettings: Partial<SiteSettings
             return { success: false, message: error.message };
         }
 
-        // 🚀 Purge server route cache across all pages so changes reflect immediately
-        revalidatePath('/');
-        revalidatePath('/about');
-        revalidatePath('/villas');
-        revalidatePath('/sanctuary');
-        revalidatePath('/contact');
+        // 🚀 Purges root layout and ALL page caches globally (Watermark, Logo, Footer, Nav, etc.)
+        revalidatePath('/', 'layout');
         revalidatePath('/admin');
 
         return { success: true };

@@ -20,6 +20,7 @@ export interface AboutFeature {
 export interface SiteSettings {
     id: string;
     site_name: string;
+    site_icon?: string;
     logo_url: string;
     hero_subtitle: string;
     hero_title: string;
@@ -30,6 +31,7 @@ export interface SiteSettings {
     footer_phone: string;
     footer_email: string;
     footer_watermark: string;
+    footer_description?: string;
     hero_images?: string[];
     story_heading_1?: string;
     story_body_1?: string;
@@ -46,6 +48,7 @@ export interface SiteSettings {
     sanctuary_story_body_1?: string;
     sanctuary_story_heading_2?: string;
     sanctuary_story_body_2?: string;
+    sanctuary_badge_text?: string;
     villas_title?: string;
     villas_description?: string;
     contact_banner_image?: string;
@@ -53,9 +56,9 @@ export interface SiteSettings {
     contact_subtitle?: string;
     contact_landline?: string;
     inquiry_email?: string;
-    // About Page Settings
     about_title?: string;
     about_subtitle?: string;
+    about_badge_text?: string;
     about_story_title?: string;
     about_story_body?: string;
     about_mission?: string;
@@ -82,10 +85,6 @@ const DEFAULT_SANCTUARY_GALLERY = [
     'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=800&q=80',
 ];
 
 const DEFAULT_ABOUT_FEATURES: AboutFeature[] = [
@@ -118,22 +117,27 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         if (data) {
             return {
                 ...data,
+                site_icon: data.site_icon || 'Palmtree',
                 hero_images: (data.hero_images && data.hero_images.length > 0) ? data.hero_images : DEFAULT_HERO_IMAGES,
                 story_banner_image: data.story_banner_image || DEFAULT_STORY_BANNER,
                 sanctuary_banner_image: data.sanctuary_banner_image || DEFAULT_SANCTUARY_BANNER,
                 sanctuary_gallery: (data.sanctuary_gallery && data.sanctuary_gallery.length > 0) ? data.sanctuary_gallery : DEFAULT_SANCTUARY_GALLERY,
                 contact_banner_image: data.contact_banner_image || DEFAULT_CONTACT_BANNER,
                 inquiry_email: data.inquiry_email || 'aranjitarchita@gmail.com',
-                about_title: data.about_title || 'Crafted for Serenity & Luxury',
-                about_subtitle: data.about_subtitle || 'A sanctuary tucked away along the pristine coastal waters of Pangasinan.',
+                footer_watermark: (data.footer_watermark && data.footer_watermark.trim() !== '') ? data.footer_watermark : (data.site_name || 'SEAVIEW'),
+                footer_description: data.footer_description || 'Executive coastal Kubo suites where traditional Filipino craftsmanship meets contemporary beachfront luxury.',
+                about_badge_text: data.about_badge_text || `Discover ${data.site_name || 'SEAVIEW'}`,
+                about_title: data.about_title || 'Crafted for Serenity & Comfort',
+                about_subtitle: data.about_subtitle || 'A beachfront staycation tucked away along the pristine coastal waters of Pangasinan.',
                 about_story_title: data.about_story_title || 'The Seaview Story',
-                about_story_body: data.about_story_body || 'Founded with a passion for modern Filipino hospitality, Seaview Resort combines hand-carved local timber, traditional bahay kubo architecture, and minimalist oceanfront luxury. Every suite is designed to reconnect you with nature while providing modern comfort.',
-                about_mission: data.about_mission || 'To deliver authentic Filipino warmth and unforgettable beachfront relaxation in an eco-friendly sanctuary.',
-                about_vision: data.about_vision || 'To be Pangasinans premier destination for eco-luxury kubo living and coastal wellness.',
+                about_story_body: data.about_story_body || 'Founded with a passion for modern coastal relaxation, Seaview Cabins combines clean minimalist aesthetics with cozy beachside warmth.',
+                about_mission: data.about_mission || 'To deliver clean, cozy, and kid-friendly beachfront staycations with authentic local warmth and exceptional service.',
+                about_vision: data.about_vision || 'To be Pangasinans premier beachside destination for memorable family getaways, slow coastal living, and relaxing sunset retreats.',
                 about_image_url: data.about_image_url || DEFAULT_ABOUT_IMAGE,
                 about_features_subtitle: data.about_features_subtitle || 'WHY CHOOSE US',
                 about_features_title: data.about_features_title || 'The Seaview Difference',
                 about_features: (data.about_features && data.about_features.length > 0) ? data.about_features : DEFAULT_ABOUT_FEATURES,
+                sanctuary_badge_text: data.sanctuary_badge_text || 'Modern Beachfront Staycation',
             } as SiteSettings;
         }
     } catch (err) {
@@ -143,6 +147,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     return {
         id: 'default',
         site_name: 'SEAVIEW',
+        site_icon: 'Palmtree',
         logo_url: '',
         hero_subtitle: 'MODERN FILIPINO COASTAL SANCTUARY',
         hero_title: 'Bamboo, Capiz & Unbroken Ocean Views.',
@@ -158,6 +163,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         footer_phone: '+63 912 345 6789',
         footer_email: 'reservations@seaviewkubo.com',
         footer_watermark: 'SEAVIEW',
+        footer_description: 'Executive coastal Kubo suites where traditional Filipino craftsmanship meets contemporary beachfront luxury.',
         hero_images: DEFAULT_HERO_IMAGES,
         story_heading_1: "More than a stay — It's the Seaview Coastal Experience.",
         story_body_1: "Nestled along the pristine shores of the Philippines, Seaview offers a fresh take on modern beachfront luxury.",
@@ -174,6 +180,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
             { icon: 'Sun', title: 'Sunset Yoga Pavilion', description: 'Open-air bamboo deck tailored for sunrise meditation and evening sea-breeze stretches.' },
             { icon: 'Leaf', title: 'Eco-Crafted Sanctuaries', description: 'Built with locally harvested bamboo, capiz shells, and indigenous sustainable materials.' },
         ],
+        sanctuary_badge_text: 'Modern Beachfront Staycation',
         villas_title: 'Handcrafted Kubo Villas',
         villas_description: 'Explore our executive beachfront suites combining traditional Filipino craftsmanship with modern minimalist luxury.',
         contact_banner_image: DEFAULT_CONTACT_BANNER,
@@ -181,12 +188,13 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         contact_subtitle: 'We are here to assist with your beachfront villa reservations, private staycations, and custom coastal experience inquiries.',
         contact_landline: '(075) 632-8888',
         inquiry_email: 'aranjitarchita@gmail.com',
-        about_title: 'Crafted for Serenity & Luxury',
-        about_subtitle: 'A sanctuary tucked away along the pristine coastal waters of Pangasinan.',
+        about_badge_text: 'Discover SEAVIEW',
+        about_title: 'Crafted for Serenity & Comfort',
+        about_subtitle: 'A beachfront staycation tucked away along the pristine coastal waters of Pangasinan.',
         about_story_title: 'The Seaview Story',
-        about_story_body: 'Founded with a passion for modern Filipino hospitality, Seaview Resort combines hand-carved local timber, traditional bahay kubo architecture, and minimalist oceanfront luxury. Every suite is designed to reconnect you with nature while providing modern comfort.',
-        about_mission: 'To deliver authentic Filipino warmth and unforgettable beachfront relaxation in an eco-friendly sanctuary.',
-        about_vision: 'To be Pangasinans premier destination for eco-luxury kubo living and coastal wellness.',
+        about_story_body: 'Founded with a passion for modern coastal relaxation, Seaview Cabins combines clean minimalist aesthetics with cozy beachside warmth.',
+        about_mission: 'To deliver clean, cozy, and kid-friendly beachfront staycations with authentic local warmth and exceptional service.',
+        about_vision: 'To be Pangasinans premier beachside destination for memorable family getaways, slow coastal living, and relaxing sunset retreats.',
         about_image_url: DEFAULT_ABOUT_IMAGE,
         about_features_subtitle: 'WHY CHOOSE US',
         about_features_title: 'The Seaview Difference',
