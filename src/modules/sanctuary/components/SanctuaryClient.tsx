@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
-import { Palmtree, MapPin, Phone, Mail, Laptop, Waves, Sun, ShieldCheck, Leaf, Wind, Droplets, Heart, ChevronDown, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
+import { Palmtree, Waves, Sun, ShieldCheck, Leaf, Wind, Droplets, Heart, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Header } from '@/modules/shared/components/Header';
+import { Footer } from '@/modules/shared/components/Footer';
 import type { Room } from '@/modules/shared/types/database.types';
 import type { SiteSettings } from '@/modules/settings/services/getSettings';
 
@@ -29,17 +30,13 @@ interface SanctuaryClientProps {
     settings: SiteSettings;
 }
 
-export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps) {
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-    // Collect all Sanctuary gallery images
+export function SanctuaryClient({ settings }: SanctuaryClientProps) {
     const sanctuaryImages = (settings.sanctuary_gallery && settings.sanctuary_gallery.length > 0)
         ? settings.sanctuary_gallery
         : DEFAULT_SANCTUARY_GALLERY;
 
     const storyBanner = settings.sanctuary_banner_image || sanctuaryImages[0] || DEFAULT_SANCTUARY_BANNER;
 
-    // Slideshow State
     const [currentSlide, setCurrentSlide] = useState(0);
 
     useEffect(() => {
@@ -61,78 +58,10 @@ export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps
     return (
         <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between scroll-smooth">
             <div>
-                {/* Sticky Header */}
-                <header className="sticky top-0 z-50 bg-[#1c120c] text-[#faf7f2] px-4 sm:px-6 h-20 flex items-center justify-between border-b border-[#2b1d14] shadow-lg">
-                    <Link href="/" className="flex items-center gap-2 font-bold tracking-widest text-lg sm:text-xl uppercase text-[#faf7f2]">
-                        {settings.logo_url ? (
-                            <div className="relative w-7 h-7 sm:w-8 sm:h-8">
-                                <Image src={settings.logo_url} alt={settings.site_name} fill className="object-contain" />
-                            </div>
-                        ) : (
-                            <Palmtree className="w-5 h-5 sm:w-6 sm:h-6 text-[#c89349]" />
-                        )}
-                        <span>{settings.site_name}</span>
-                    </Link>
+                {/* Shared Reusable Active-Aware Header */}
+                <Header settings={settings} />
 
-                    {/* Desktop Navigation Links */}
-                    <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-[#faf7f2]/80">
-                        {settings.nav_links.map((link, idx) => (
-                            <Link key={idx} href={link.href} className="hover:text-[#c89349] transition">
-                                {link.label}
-                            </Link>
-                        ))}
-                    </nav>
-
-                    {/* Reserve Button & Hamburger Menu */}
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href="/villas"
-                            className="hidden sm:flex min-h-[40px] px-5 bg-[#c89349] text-[#1c120c] font-bold uppercase tracking-wider text-xs rounded-xl items-center justify-center hover:bg-[#b07d37] transition shadow-md"
-                        >
-                            {settings.reserve_button_text}
-                        </Link>
-
-                        <button
-                            type="button"
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="md:hidden p-2 text-[#faf7f2] hover:text-[#c89349] transition focus:outline-none cursor-pointer"
-                            aria-label="Toggle menu"
-                        >
-                            {isMobileMenuOpen ? <X className="w-6 h-6 text-[#c89349]" /> : <Menu className="w-6 h-6" />}
-                        </button>
-                    </div>
-                </header>
-
-                {/* Opaque Mobile Navigation Drawer */}
-                {isMobileMenuOpen && (
-                    <div className="fixed inset-x-0 top-20 bottom-0 z-50 bg-[#1c120c] text-[#faf7f2] md:hidden flex flex-col justify-between p-6 overflow-y-auto border-t border-[#2b1d14]">
-                        <nav className="flex flex-col gap-5 pt-2">
-                            {settings.nav_links.map((link, idx) => (
-                                <Link
-                                    key={idx}
-                                    href={link.href}
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="text-base font-bold uppercase tracking-widest text-[#faf7f2] hover:text-[#c89349] transition border-b border-[#2b1d14] pb-4 flex items-center justify-between"
-                                >
-                                    <span>{link.label}</span>
-                                    <span className="text-[#c89349] text-sm">→</span>
-                                </Link>
-                            ))}
-                        </nav>
-
-                        <div className="pt-8 pb-6">
-                            <Link
-                                href="/villas"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className="w-full min-h-[50px] bg-[#c89349] text-[#1c120c] font-bold uppercase tracking-wider text-xs rounded-xl flex items-center justify-center hover:bg-[#b07d37] transition shadow-lg cursor-pointer"
-                            >
-                                {settings.reserve_button_text}
-                            </Link>
-                        </div>
-                    </div>
-                )}
-
-                {/* Continuous Dark Canvas (Eliminates All White Gaps & Stark Divider Lines) */}
+                {/* Continuous Dark Canvas */}
                 <div className="bg-[#1c120c] text-[#faf7f2]">
                     {/* Hero Section */}
                     <section id="sanctuary-hero" className="bg-[#1c120c] text-[#faf7f2] pt-16 pb-20 px-4 text-center relative overflow-hidden min-h-[540px] sm:min-h-[620px] flex flex-col justify-center">
@@ -159,16 +88,16 @@ export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps
                         )}
 
                         <div className="max-w-4xl mx-auto space-y-4 relative z-10">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#c89349] inline-flex items-center justify-center gap-2 bg-[#1c120c]/60 backdrop-blur-xs px-4 py-1 rounded-full border border-[#c89349]/30">
-                {settings.logo_url ? (
-                    <div className="relative w-4 h-4">
-                        <Image src={settings.logo_url} alt={settings.site_name} fill className="object-contain" />
-                    </div>
-                ) : (
-                    <Palmtree className="w-4 h-4 text-[#c89349]" />
-                )}
-                  <span>{settings.sanctuary_hero_subtitle || 'Modern Beachfront Staycation'}</span>
-              </span>
+                            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#c89349] inline-flex items-center justify-center gap-2 bg-[#1c120c]/60 backdrop-blur-xs px-4 py-1 rounded-full border border-[#c89349]/30">
+                                {settings.logo_url ? (
+                                    <div className="relative w-4 h-4">
+                                        <Image src={settings.logo_url} alt={settings.site_name} fill className="object-contain" />
+                                    </div>
+                                ) : (
+                                    <Palmtree className="w-4 h-4 text-[#c89349]" />
+                                )}
+                                <span>{settings.sanctuary_hero_subtitle || 'Modern Beachfront Staycation'}</span>
+                            </span>
 
                             <h1 className="text-3xl sm:text-5xl md:text-6xl font-light tracking-tight text-[#faf7f2] leading-tight drop-shadow-md">
                                 {settings.sanctuary_hero_title || 'Seaview Cabins'}
@@ -227,7 +156,7 @@ export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps
                             </div>
                         </div>
 
-                        {/* Featured Sanctuary Banner Photo with Feathered Gradients */}
+                        {/* Featured Banner */}
                         {storyBanner && (
                             <div className="relative h-[320px] sm:h-[500px] w-full overflow-hidden">
                                 <Image
@@ -240,7 +169,7 @@ export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps
                             </div>
                         )}
 
-                        {/* Second Story Card with Gold Accent Separator */}
+                        {/* Second Story Card */}
                         <div className="py-16 sm:py-24 px-6 text-center">
                             <div className="max-w-3xl mx-auto space-y-6">
                                 <div className="w-12 h-0.5 bg-[#c89349]/50 mx-auto rounded-full mb-6" />
@@ -331,73 +260,8 @@ export function SanctuaryClient({ initialRooms, settings }: SanctuaryClientProps
                 )}
             </div>
 
-            {/* Footer */}
-            <footer className="bg-[#1c120c] text-[#faf7f2] relative overflow-hidden pt-12 sm:pt-16 pb-8 border-t border-[#2b1d14]">
-                <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none overflow-hidden">
-          <span className="text-[80px] sm:text-[180px] md:text-[240px] font-black tracking-widest text-[#c89349] uppercase whitespace-nowrap">
-            {settings.footer_watermark || settings.site_name}
-          </span>
-                </div>
-
-                <div className="max-w-7xl mx-auto px-6 relative z-10 space-y-10">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 font-bold tracking-widest text-xl uppercase text-[#faf7f2]">
-                                {settings.logo_url ? (
-                                    <div className="relative w-6 h-6">
-                                        <Image src={settings.logo_url} alt={settings.site_name} fill className="object-contain" />
-                                    </div>
-                                ) : (
-                                    <Palmtree className="w-6 h-6 text-[#c89349]" />
-                                )}
-                                <span>{settings.site_name}</span>
-                            </div>
-                            <p className="text-xs text-[#e6c898]/70 leading-relaxed max-w-sm">
-                                Executive coastal Kubo suites where traditional Filipino craftsmanship meets contemporary beachfront luxury.
-                            </p>
-                        </div>
-
-                        <div className="space-y-3">
-                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Quick Links</h4>
-                            <ul className="space-y-2 text-xs text-[#faf7f2]/80">
-                                {settings.nav_links.map((link, idx) => (
-                                    <li key={idx}>
-                                        <Link href={link.href} className="hover:text-[#c89349] transition">
-                                            {link.label}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        <div className="space-y-3">
-                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Resort Desk</h4>
-                            <div className="space-y-2 text-xs text-[#faf7f2]/80">
-                                <p className="flex items-center gap-2">
-                                    <MapPin className="w-4 h-4 text-[#c89349]" />
-                                    <span>{settings.footer_address}</span>
-                                </p>
-                                <p className="flex items-center gap-2">
-                                    <Phone className="w-4 h-4 text-[#c89349]" />
-                                    <span>{settings.footer_phone}</span>
-                                </p>
-                                <p className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-[#c89349]" />
-                                    <span>{settings.footer_email}</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-[#2b1d14] flex flex-col sm:flex-row items-center justify-between text-xs text-[#faf7f2]/50 gap-3">
-                        <p>© 2026 {settings.site_name}. All rights reserved.</p>
-                        <p className="flex items-center gap-1.5 font-medium text-[#c89349]">
-                            <Laptop className="w-4 h-4 text-[#c89349]" />
-                            <span className="font-bold text-[#faf7f2]">@tijnara</span>
-                        </p>
-                    </div>
-                </div>
-            </footer>
+            {/* Shared Reusable Footer */}
+            <Footer settings={settings} />
         </div>
     );
 }
