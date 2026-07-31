@@ -8,23 +8,40 @@ export function Header() {
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
 
+    // Track scroll position for header background style
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // Prevent background scrolling when mobile menu is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     return (
         <header
-            className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+            className={`sticky top-0 z-50 w-full transition-all duration-300 ${
                 isScrolled
                     ? 'bg-[#1c120c]/95 backdrop-blur-md border-b border-[#2b1d14] text-[#faf7f2]'
                     : 'bg-[#1c120c] text-[#faf7f2]'
             }`}
         >
-            <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
-                {/* Brand */}
-                <Link href="/" className="flex items-center gap-2.5 font-bold tracking-widest text-lg uppercase text-[#faf7f2]">
+            <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between relative z-50">
+                {/* Brand Logo */}
+                <Link
+                    href="/"
+                    className="flex items-center gap-2.5 font-bold tracking-widest text-lg uppercase text-[#faf7f2]"
+                    onClick={() => setIsOpen(false)}
+                >
                     <Palmtree className="w-5 h-5 text-[#c89349]" />
                     <span>SEAVIEW</span>
                 </Link>
@@ -47,9 +64,10 @@ export function Header() {
 
                 {/* Mobile Hamburger Button */}
                 <button
+                    type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className="md:hidden min-w-[48px] min-h-[48px] flex items-center justify-end text-[#faf7f2] active:text-[#c89349]"
-                    aria-label="Toggle menu"
+                    className="md:hidden min-w-[48px] min-h-[48px] flex items-center justify-center text-[#faf7f2] hover:text-[#c89349] active:text-[#c89349] transition cursor-pointer relative z-50 pointer-events-auto"
+                    aria-label="Toggle navigation menu"
                 >
                     {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                 </button>
@@ -57,7 +75,7 @@ export function Header() {
 
             {/* Mobile Drawer */}
             {isOpen && (
-                <div className="md:hidden fixed inset-x-0 top-16 bg-[#1c120c] border-b border-[#2b1d14] px-6 py-8 h-[calc(100vh-4rem)] flex flex-col justify-between animate-in slide-in-from-top duration-200">
+                <div className="md:hidden fixed inset-x-0 top-16 bg-[#1c120c] border-b border-[#2b1d14] px-6 py-8 h-[calc(100vh-4rem)] flex flex-col justify-between animate-in slide-in-from-top duration-200 z-40 overflow-y-auto">
                     <nav className="flex flex-col space-y-6 text-xl font-light tracking-wide text-[#faf7f2]">
                         <Link href="#villas" onClick={() => setIsOpen(false)}>Kubo Villas & Suites</Link>
                         <Link href="#experience" onClick={() => setIsOpen(false)}>Island Experience</Link>
@@ -68,7 +86,7 @@ export function Header() {
                     <Link
                         href="#booking"
                         onClick={() => setIsOpen(false)}
-                        className="w-full h-14 bg-[#c89349] text-[#1c120c] font-bold uppercase tracking-widest rounded-xl flex items-center justify-center text-xs"
+                        className="w-full h-14 bg-[#c89349] text-[#1c120c] font-bold uppercase tracking-widest rounded-xl flex items-center justify-center text-xs shadow-lg"
                     >
                         Book Your Stay
                     </Link>

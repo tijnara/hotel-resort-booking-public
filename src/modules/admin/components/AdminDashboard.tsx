@@ -30,7 +30,7 @@ export interface AdminBooking {
 
 export interface StaffUser {
     id: string;
-    email: string;
+    email?: string; // Updated: Made optional to match Supabase User type
     created_at: string;
     user_metadata?: {
         full_name?: string;
@@ -540,13 +540,13 @@ export function AdminDashboardComponent({
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <h4 className="font-bold text-sm text-[#1c120c]">
-                                                {u.user_metadata?.full_name || u.email}
+                                                {u.user_metadata?.full_name || u.email || 'Staff Member'}
                                             </h4>
                                             <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#c89349]/20 text-[#1c120c]">
                                                 {u.user_metadata?.role || 'Staff'}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-[#2b1d14]/60 mt-0.5">{u.email}</p>
+                                        <p className="text-xs text-[#2b1d14]/60 mt-0.5">{u.email || 'No email provided'}</p>
                                     </div>
                                     <span className="text-[10px] text-[#2b1d14]/40 font-mono">
                                         Added: {new Date(u.created_at).toLocaleDateString()}

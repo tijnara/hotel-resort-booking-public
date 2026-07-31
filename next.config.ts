@@ -1,14 +1,22 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // 🚀 Allows dev mode Hot Module Replacement (HMR) over Ngrok tunnels
+  allowedDevOrigins: ['*.ngrok-free.dev', 'localhost:3000', '127.0.0.1:3000'],
+
+  // Empty turbopack config prevents Next.js 16 build conflict errors
+  turbopack: {},
+
+  // Allow Server Actions and cross-origin requests from Ngrok tunnels
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['*.ngrok-free.dev', 'localhost:3000', '127.0.0.1:3000'],
+    },
+  },
+
   images: {
-    // Enable high-compression next-gen image formats
     formats: ['image/avif', 'image/webp'],
-
-    // Set image cache duration to 7 days for fast repeated page loads
     minimumCacheTTL: 60 * 60 * 24 * 7,
-
-    // Allow Next.js Image Optimization for external asset hosts
     remotePatterns: [
       {
         protocol: 'https',
@@ -16,7 +24,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '**.supabase.co', // Wildcard match for all Supabase Storage project domains
+        hostname: '**.supabase.co',
       },
     ],
   },
