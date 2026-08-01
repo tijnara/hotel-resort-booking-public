@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Compass, Heart, ShieldCheck, ArrowRight, Sun, Waves, Leaf, Wind, Home, Droplets } from 'lucide-react';
@@ -9,6 +10,15 @@ import { Footer } from '@/modules/shared/components/Footer';
 import type { SiteSettings } from '@/modules/settings/services/getSettings';
 
 export function AboutClient({ settings }: { settings: SiteSettings }) {
+    const [showTideMask, setShowTideMask] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowTideMask(false);
+        }, 2500);
+        return () => clearTimeout(timer);
+    }, []);
+
     const renderIcon = (iconName: string) => {
         switch (iconName) {
             case 'ShieldCheck': return <ShieldCheck className="w-6 h-6 text-[#c89349]" />;
@@ -46,22 +56,38 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
         ];
 
     return (
-        <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between">
+        <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between relative overflow-x-hidden">
+            {/* 🌊 1. Tidal Wave Sweep Mask */}
+            {showTideMask && (
+                <div className="fixed inset-0 z-50 bg-[#1c120c] animate-tide-curtain pointer-events-none flex items-center justify-center">
+                    <div className="flex items-center gap-3">
+                        <BrandIcon iconName={settings.site_icon} className="w-8 h-8 text-[#c89349]" />
+                        <span className="text-2xl font-black tracking-widest text-[#faf7f2] uppercase">
+                            {settings.site_name || 'SEAVIEW'}
+                        </span>
+                    </div>
+                </div>
+            )}
+
             <div>
                 {/* Shared Header Component */}
                 <Header settings={settings} />
 
                 {/* Hero Section */}
-                <section className="relative bg-[#1c120c] text-[#faf7f2] pt-20 pb-20 px-6 text-center">
-                    <div className="max-w-5xl mx-auto space-y-4">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#c89349] flex items-center justify-center gap-2">
-              <BrandIcon iconName={settings.site_icon} className="w-4 h-4 text-[#c89349]" />
-              <span>{settings.about_badge_text || `Discover ${settings.site_name || 'SEAVIEW'}`}</span>
-            </span>
-                        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-[#faf7f2]">
-                            {settings.about_title || 'Crafted for Serenity & Comfort'}
+                <section className="relative bg-[#1c120c] text-[#faf7f2] pt-20 pb-20 px-6 text-center overflow-hidden">
+                    <div className="max-w-5xl mx-auto space-y-4 relative z-10">
+                        <div className="animate-tide-text-1">
+                            <span className="text-xs font-bold uppercase tracking-widest text-[#c89349] inline-flex items-center justify-center gap-2 bg-[#1c120c]/70 backdrop-blur-md px-4 py-1.5 rounded-full border border-[#c89349]/40 shadow-lg">
+                                <BrandIcon iconName={settings.site_icon} className="w-4 h-4 text-[#c89349]" />
+                                <span>{settings.about_badge_text || `Discover ${settings.site_name || 'SEAVIEW'}`}</span>
+                            </span>
+                        </div>
+                        <h1 className="animate-tide-text-2 text-3xl md:text-5xl font-extrabold tracking-tight">
+                            <span className="animate-shimmer-text">
+                                {settings.about_title || 'Crafted for Serenity & Comfort'}
+                            </span>
                         </h1>
-                        <p className="text-sm md:text-base text-[#faf7f2]/70 max-w-2xl mx-auto leading-relaxed font-light">
+                        <p className="animate-tide-text-3 text-sm md:text-base text-[#faf7f2]/70 max-w-2xl mx-auto leading-relaxed font-light">
                             {settings.about_subtitle || 'A beachfront staycation tucked away along the pristine coastal waters of Pangasinan.'}
                         </p>
                     </div>
@@ -80,7 +106,7 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
                         <div className="pt-2">
                             <Link
                                 href="/villas"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#2b1d14] transition cursor-pointer"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#2b1d14] transition hover:scale-105 active:scale-95 cursor-pointer shadow-md"
                             >
                                 <span>Explore Our Villas</span>
                                 <ArrowRight className="w-4 h-4 text-[#c89349]" />
@@ -88,12 +114,12 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
                         </div>
                     </div>
 
-                    <div className="relative aspect-4/3 rounded-3xl overflow-hidden border border-[#e6c898]/40 shadow-lg">
+                    <div className="relative aspect-4/3 rounded-3xl overflow-hidden border border-[#e6c898]/40 shadow-lg group cursor-pointer">
                         <Image
                             src={settings.about_image_url || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=1200'}
                             alt={`${settings.site_name || 'Resort'} Grounds`}
                             fill
-                            className="object-cover"
+                            className="object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"
                         />
                     </div>
                 </section>
@@ -122,9 +148,9 @@ export function AboutClient({ settings }: { settings: SiteSettings }) {
                 {/* Dynamic Features Section */}
                 <section className="max-w-6xl mx-auto px-6 py-16 space-y-12 text-center">
                     <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-[#c89349]">
-              {settings.about_features_subtitle || 'WHY CHOOSE US'}
-            </span>
+                        <span className="text-xs font-bold uppercase tracking-widest text-[#c89349]">
+                            {settings.about_features_subtitle || 'WHY CHOOSE US'}
+                        </span>
                         <h2 className="text-2xl md:text-3xl font-extrabold text-[#1c120c] mt-1">
                             {settings.about_features_title || 'The Seaview Difference'}
                         </h2>

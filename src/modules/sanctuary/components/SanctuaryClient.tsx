@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Palmtree, Waves, Sun, ShieldCheck, Leaf, Wind, Droplets, Heart, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Header } from '@/modules/shared/components/Header';
 import { Footer } from '@/modules/shared/components/Footer';
+import { BrandIcon } from '@/modules/shared/components/BrandIcon';
 import type { Room } from '@/modules/shared/types/database.types';
 import type { SiteSettings } from '@/modules/settings/services/getSettings';
 
@@ -31,6 +32,8 @@ interface SanctuaryClientProps {
 }
 
 export function SanctuaryClient({ settings }: SanctuaryClientProps) {
+    const [showTideMask, setShowTideMask] = useState(true);
+
     const sanctuaryImages = (settings.sanctuary_gallery && settings.sanctuary_gallery.length > 0)
         ? settings.sanctuary_gallery
         : DEFAULT_SANCTUARY_GALLERY;
@@ -40,10 +43,17 @@ export function SanctuaryClient({ settings }: SanctuaryClientProps) {
     const [currentSlide, setCurrentSlide] = useState(0);
 
     useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowTideMask(false);
+        }, 2500);
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
         if (sanctuaryImages.length <= 1) return;
         const interval = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % sanctuaryImages.length);
-        }, 6000);
+        }, 9000);
         return () => clearInterval(interval);
     }, [sanctuaryImages.length]);
 
@@ -56,9 +66,21 @@ export function SanctuaryClient({ settings }: SanctuaryClientProps) {
     const amenitiesList = settings.sanctuary_amenities || [];
 
     return (
-        <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between scroll-smooth">
+        <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between scroll-smooth relative overflow-x-hidden">
+            {/* 🌊 1. Tidal Wave Sweep Mask */}
+            {showTideMask && (
+                <div className="fixed inset-0 z-50 bg-[#1c120c] animate-tide-curtain pointer-events-none flex items-center justify-center">
+                    <div className="flex items-center gap-3">
+                        <BrandIcon iconName={settings.site_icon} className="w-8 h-8 text-[#c89349]" />
+                        <span className="text-2xl font-black tracking-widest text-[#faf7f2] uppercase">
+                            {settings.site_name || 'SEAVIEW'}
+                        </span>
+                    </div>
+                </div>
+            )}
+
             <div>
-                {/* Shared Reusable Active-Aware Header */}
+                {/* Shared Header Component */}
                 <Header settings={settings} />
 
                 {/* Continuous Dark Canvas */}
@@ -70,7 +92,7 @@ export function SanctuaryClient({ settings }: SanctuaryClientProps) {
                                 {sanctuaryImages.map((img, idx) => (
                                     <div
                                         key={idx}
-                                        className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                                        className={`absolute inset-0 transition-all duration-[2500ms] ease-in-out ${
                                             idx === currentSlide ? 'opacity-90 scale-105' : 'opacity-0 scale-100'
                                         }`}
                                     >
@@ -88,27 +110,25 @@ export function SanctuaryClient({ settings }: SanctuaryClientProps) {
                         )}
 
                         <div className="max-w-4xl mx-auto space-y-4 relative z-10">
-                            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#c89349] inline-flex items-center justify-center gap-2 bg-[#1c120c]/60 backdrop-blur-xs px-4 py-1 rounded-full border border-[#c89349]/30">
-                                {settings.logo_url ? (
-                                    <div className="relative w-4 h-4">
-                                        <Image src={settings.logo_url} alt={settings.site_name} fill className="object-contain" />
-                                    </div>
-                                ) : (
-                                    <Palmtree className="w-4 h-4 text-[#c89349]" />
-                                )}
-                                <span>{settings.sanctuary_hero_subtitle || 'Modern Beachfront Staycation'}</span>
-                            </span>
+                            <div className="animate-tide-text-1">
+                                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#c89349] inline-flex items-center justify-center gap-2 bg-[#1c120c]/60 backdrop-blur-xs px-4 py-1.5 rounded-full border border-[#c89349]/30">
+                                    <BrandIcon iconName={settings.site_icon} className="w-4 h-4 text-[#c89349]" />
+                                    <span>{settings.sanctuary_hero_subtitle || 'Modern Beachfront Staycation'}</span>
+                                </span>
+                            </div>
 
-                            <h1 className="text-3xl sm:text-5xl md:text-6xl font-light tracking-tight text-[#faf7f2] leading-tight drop-shadow-md">
-                                {settings.sanctuary_hero_title || 'Seaview Cabins'}
+                            <h1 className="animate-tide-text-2 text-3xl sm:text-5xl md:text-6xl font-light tracking-tight text-[#faf7f2] leading-tight drop-shadow-md">
+                                <span className="animate-shimmer-text">
+                                    {settings.sanctuary_hero_title || 'Seaview Cabins'}
+                                </span>
                             </h1>
-                            <p className="text-xs sm:text-sm text-[#faf7f2]/90 max-w-xl mx-auto leading-relaxed drop-shadow-sm px-2 font-medium">
+                            <p className="animate-tide-text-3 text-xs sm:text-sm text-[#faf7f2]/90 max-w-xl mx-auto leading-relaxed drop-shadow-sm px-2 font-medium">
                                 {settings.sanctuary_hero_description || 'Escape to a peaceful beachfront sanctuary. Relax in our modern minimalist villas and enjoy a memorable seaside getaway.'}
                             </p>
 
                             {/* Slide Controls */}
                             {sanctuaryImages.length > 1 && (
-                                <div className="pt-6 flex items-center justify-center gap-3">
+                                <div className="animate-tide-text-3 pt-6 flex items-center justify-center gap-3">
                                     <button
                                         onClick={() => setCurrentSlide((prev) => (prev - 1 + sanctuaryImages.length) % sanctuaryImages.length)}
                                         className="p-1.5 rounded-full bg-[#1c120c]/60 backdrop-blur-md text-[#faf7f2] hover:text-[#c89349] transition cursor-pointer border border-[#c89349]/30"
@@ -144,7 +164,6 @@ export function SanctuaryClient({ settings }: SanctuaryClientProps) {
 
                     {/* Seamless Story Section */}
                     <section className="bg-[#1c120c]">
-                        {/* First Story Card */}
                         <div className="py-16 sm:py-24 px-6 text-center">
                             <div className="max-w-3xl mx-auto space-y-4">
                                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-tight leading-snug text-[#faf7f2]">
@@ -156,7 +175,6 @@ export function SanctuaryClient({ settings }: SanctuaryClientProps) {
                             </div>
                         </div>
 
-                        {/* Featured Banner */}
                         {storyBanner && (
                             <div className="relative h-[320px] sm:h-[500px] w-full overflow-hidden">
                                 <Image
@@ -169,7 +187,6 @@ export function SanctuaryClient({ settings }: SanctuaryClientProps) {
                             </div>
                         )}
 
-                        {/* Second Story Card */}
                         <div className="py-16 sm:py-24 px-6 text-center">
                             <div className="max-w-3xl mx-auto space-y-6">
                                 <div className="w-12 h-0.5 bg-[#c89349]/50 mx-auto rounded-full mb-6" />
@@ -260,7 +277,7 @@ export function SanctuaryClient({ settings }: SanctuaryClientProps) {
                 )}
             </div>
 
-            {/* Shared Reusable Footer */}
+            {/* Shared Footer Component */}
             <Footer settings={settings} />
         </div>
     );

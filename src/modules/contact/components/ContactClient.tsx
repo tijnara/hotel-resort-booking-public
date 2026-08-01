@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { MapPin, Phone, PhoneCall, Mail, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { sendInquiryAction } from '../actions/sendInquiryAction';
 import { Header } from '@/modules/shared/components/Header';
 import { Footer } from '@/modules/shared/components/Footer';
+import { BrandIcon } from '@/modules/shared/components/BrandIcon';
 import type { SiteSettings } from '@/modules/settings/services/getSettings';
 
 interface ContactClientProps {
@@ -13,6 +14,7 @@ interface ContactClientProps {
 }
 
 export function ContactClient({ settings }: ContactClientProps) {
+    const [showTideMask, setShowTideMask] = useState(true);
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -22,6 +24,13 @@ export function ContactClient({ settings }: ContactClientProps) {
     const [contactNumber, setContactNumber] = useState('');
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowTideMask(false);
+        }, 2500);
+        return () => clearTimeout(timer);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -51,9 +60,21 @@ export function ContactClient({ settings }: ContactClientProps) {
     const bannerPhoto = settings.contact_banner_image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80';
 
     return (
-        <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between">
+        <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between relative overflow-x-hidden">
+            {/* 🌊 1. Tidal Wave Sweep Mask */}
+            {showTideMask && (
+                <div className="fixed inset-0 z-50 bg-[#1c120c] animate-tide-curtain pointer-events-none flex items-center justify-center">
+                    <div className="flex items-center gap-3">
+                        <BrandIcon iconName={settings.site_icon} className="w-8 h-8 text-[#c89349]" />
+                        <span className="text-2xl font-black tracking-widest text-[#faf7f2] uppercase">
+                            {settings.site_name || 'SEAVIEW'}
+                        </span>
+                    </div>
+                </div>
+            )}
+
             <div>
-                {/* Shared Reusable Active-Aware Header */}
+                {/* Shared Header Component */}
                 <Header settings={settings} />
 
                 {/* Contact Banner Section with Dark Overlay Card */}
@@ -67,23 +88,26 @@ export function ContactClient({ settings }: ContactClientProps) {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1c120c] via-black/40 to-transparent" />
 
-                    {/* Floating Dark Card */}
+                    {/* Floating Dark Card with Shimmer & Staggered Reveal */}
                     <div className="relative z-10 max-w-2xl mx-4 my-8 p-6 sm:p-10 bg-[#1c120c]/90 backdrop-blur-md rounded-3xl border border-[#c89349]/30 text-center shadow-2xl space-y-3">
-                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#c89349] block">
-                            Resort Concierge & Guest Relations
-                        </span>
-                        <h1 className="text-2xl sm:text-4xl font-light tracking-tight text-[#faf7f2]">
-                            {settings.contact_title || 'Connect with Our Resort Desk'}
+                        <div className="animate-tide-text-1">
+                            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#c89349] block">
+                                Resort Concierge & Guest Relations
+                            </span>
+                        </div>
+                        <h1 className="animate-tide-text-2 text-2xl sm:text-4xl font-light tracking-tight">
+                            <span className="animate-shimmer-text">
+                                {settings.contact_title || 'Connect with Our Resort Desk'}
+                            </span>
                         </h1>
-                        <p className="text-xs sm:text-sm text-[#e6c898]/80 leading-relaxed max-w-lg mx-auto font-light">
+                        <p className="animate-tide-text-3 text-xs sm:text-sm text-[#e6c898]/80 leading-relaxed max-w-lg mx-auto font-light">
                             {settings.contact_subtitle || 'We are here to assist with your beachfront villa reservations, private staycations, and custom coastal experience inquiries.'}
                         </p>
                     </div>
                 </section>
 
-                {/* Contact Info & Inquiry Form Container */}
+                {/* Contact Details & Inquiry Form */}
                 <section className="max-w-4xl mx-auto px-5 py-12 space-y-12">
-                    {/* Resort Contact Details Bar */}
                     <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#e6c898]/40 shadow-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div className="flex items-start gap-3">
                             <div className="w-10 h-10 bg-[#1c120c] text-[#c89349] rounded-xl flex items-center justify-center shrink-0">
@@ -126,7 +150,7 @@ export function ContactClient({ settings }: ContactClientProps) {
                         </div>
                     </div>
 
-                    {/* Interactive Inquiry Form */}
+                    {/* Form Section */}
                     <div className="bg-[#1c120c] text-[#faf7f2] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#2b1d14] space-y-6">
                         <div className="text-center space-y-2">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Guest Service Desk</span>
@@ -230,7 +254,7 @@ export function ContactClient({ settings }: ContactClientProps) {
                 </section>
             </div>
 
-            {/* Shared Reusable Footer */}
+            {/* Shared Footer Component */}
             <Footer settings={settings} />
         </div>
     );
