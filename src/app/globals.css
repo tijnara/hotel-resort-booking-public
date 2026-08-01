@@ -1,33 +1,97 @@
 @import "tailwindcss";
 
 :root {
-  /* Default Seaview Kubo Brand Colors */
-  --background: #faf7f2;       /* Warm Capiz Shell Off-White */
-  --foreground: #1c120c;       /* Deep Mahogany Wood */
-
-  /* Font Fallbacks for IDE Linter */
+  --background: #faf7f2;
+  --foreground: #1c120c;
   --font-geist-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 @theme inline {
-  /* Core Theme Mappings */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-
-  /* Custom Filipino Kubo Color Tokens */
-  --color-kubo-capiz: #faf7f2;     /* Warm shell background */
-  --color-kubo-mahogany: #1c120c;  /* Primary dark wood header/accents */
-  --color-kubo-timber: #2b1d14;    /* Mid-tone dark wood */
-  --color-kubo-gold: #c89349;      /* Bamboo & cogon grass CTA/highlight */
-  --color-kubo-sand: #e6c898;      /* Soft sand/bamboo borders & text */
-  --color-kubo-palm: #2d5a43;      /* Tropical foliage green accent */
+  --color-kubo-capiz: #faf7f2;
+  --color-kubo-mahogany: #1c120c;
+  --color-kubo-timber: #2b1d14;
+  --color-kubo-gold: #c89349;
+  --color-kubo-sand: #e6c898;
+  --color-kubo-palm: #2d5a43;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+/* 🌊 1. Tidal Wave Mask Sweep */
+@keyframes tideSweep {
+  0% {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  }
+  50% {
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
+  }
+}
+
+/* ✨ 2. Traveling Metallic Gold Light Shimmer */
+@keyframes goldShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* 🍃 3. Gentle Rising Float Reveal */
+@keyframes tideRise {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Animation Helper Classes */
+.animate-tide-curtain {
+  animation: tideSweep 2.4s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+}
+
+.animate-tide-text-1 {
+  animation: tideRise 1.8s cubic-bezier(0.16, 1, 0.3, 1) 1.2s both;
+}
+
+.animate-tide-text-2 {
+  animation: tideRise 1.8s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both;
+}
+
+.animate-tide-text-3 {
+  animation: tideRise 1.8s cubic-bezier(0.16, 1, 0.3, 1) 2.0s both;
+}
+
+.animate-shimmer-text {
+  background: linear-gradient(
+          90deg,
+          #faf7f2 0%,
+          #c89349 25%,
+          #ffffff 50%,
+          #c89349 75%,
+          #faf7f2 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: goldShimmer 6s linear infinite;
 }

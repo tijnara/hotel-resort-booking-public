@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Header } from '@/modules/shared/components/Header';
 import { Footer } from '@/modules/shared/components/Footer';
+import { BrandIcon } from '@/modules/shared/components/BrandIcon';
 import { AvailabilityBar } from '@/modules/rooms/components/AvailabilityBar';
 import { filterAvailableRoomsAction } from '@/modules/rooms/actions/filterRooms';
 import type { Room } from '@/modules/shared/types/database.types';
@@ -30,6 +31,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [isFiltered, setIsFiltered] = useState(false);
+    const [showTideMask, setShowTideMask] = useState(true);
 
     const allRoomImages = initialRooms.flatMap((room) => room.images || []).filter(Boolean);
     const heroImages = (settings.hero_images && settings.hero_images.length > 0)
@@ -41,10 +43,17 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
     const [currentSlide, setCurrentSlide] = useState(0);
 
     useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowTideMask(false);
+        }, 2500);
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
         if (heroImages.length <= 1) return;
         const interval = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-        }, 6000);
+        }, 9000);
         return () => clearInterval(interval);
     }, [heroImages.length]);
 
@@ -64,21 +73,31 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
     };
 
     return (
-        <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between scroll-smooth">
+        <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between scroll-smooth relative overflow-x-hidden">
+
+            {/* 🌊 1. Tidal Wave Sweep Mask */}
+            {showTideMask && (
+                <div className="fixed inset-0 z-50 bg-[#1c120c] animate-tide-curtain pointer-events-none flex items-center justify-center">
+                    <div className="flex items-center gap-3">
+                        <BrandIcon iconName={settings.site_icon} className="w-8 h-8 text-[#c89349]" />
+                        <span className="text-2xl font-black tracking-widest text-[#faf7f2] uppercase">
+              {settings.site_name || 'SEAVIEW'}
+            </span>
+                    </div>
+                </div>
+            )}
+
             <div>
-                {/* Shared Header Component */}
                 <Header settings={settings} />
 
-                {/* Continuous Dark Canvas */}
                 <div className="bg-[#1c120c] text-[#faf7f2]">
-                    {/* Hero Section */}
-                    <section id="hero" className="bg-[#1c120c] text-[#faf7f2] pt-16 pb-20 px-4 text-center relative overflow-hidden min-h-[540px] sm:min-h-[620px] flex flex-col justify-center">
+                    <section id="hero" className="bg-[#1c120c] text-[#faf7f2] pt-16 pb-20 px-4 text-center relative overflow-hidden min-h-[540px] sm:min-h-[640px] flex flex-col justify-center">
                         {heroImages.length > 0 && (
                             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
                                 {heroImages.map((img, idx) => (
                                     <div
                                         key={idx}
-                                        className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                                        className={`absolute inset-0 transition-all duration-[2500ms] ease-in-out ${
                                             idx === currentSlide ? 'opacity-90 scale-105' : 'opacity-0 scale-100'
                                         }`}
                                     >
@@ -91,22 +110,33 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                                         />
                                     </div>
                                 ))}
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#1c120c] via-[#1c120c]/35 to-[#1c120c]/65" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#1c120c] via-[#1c120c]/40 to-[#1c120c]/65" />
                             </div>
                         )}
 
-                        <div className="max-w-4xl mx-auto space-y-4 relative z-10">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#c89349] block bg-[#1c120c]/60 backdrop-blur-xs w-fit mx-auto px-4 py-1 rounded-full border border-[#c89349]/30">
-                {settings.hero_subtitle}
-              </span>
-                            <h1 className="text-3xl sm:text-5xl md:text-6xl font-light tracking-tight text-[#faf7f2] leading-tight drop-shadow-md">
-                                {settings.hero_title}
+                        <div className="max-w-4xl mx-auto space-y-5 relative z-10">
+                            {/* Badge */}
+                            <div className="animate-tide-text-1">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-[#c89349] inline-flex items-center gap-2 bg-[#1c120c]/70 backdrop-blur-md px-4 py-1.5 rounded-full border border-[#c89349]/40 shadow-lg">
+                  <BrandIcon iconName={settings.site_icon} className="w-3.5 h-3.5 text-[#c89349]" />
+                  <span>{settings.hero_subtitle}</span>
+                </span>
+                            </div>
+
+                            {/* Shimmering Title */}
+                            <h1 className="animate-tide-text-2 text-3xl sm:text-5xl md:text-6xl font-light tracking-tight leading-tight drop-shadow-md">
+                <span className="animate-shimmer-text font-normal">
+                  {settings.hero_title}
+                </span>
                             </h1>
-                            <p className="text-xs sm:text-sm text-[#faf7f2]/90 max-w-xl mx-auto leading-relaxed drop-shadow-sm px-2 font-medium">
+
+                            {/* Subtitle */}
+                            <p className="animate-tide-text-3 text-xs sm:text-sm text-[#faf7f2]/90 max-w-xl mx-auto leading-relaxed drop-shadow-sm px-2 font-medium">
                                 {settings.hero_description}
                             </p>
 
-                            <div className="pt-4 sm:pt-6">
+                            {/* Availability Bar */}
+                            <div className="animate-tide-text-3 pt-4 sm:pt-6">
                                 <AvailabilityBar
                                     onFilter={handleFilter}
                                     onReset={handleReset}
@@ -115,11 +145,12 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                                 />
                             </div>
 
+                            {/* Slide Controls */}
                             {heroImages.length > 1 && (
-                                <div className="pt-3 flex items-center justify-center gap-3">
+                                <div className="animate-tide-text-3 pt-3 flex items-center justify-center gap-3">
                                     <button
                                         onClick={() => setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length)}
-                                        className="p-1.5 rounded-full bg-[#1c120c]/60 backdrop-blur-md text-[#faf7f2] hover:text-[#c89349] transition cursor-pointer border border-[#c89349]/30"
+                                        className="p-1.5 rounded-full bg-[#1c120c]/60 backdrop-blur-md text-[#faf7f2] hover:text-[#c89349] transition cursor-pointer border border-[#c89349]/30 hover:scale-110 active:scale-95"
                                         aria-label="Previous image"
                                     >
                                         <ChevronLeft className="w-4 h-4" />
@@ -130,7 +161,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                                             <button
                                                 key={idx}
                                                 onClick={() => setCurrentSlide(idx)}
-                                                className={`h-1.5 rounded-full transition-all duration-500 cursor-pointer ${
+                                                className={`h-1.5 rounded-full transition-all duration-700 cursor-pointer ${
                                                     idx === currentSlide ? 'w-6 bg-[#c89349]' : 'w-1.5 bg-[#faf7f2]/40 hover:bg-[#faf7f2]'
                                                 }`}
                                                 aria-label={`Slide ${idx + 1}`}
@@ -140,7 +171,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
 
                                     <button
                                         onClick={() => setCurrentSlide((prev) => (prev + 1) % heroImages.length)}
-                                        className="p-1.5 rounded-full bg-[#1c120c]/60 backdrop-blur-md text-[#faf7f2] hover:text-[#c89349] transition cursor-pointer border border-[#c89349]/30"
+                                        className="p-1.5 rounded-full bg-[#1c120c]/60 backdrop-blur-md text-[#faf7f2] hover:text-[#c89349] transition cursor-pointer border border-[#c89349]/30 hover:scale-110 active:scale-95"
                                         aria-label="Next image"
                                     >
                                         <ChevronRight className="w-4 h-4" />
@@ -150,12 +181,13 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         </div>
                     </section>
 
-                    {/* About Us Preview Section */}
+                    {/* About Us Preview */}
                     <section id="about-preview" className="py-16 sm:py-24 px-6 bg-[#1c120c] border-t border-[#2b1d14]">
                         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                             <div className="space-y-6">
-                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#c89349] block">
-                  About {settings.site_name}
+                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-2">
+                  <BrandIcon iconName={settings.site_icon} className="w-4 h-4 text-[#c89349]" />
+                  <span>About {settings.site_name}</span>
                 </span>
                                 <h2 className="text-2xl sm:text-4xl font-extrabold text-[#faf7f2] tracking-tight leading-snug">
                                     {settings.about_title || 'Crafted for Serenity & Luxury'}
@@ -166,7 +198,7 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                                 <div className="pt-2">
                                     <Link
                                         href="/about"
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#c89349] text-[#1c120c] text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#b07d37] transition active:scale-95 shadow-md cursor-pointer"
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#c89349] text-[#1c120c] text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#b07d37] transition hover:scale-105 active:scale-95 shadow-md cursor-pointer"
                                     >
                                         <span>Read Our Full Story</span>
                                         <ArrowRight className="w-4 h-4 text-[#1c120c]" />
@@ -174,18 +206,19 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                                 </div>
                             </div>
 
-                            <div className="relative aspect-4/3 rounded-3xl overflow-hidden border border-[#e6c898]/30 shadow-xl">
+                            <div className="relative aspect-4/3 rounded-3xl overflow-hidden border border-[#e6c898]/30 shadow-xl group cursor-pointer">
                                 <Image
                                     src={settings.about_image_url || DEFAULT_ABOUT_IMAGE}
                                     alt={`About ${settings.site_name}`}
                                     fill
-                                    className="object-cover"
+                                    className="object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"
                                 />
+                                <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-700" />
                             </div>
                         </div>
                     </section>
 
-                    {/* Seamless Resort Story Section */}
+                    {/* Resort Experience Story */}
                     <section id="experience" className="bg-[#1c120c]">
                         <div className="py-16 sm:py-24 px-6 text-center">
                             <div className="max-w-3xl mx-auto space-y-6">
@@ -199,12 +232,12 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                         </div>
 
                         {storyBanner && (
-                            <div className="relative h-[320px] sm:h-[500px] w-full overflow-hidden">
+                            <div className="relative h-[320px] sm:h-[500px] w-full overflow-hidden group">
                                 <Image
                                     src={storyBanner}
                                     alt="Seaview Experience Banner"
                                     fill
-                                    className="object-cover"
+                                    className="object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-b from-[#1c120c] via-transparent to-[#1c120c]" />
                             </div>
@@ -225,7 +258,6 @@ export function HomeClient({ initialRooms, settings }: HomeClientProps) {
                 </div>
             </div>
 
-            {/* Shared Footer Component */}
             <Footer settings={settings} />
         </div>
     );
