@@ -7,8 +7,8 @@ import { HomeClient } from '@/modules/home/components/HomeClient';
 export async function generateMetadata() {
   const settings = await getSiteSettings();
   return {
-    title: `${settings.site_name} | ${settings.hero_subtitle}`,
-    description: settings.hero_description,
+    title: `${settings.site_name} | Executive Coastal Kubo Villas & Resort`,
+    description: settings.hero_description || 'Book your private stay today and experience premium comfort, breathtaking golden hours, and authentic local hospitality.',
   };
 }
 

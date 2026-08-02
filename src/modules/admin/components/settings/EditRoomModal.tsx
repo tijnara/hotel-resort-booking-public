@@ -4,30 +4,31 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { X, Loader2, Save, Upload, Trash2, Plus, Image as ImageIcon } from 'lucide-react';
 import { createClient } from '@/modules/shared/lib/supabase/client';
-import { updateRoomAction } from '../../actions/roomActions';
+import { updateRoomAction, createRoomAction } from '../../actions/roomActions';
 import type { Room } from '@/modules/shared/types/database.types';
 
 interface EditRoomModalProps {
-    room: Room;
+    room: Room | null; // Pass null when creating a new villa
     isOpen: boolean;
     onClose: () => void;
 }
 
 export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
+    const isEditing = !!room;
+
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
-    const [name, setName] = useState(room.name);
-    const [tagline, setTagline] = useState(room.tagline || '');
-    const [description, setDescription] = useState(room.description);
-    const [pricePerNight, setPricePerNight] = useState(room.price_per_night);
-    const [maxGuests, setMaxGuests] = useState(room.max_guests);
-    const [bedType, setBedType] = useState(room.bed_type);
-    const [sizeSqm, setSizeSqm] = useState(room.size_sqm);
+    const [name, setName] = useState(room?.name || '');
+    const [tagline, setTagline] = useState(room?.tagline || '');
+    const [description, setDescription] = useState(room?.description || '');
+    const [pricePerNight, setPricePerNight] = useState(room?.price_per_night || 5000);
+    const [maxGuests, setMaxGuests] = useState(room?.max_guests || 2);
+    const [bedType, setBedType] = useState(room?.bed_type || '1 King Bed');
+    const [sizeSqm, setSizeSqm] = useState(room?.size_sqm || 35);
 
-    // Manage image array directly for previews & deletion
-    const [images, setImages] = useState<string[]>(room.images || []);
+    const [images, setImages] = useState<string[]>(room?.images || []);
     const [manualUrl, setManualUrl] = useState('');
 
     if (!isOpen) return null;
@@ -48,7 +49,6 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
             const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
             const filePath = `villas/${fileName}`;
 
-            // Upload file to Supabase 'room-images' bucket
             const { error: uploadError } = await supabase.storage
                 .from('room-images')
                 .upload(filePath, file);
@@ -59,7 +59,6 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                 return;
             }
 
-            // Get public URL
             const { data } = supabase.storage
                 .from('room-images')
                 .getPublicUrl(filePath);
@@ -71,17 +70,15 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
 
         setImages((prev) => [...prev, ...uploadedUrls]);
         setUploading(false);
-        e.target.value = ''; // Reset input
+        e.target.value = '';
     };
 
-    // Add manual URL input
     const handleAddManualUrl = () => {
         if (!manualUrl.trim()) return;
         setImages((prev) => [...prev, manualUrl.trim()]);
         setManualUrl('');
     };
 
-    // Remove image from preview list
     const handleRemoveImage = (indexToRemove: number) => {
         setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
     };
@@ -97,7 +94,7 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
             return;
         }
 
-        const res = await updateRoomAction(room.id, {
+        const roomPayload = {
             name,
             tagline,
             description,
@@ -106,14 +103,18 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
             bed_type: bedType,
             size_sqm: Number(sizeSqm),
             images,
-        });
+        };
+
+        const res = isEditing && room
+            ? await updateRoomAction(room.id, roomPayload)
+            : await createRoomAction(roomPayload);
 
         setLoading(false);
 
         if (res.success) {
             onClose();
         } else {
-            setErrorMsg(res.message || 'Failed to update room details.');
+            setErrorMsg(res.message || 'Failed to save villa details.');
         }
     };
 
@@ -124,12 +125,16 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                 {/* Modal Header */}
                 <div className="flex justify-between items-center border-b border-[#e6c898]/40 pb-4">
                     <div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Management</span>
-                        <h3 className="text-xl font-bold text-[#1c120c]">Edit {room.name}</h3>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">
+                            {isEditing ? 'Management' : 'New Accommodation'}
+                        </span>
+                        <h3 className="text-xl font-bold text-[#1c120c]">
+                            {isEditing ? `Edit ${room?.name}` : 'Add New Kubo Villa'}
+                        </h3>
                     </div>
                     <button
                         onClick={onClose}
-                        className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-[#e6c898]/30 text-[#1c120c]"
+                        className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-[#e6c898]/30 text-[#1c120c] cursor-pointer"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -150,6 +155,7 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                                 required
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
+                                placeholder="e.g. Executive Kubo Suite"
                                 className="w-full text-xs font-semibold text-[#1c120c] outline-none"
                             />
                         </div>
@@ -173,6 +179,7 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                             rows={3}
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Handcrafted bamboo suite featuring panoramic oceanfront views..."
                             className="w-full text-xs font-medium text-[#1c120c] outline-none resize-none leading-relaxed"
                         />
                     </div>
@@ -234,7 +241,6 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                                 <h4 className="text-xs font-bold text-[#1c120c]">Villa Photos & Images ({images.length})</h4>
                             </div>
 
-                            {/* Upload Button */}
                             <label className="cursor-pointer min-h-[40px] px-4 bg-[#c89349] text-[#1c120c] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 hover:bg-[#b07d37] transition active:scale-95">
                                 {uploading ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -269,7 +275,7 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveImage(idx)}
-                                            className="absolute top-1.5 right-1.5 w-7 h-7 bg-rose-600 text-white rounded-full flex items-center justify-center opacity-90 sm:opacity-0 group-hover:opacity-100 transition shadow-md"
+                                            className="absolute top-1.5 right-1.5 w-7 h-7 bg-rose-600 text-white rounded-full flex items-center justify-center opacity-90 sm:opacity-0 group-hover:opacity-100 transition shadow-md cursor-pointer"
                                             title="Remove image"
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
@@ -284,7 +290,6 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                             </div>
                         )}
 
-                        {/* Manual URL Input Fallback */}
                         <div className="pt-2 border-t border-[#faf7f2] flex items-center gap-2">
                             <input
                                 type="url"
@@ -296,7 +301,7 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                             <button
                                 type="button"
                                 onClick={handleAddManualUrl}
-                                className="min-h-[38px] px-4 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase rounded-xl flex items-center gap-1 hover:bg-[#2b1d14] transition"
+                                className="min-h-[38px] px-4 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase rounded-xl flex items-center gap-1 hover:bg-[#2b1d14] transition cursor-pointer shrink-0"
                             >
                                 <Plus className="w-4 h-4 text-[#c89349]" />
                                 <span>Add</span>
@@ -308,7 +313,7 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="w-1/2 h-12 bg-white text-[#1c120c] border border-[#e6c898]/40 font-bold uppercase tracking-widest text-xs rounded-xl hover:bg-slate-50 transition"
+                            className="w-1/2 h-12 bg-white text-[#1c120c] border border-[#e6c898]/40 font-bold uppercase tracking-widest text-xs rounded-xl hover:bg-slate-50 transition cursor-pointer"
                         >
                             Cancel
                         </button>
@@ -316,12 +321,12 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                         <button
                             type="submit"
                             disabled={loading || uploading}
-                            className="w-1/2 h-12 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition disabled:opacity-50"
+                            className="w-1/2 h-12 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition disabled:opacity-50 cursor-pointer"
                         >
                             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                                 <>
                                     <Save className="w-4 h-4 text-[#c89349]" />
-                                    <span>Save Changes</span>
+                                    <span>{isEditing ? 'Save Changes' : 'Create Villa'}</span>
                                 </>
                             )}
                         </button>
