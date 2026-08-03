@@ -13,6 +13,8 @@ const CreateBookingSchema = z.object({
     checkOut: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid check-out date.'),
     guestsCount: z.number().int().min(1, 'At least 1 guest is required.'),
     totalPrice: z.number().positive('Total price must be greater than zero.'),
+    paymentMethod: z.enum(['gcash', 'bank']).default('gcash'),
+    receiptUrl: z.string().optional(),
 }).refine(
     (data) => new Date(data.checkOut) > new Date(data.checkIn),
     {
@@ -30,10 +32,11 @@ interface CreateBookingPayload {
     checkOut: string;
     guestsCount: number;
     totalPrice: number;
+    paymentMethod: 'gcash' | 'bank';
+    receiptUrl?: string;
 }
 
 export async function createBookingAction(rawData: CreateBookingPayload) {
-    // 1. Validate payload
     const validation = CreateBookingSchema.safeParse(rawData);
     if (!validation.success) {
         return {
@@ -45,7 +48,6 @@ export async function createBookingAction(rawData: CreateBookingPayload) {
     const data = validation.data;
     const supabase = await createClient();
 
-    // 2. Fetch room details
     const { data: roomData } = await supabase
         .from('rooms')
         .select('name')
@@ -54,7 +56,6 @@ export async function createBookingAction(rawData: CreateBookingPayload) {
 
     const roomName = roomData?.name || 'Kubo Villa';
 
-    // 3. Insert reservation into Supabase with 'pending' status
     const { data: insertedBooking, error } = await supabase
         .from('bookings')
         .insert([
@@ -67,7 +68,9 @@ export async function createBookingAction(rawData: CreateBookingPayload) {
                 check_out: data.checkOut,
                 guests_count: data.guestsCount,
                 total_price: data.totalPrice,
-                status: 'pending', // Initial status set to pending
+                payment_method: data.paymentMethod,
+                receipt_url: data.receiptUrl || null,
+                status: 'pending',
             },
         ])
         .select('id')
@@ -87,7 +90,7 @@ export async function createBookingAction(rawData: CreateBookingPayload) {
 
     const bookingRef = insertedBooking?.id ? insertedBooking.id.slice(0, 8).toUpperCase() : 'SEAVIEW';
 
-    // 4. Send Stage 1 "Request Received (Pending Review)" Email
+    // Send Stage 1 Email with Payment Method
     sendRequestReceivedEmail({
         to: data.guestEmail,
         guestName: data.guestName,
@@ -96,6 +99,7 @@ export async function createBookingAction(rawData: CreateBookingPayload) {
         checkIn: data.checkIn,
         checkOut: data.checkOut,
         totalPrice: data.totalPrice,
+        paymentMethod: data.paymentMethod,
     }).catch((err) => console.error('Stage 1 Email Error:', err));
 
     return { success: true, bookingRef };

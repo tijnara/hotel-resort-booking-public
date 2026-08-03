@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { X, Calendar as CalendarIcon, Users, CheckCircle2, AlertCircle, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Users, CheckCircle2, AlertCircle, Loader2, ChevronLeft, ChevronRight, Upload, QrCode, Building2, ImageIcon } from 'lucide-react';
 import { createBookingAction } from '@/modules/bookings/actions/createBooking';
 import { getBookedDatesForRoomAction, BookedDateRange } from '@/modules/bookings/actions/getRoomBookings';
 import { getOccupiedDatesSet, isRangeOverlapping } from '@/modules/shared/lib/dateUtils';
+import { createClient } from '@/modules/shared/lib/supabase/client';
 import type { Room } from '@/modules/shared/types/database.types';
 
 type ExtendedRoom = Room & {
@@ -35,6 +36,11 @@ export function CheckoutDrawer({
     const [guestPhone, setGuestPhone] = useState('');
     const [guestsCount, setGuestsCount] = useState(1);
 
+    // Payment & Receipt States
+    const [paymentMethod, setPaymentMethod] = useState<'gcash' | 'bank'>('gcash');
+    const [receiptFile, setReceiptFile] = useState<File | null>(null);
+    const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+
     const [bookedRanges, setBookedRanges] = useState<BookedDateRange[]>([]);
     const [loadingBookings, setLoadingBookings] = useState(false);
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -55,6 +61,8 @@ export function CheckoutDrawer({
         setCheckOut(initialCheckOut);
         setErrorMessage(null);
         setIsSuccess(false);
+        setReceiptFile(null);
+        setReceiptPreview(null);
         setLoadingBookings(true);
     } else if (!isOpen && prevSync.isOpen) {
         setPrevSync({ isOpen: false, roomId: prevSync.roomId });
@@ -110,6 +118,14 @@ export function CheckoutDrawer({
     const nights = calcNights();
     const totalPrice = nights * (room.price_per_night || 0);
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setReceiptFile(file);
+            setReceiptPreview(URL.createObjectURL(file));
+        }
+    };
+
     // Handle custom date clicks in calendar dropdown
     const handleDateClick = (dateStr: string) => {
         setErrorMessage(null);
@@ -151,25 +167,62 @@ export function CheckoutDrawer({
             return;
         }
 
+        if (!receiptFile) {
+            setErrorMessage('Please upload a screenshot or photo of your payment receipt.');
+            return;
+        }
+
         setIsSubmitting(true);
 
-        const res = await createBookingAction({
-            roomId: room.id,
-            guestName,
-            guestEmail,
-            guestPhone,
-            checkIn,
-            checkOut,
-            guestsCount,
-            totalPrice,
-        });
+        try {
+            const supabase = createClient();
 
-        setIsSubmitting(false);
+            // 1. Upload receipt to Supabase 'receipts' bucket
+            const fileExt = receiptFile.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+            const filePath = `receipts/${fileName}`;
 
-        if (res.success) {
-            setIsSuccess(true);
-        } else {
-            setErrorMessage(res.message || 'Failed to complete booking.');
+            const { error: uploadErr } = await supabase.storage
+                .from('receipts')
+                .upload(filePath, receiptFile);
+
+            if (uploadErr) {
+                setErrorMessage(`Receipt upload failed: ${uploadErr.message}`);
+                setIsSubmitting(false);
+                return;
+            }
+
+            // 2. Get Public URL
+            const { data: urlData } = supabase.storage
+                .from('receipts')
+                .getPublicUrl(filePath);
+
+            const uploadedReceiptUrl = urlData.publicUrl;
+
+            // 3. Create booking with receipt URL and selected payment method
+            const res = await createBookingAction({
+                roomId: room.id,
+                guestName,
+                guestEmail,
+                guestPhone,
+                checkIn,
+                checkOut,
+                guestsCount,
+                totalPrice,
+                paymentMethod, // Pass payment channel selected by guest
+                receiptUrl: uploadedReceiptUrl,
+            });
+
+            setIsSubmitting(false);
+
+            if (res.success) {
+                setIsSuccess(true);
+            } else {
+                setErrorMessage(res.message || 'Failed to complete booking.');
+            }
+        } catch (err: any) {
+            setIsSubmitting(false);
+            setErrorMessage(err.message || 'Payment submission failed.');
         }
     };
 
@@ -204,9 +257,9 @@ export function CheckoutDrawer({
                             <CheckCircle2 className="w-10 h-10" />
                         </div>
                         <div className="space-y-2">
-                            <h3 className="text-2xl font-bold text-[#1c120c]">Reservation Confirmed!</h3>
+                            <h3 className="text-2xl font-bold text-[#1c120c]">Reservation Submitted!</h3>
                             <p className="text-xs text-[#2b1d14]/70 max-w-xs mx-auto leading-relaxed">
-                                Thank you, <span className="font-bold text-[#1c120c]">{guestName}</span>. Your stay at <span className="font-bold text-[#1c120c]">{room.name}</span> from {checkIn} to {checkOut} has been booked.
+                                Thank you, <span className="font-bold text-[#1c120c]">{guestName}</span>. Your payment receipt for <span className="font-bold text-[#1c120c]">{room.name}</span> ({checkIn} to {checkOut}) has been uploaded. Our front desk will verify your receipt and send your booking confirmation email shortly.
                             </p>
                         </div>
                         <button
@@ -393,6 +446,80 @@ export function CheckoutDrawer({
                             </div>
                         </div>
 
+                        {/* Payment Details Selector */}
+                        <div className="bg-white p-4 rounded-2xl border border-[#e6c898]/40 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Payment Instructions</span>
+                                <span className="text-xs font-extrabold text-[#1c120c]">Total: ₱{totalPrice.toLocaleString()}</span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setPaymentMethod('gcash')}
+                                    className={`p-2.5 rounded-xl text-xs font-bold uppercase flex items-center justify-center gap-1.5 cursor-pointer border ${
+                                        paymentMethod === 'gcash' ? 'bg-[#1c120c] text-[#faf7f2] border-[#1c120c]' : 'bg-[#faf7f2] text-[#1c120c]/70 border-[#e6c898]/40'
+                                    }`}
+                                >
+                                    <QrCode className="w-4 h-4 text-[#c89349]" />
+                                    <span>GCash / Maya</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setPaymentMethod('bank')}
+                                    className={`p-2.5 rounded-xl text-xs font-bold uppercase flex items-center justify-center gap-1.5 cursor-pointer border ${
+                                        paymentMethod === 'bank' ? 'bg-[#1c120c] text-[#faf7f2] border-[#1c120c]' : 'bg-[#faf7f2] text-[#1c120c]/70 border-[#e6c898]/40'
+                                    }`}
+                                >
+                                    <Building2 className="w-4 h-4 text-[#c89349]" />
+                                    <span>Bank Transfer</span>
+                                </button>
+                            </div>
+
+                            {paymentMethod === 'gcash' ? (
+                                <div className="p-3 bg-[#faf7f2] rounded-xl text-xs space-y-1 text-[#1c120c]">
+                                    <p className="font-bold text-[#c89349]">GCash / Maya Account:</p>
+                                    <p className="font-mono text-sm font-bold">0917-123-4567</p>
+                                    <p className="text-[11px] text-[#2b1d14]/70">Account Name: SEAVIEW RESORT</p>
+                                </div>
+                            ) : (
+                                <div className="p-3 bg-[#faf7f2] rounded-xl text-xs space-y-1 text-[#1c120c]">
+                                    <p className="font-bold text-[#c89349]">BDO Unibank Account:</p>
+                                    <p className="font-mono text-sm font-bold">0012-3456-7890</p>
+                                    <p className="text-[11px] text-[#2b1d14]/70">Account Name: SEAVIEW RESORT</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Upload Receipt Section */}
+                        <div className="bg-white p-4 rounded-2xl border border-[#e6c898]/40 space-y-3">
+                            <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest">
+                                Upload Payment Screenshot
+                            </label>
+
+                            <label className="border-2 border-dashed border-[#e6c898]/60 p-4 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-[#faf7f2] transition">
+                                {receiptPreview ? (
+                                    <div className="relative w-full h-32 rounded-lg overflow-hidden">
+                                        <Image src={receiptPreview} alt="Receipt preview" fill className="object-contain" />
+                                    </div>
+                                ) : (
+                                    <div className="text-center space-y-1">
+                                        <ImageIcon className="w-8 h-8 text-[#c89349] mx-auto" />
+                                        <p className="text-xs font-bold text-[#1c120c]">Click to upload receipt photo</p>
+                                        <p className="text-[10px] text-gray-400">JPG, PNG, or Screenshot</p>
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    required
+                                    onChange={handleFileChange}
+                                    className="hidden"
+                                />
+                            </label>
+                        </div>
+
                         {/* Price Summary Breakdown */}
                         {nights > 0 && (
                             <div className="p-4 bg-amber-50 rounded-2xl border border-[#e6c898]/60 space-y-2">
@@ -424,7 +551,10 @@ export function CheckoutDrawer({
                             {isSubmitting ? (
                                 <Loader2 className="w-5 h-5 animate-spin text-[#c89349]" />
                             ) : (
-                                <span>Confirm & Reserve Villa</span>
+                                <>
+                                    <Upload className="w-4 h-4 text-[#c89349]" />
+                                    <span>Submit Reservation & Receipt</span>
+                                </>
                             )}
                         </button>
                     </form>

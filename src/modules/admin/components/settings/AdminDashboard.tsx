@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2, Sliders, Save, CheckCircle2, Plus, Trash2, ShieldAlert, ChevronRight } from 'lucide-react';
+import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2, Sliders, Save, CheckCircle2, Plus, Trash2, ShieldAlert, ChevronRight, Image as ImageIcon, AlertTriangle, Settings } from 'lucide-react';
 import { updateBookingStatusAction } from '../../actions/adminActions';
 import { createStaffUserAction, updateStaffUserAction, deleteStaffUserAction } from '../../actions/userActions';
 import { updateSiteSettingsAction } from '../../actions/settingsActions';
@@ -21,6 +21,9 @@ export interface AdminBooking {
     check_out: string;
     guests_count?: number;
     total_price: number | string;
+    payment_method?: string | null;
+    receipt_url?: string | null;
+    cancellation_reason?: string | null;
     status: 'pending' | 'confirmed' | 'cancelled' | 'refunded';
     created_at: string;
     rooms?: {
@@ -47,6 +50,13 @@ interface AdminDashboardProps {
     userRole?: string;
 }
 
+const DEFAULT_REASONS = [
+    'Guest requested cancellation',
+    'Invalid or unverified payment receipt',
+    'Unpaid / Expired payment deadline',
+    'Double booking / Schedule conflict',
+];
+
 export function AdminDashboardComponent({
                                             initialBookings,
                                             initialStaff,
@@ -59,6 +69,17 @@ export function AdminDashboardComponent({
     const [mainTab, setMainTab] = useState<'bookings' | 'users' | 'villas' | 'settings'>('bookings');
     const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'refunded'>('all');
     const [loadingId, setLoadingId] = useState<string | null>(null);
+    const [viewingReceiptUrl, setViewingReceiptUrl] = useState<string | null>(null);
+
+    // Cancellation Reasons State
+    const [cancellationOptions, setCancellationOptions] = useState<string[]>(
+        siteSettings?.cancellation_reasons || DEFAULT_REASONS
+    );
+    const [cancelModalBookingId, setCancelModalBookingId] = useState<string | null>(null);
+    const [selectedReason, setSelectedReason] = useState<string>('');
+    const [otherReasonText, setOtherReasonText] = useState<string>('');
+    const [isManagingReasons, setIsManagingReasons] = useState(false);
+    const [newReasonInput, setNewReasonInput] = useState('');
 
     // Supabase Database-Backed Tab Names
     const DEFAULT_TAB_NAMES = {
@@ -76,7 +97,6 @@ export function AdminDashboardComponent({
     const [editingTabKey, setEditingTabKey] = useState<string | null>(null);
     const [savingTabKey, setSavingTabKey] = useState<string | null>(null);
 
-    // Save tab name changes to Supabase (Admins only)
     const handleSaveTabName = async (key: string) => {
         if (!isAdmin) return;
         setEditingTabKey(null);
@@ -84,16 +104,63 @@ export function AdminDashboardComponent({
 
         const updatedTabNames = { ...tabNames };
 
-        const res = await updateSiteSettingsAction({
+        await updateSiteSettingsAction({
             ...siteSettings,
             admin_tab_names: updatedTabNames,
         });
 
         setSavingTabKey(null);
+    };
+
+    // Save Updated Cancellation Reasons List (Admins Only)
+    const handleSaveCancellationReasons = async (newReasons: string[]) => {
+        setCancellationOptions(newReasons);
+        if (siteSettings) {
+            await updateSiteSettingsAction({
+                ...siteSettings,
+                cancellation_reasons: newReasons,
+            });
+        }
+    };
+
+    const handleAddReason = () => {
+        if (!newReasonInput.trim()) return;
+        const updated = [...cancellationOptions, newReasonInput.trim()];
+        handleSaveCancellationReasons(updated);
+        setNewReasonInput('');
+    };
+
+    const handleDeleteReason = (index: number) => {
+        const updated = cancellationOptions.filter((_, i) => i !== index);
+        handleSaveCancellationReasons(updated);
+    };
+
+    // Status Update Trigger
+    const handleStatusUpdate = async (id: string, status: 'confirmed' | 'cancelled' | 'pending' | 'refunded', reason?: string) => {
+        setLoadingId(id);
+        const res = await updateBookingStatusAction(id, status, reason);
+        setLoadingId(null);
 
         if (!res.success) {
-            alert(`Failed to save tab name in database: ${res.message}`);
+            alert(`Error updating reservation: ${res.message}`);
         }
+    };
+
+    const handleConfirmCancellation = async () => {
+        if (!cancelModalBookingId) return;
+
+        const finalReason = selectedReason === 'Other' ? otherReasonText : selectedReason;
+        if (!finalReason.trim()) {
+            alert('Please specify a reason for cancellation.');
+            return;
+        }
+
+        const id = cancelModalBookingId;
+        setCancelModalBookingId(null);
+        await handleStatusUpdate(id, 'cancelled', finalReason);
+
+        setSelectedReason('');
+        setOtherReasonText('');
     };
 
     // Villa Management States
@@ -101,15 +168,11 @@ export function AdminDashboardComponent({
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
     const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
 
-    // Villas Page Header Edit States
     const [villasTitle, setVillasTitle] = useState(siteSettings?.villas_title || 'Handcrafted Kubo Villas');
-    const [villasDescription, setVillasDescription] = useState(
-        siteSettings?.villas_description || 'Explore our executive beachfront suites combining traditional Filipino craftsmanship with modern minimalist luxury.'
-    );
+    const [villasDescription, setVillasDescription] = useState(siteSettings?.villas_description || '');
     const [savingVillasHeader, setSavingVillasHeader] = useState(false);
     const [villasHeaderMsg, setVillasHeaderMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    // User Creation & Edit States
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -117,7 +180,6 @@ export function AdminDashboardComponent({
     const [userLoading, setUserLoading] = useState(false);
     const [userMsg, setUserMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    // Edit Existing User State
     const [editingUser, setEditingUser] = useState<StaffUser | null>(null);
     const [editFullName, setEditFullName] = useState('');
     const [editEmail, setEditEmail] = useState('');
@@ -145,17 +207,6 @@ export function AdminDashboardComponent({
             minute: '2-digit',
             hour12: true,
         });
-    };
-
-    // Confirm, Cancel, Refund reservation actions (Allowed for ALL staff roles)
-    const handleStatusUpdate = async (id: string, status: 'confirmed' | 'cancelled' | 'pending' | 'refunded') => {
-        setLoadingId(id);
-        const res = await updateBookingStatusAction(id, status);
-        setLoadingId(null);
-
-        if (!res.success) {
-            alert(`Error updating reservation: ${res.message}`);
-        }
     };
 
     const handleSaveVillasHeader = async (e: React.FormEvent) => {
@@ -264,7 +315,6 @@ export function AdminDashboardComponent({
         <div className="space-y-8">
             {/* Top View Selector Container */}
             <div className="space-y-2">
-                {/* 📱 Mobile Indicator for Scrollable Tabs */}
                 <div className="flex items-center justify-between sm:hidden text-[10px] font-bold uppercase tracking-widest text-[#c89349]">
                     <span>Control Sections</span>
                     <span className="flex items-center gap-1 bg-[#c89349]/15 px-2.5 py-1 rounded-full text-[#1c120c]">
@@ -273,7 +323,6 @@ export function AdminDashboardComponent({
                     </span>
                 </div>
 
-                {/* Database-Backed Scrollable Tab Navigation */}
                 <div className="flex items-center gap-3 border-b border-[#e6c898]/40 pb-4 overflow-x-auto [scrollbar-width:none]">
                     {[
                         { key: 'bookings', icon: Clock },
@@ -325,7 +374,6 @@ export function AdminDashboardComponent({
                                             <span>{tabNames[key]}</span>
                                         </button>
 
-                                        {/* Rename pencil button visible ONLY to Administrators */}
                                         {isAdmin && (
                                             <button
                                                 onClick={(e) => {
@@ -346,10 +394,10 @@ export function AdminDashboardComponent({
                 </div>
             </div>
 
-            {/* TAB 1: Reservations & Payments (Open to ALL staff roles) */}
+            {/* TAB 1: Reservations & Payments */}
             {mainTab === 'bookings' ? (
                 <>
-                    {/* Overview Stat Cards */}
+                    {/* Stat Cards */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="bg-white p-5 rounded-2xl border border-[#e6c898]/40 shadow-xs">
                             <div className="flex items-center justify-between text-[#c89349] mb-2">
@@ -407,7 +455,7 @@ export function AdminDashboardComponent({
                             {filteredBookings.map((b) => (
                                 <div key={b.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             <span className="font-mono text-xs font-bold text-[#c89349]">#{b.id.slice(0, 8).toUpperCase()}</span>
                                             <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
                                                 b.status === 'confirmed' ? 'bg-[#2d5a43]/10 text-[#2d5a43]' :
@@ -417,6 +465,12 @@ export function AdminDashboardComponent({
                                             }`}>
                                                 {b.status}
                                             </span>
+
+                                            {b.payment_method && (
+                                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-gray-100 text-gray-700">
+                                                    {b.payment_method === 'gcash' ? 'GCash / Maya' : 'Bank Transfer'}
+                                                </span>
+                                            )}
                                         </div>
 
                                         <h4 className="font-bold text-base text-[#1c120c]">{b.guest_name}</h4>
@@ -426,9 +480,28 @@ export function AdminDashboardComponent({
                                             <strong>{b.rooms?.name || 'Kubo Villa'}</strong> • {b.check_in} to {b.check_out} ({b.guests_count || 1} {b.guests_count === 1 ? 'Guest' : 'Guests'})
                                         </p>
 
-                                        <div className="flex items-center gap-1.5 text-[11px] text-[#c89349] font-medium pt-1">
-                                            <Clock className="w-3.5 h-3.5" />
-                                            <span>Booked on: {formatBookingTimestamp(b.created_at)}</span>
+                                        {/* Display Reason if Cancelled */}
+                                        {b.status === 'cancelled' && b.cancellation_reason && (
+                                            <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 px-3 py-1 rounded-xl mt-1 inline-block font-medium">
+                                                <strong>Cancellation Reason:</strong> {b.cancellation_reason}
+                                            </p>
+                                        )}
+
+                                        <div className="flex items-center gap-2 pt-1 flex-wrap">
+                                            <div className="flex items-center gap-1.5 text-[11px] text-[#c89349] font-medium">
+                                                <Clock className="w-3.5 h-3.5" />
+                                                <span>Booked on: {formatBookingTimestamp(b.created_at)}</span>
+                                            </div>
+
+                                            {b.receipt_url && (
+                                                <button
+                                                    onClick={() => setViewingReceiptUrl(b.receipt_url || null)}
+                                                    className="px-2.5 py-0.5 bg-[#c89349]/15 text-[#1c120c] text-[10px] font-bold uppercase tracking-wider rounded-lg border border-[#c89349]/30 flex items-center gap-1 hover:bg-[#c89349]/30 transition cursor-pointer"
+                                                >
+                                                    <ImageIcon className="w-3 h-3 text-[#c89349]" />
+                                                    <span>View Receipt</span>
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
 
@@ -447,7 +520,6 @@ export function AdminDashboardComponent({
                                                 </span>
                                             ) : (
                                                 <>
-                                                    {/* Confirm button */}
                                                     {b.status === 'pending' && (
                                                         <button
                                                             onClick={() => handleStatusUpdate(b.id, 'confirmed')}
@@ -458,10 +530,13 @@ export function AdminDashboardComponent({
                                                         </button>
                                                     )}
 
-                                                    {/* Cancel button */}
+                                                    {/* Open Cancellation Modal */}
                                                     {b.status !== 'cancelled' && (
                                                         <button
-                                                            onClick={() => handleStatusUpdate(b.id, 'cancelled')}
+                                                            onClick={() => {
+                                                                setCancelModalBookingId(b.id);
+                                                                setSelectedReason(cancellationOptions[0] || '');
+                                                            }}
                                                             className="min-h-[40px] px-3 bg-rose-100 text-rose-800 text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-rose-200 transition active:scale-95 cursor-pointer border border-rose-200"
                                                         >
                                                             <X className="w-4 h-4" />
@@ -469,7 +544,6 @@ export function AdminDashboardComponent({
                                                         </button>
                                                     )}
 
-                                                    {/* Process Refund button */}
                                                     {b.status === 'cancelled' && (
                                                         <button
                                                             onClick={() => handleStatusUpdate(b.id, 'refunded')}
@@ -489,7 +563,7 @@ export function AdminDashboardComponent({
                     </div>
                 </>
             ) : mainTab === 'villas' ? (
-                /* TAB 2: Kubo Villa Management Section */
+                /* TAB 2: Villa Management */
                 <div className="space-y-6">
                     <div className="flex items-center justify-between flex-wrap gap-4 bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs">
                         <div>
@@ -498,7 +572,6 @@ export function AdminDashboardComponent({
                             <p className="text-xs text-[#2b1d14]/60">Manage pricing, photos, guest capacity, and room details.</p>
                         </div>
 
-                        {/* Add New Villa Button (ADMINS ONLY) */}
                         {isAdmin && (
                             <button
                                 onClick={() => {
@@ -513,7 +586,6 @@ export function AdminDashboardComponent({
                         )}
                     </div>
 
-                    {/* Edit Header Form (ADMINS ONLY) */}
                     {isAdmin && (
                         <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-4">
                             <div>
@@ -574,71 +646,38 @@ export function AdminDashboardComponent({
                                 <div>
                                     <div className="relative aspect-16/9 w-full bg-[#faf7f2]">
                                         {room.images?.[0] && (
-                                            <Image
-                                                src={room.images[0]}
-                                                alt={room.name}
-                                                fill
-                                                className="object-cover"
-                                            />
+                                            <Image src={room.images[0]} alt={room.name} fill className="object-cover" />
                                         )}
                                         <div className="absolute top-3 right-3 bg-[#1c120c]/85 backdrop-blur-md text-[#faf7f2] text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-[#c89349]/30">
                                             {room.bed_type}
                                         </div>
                                     </div>
-
                                     <div className="p-5">
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] block mb-1">
                                             {room.tagline || 'Kubo Villa'}
                                         </span>
                                         <h3 className="font-bold text-lg text-[#1c120c]">{room.name}</h3>
-                                        <p className="text-xs text-[#2b1d14]/70 mt-2 line-clamp-2 leading-relaxed">
-                                            {room.description}
-                                        </p>
-
-                                        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-[#faf7f2] text-xs font-medium text-[#2b1d14]/70">
-                                            <span className="flex items-center gap-1.5">
-                                                <Users className="w-3.5 h-3.5 text-[#c89349]" />
-                                                Max {room.max_guests} Guests
-                                            </span>
-                                            <span className="flex items-center gap-1.5">
-                                                <Maximize2 className="w-3.5 h-3.5 text-[#c89349]" />
-                                                {room.size_sqm} m²
-                                            </span>
-                                        </div>
+                                        <p className="text-xs text-[#2b1d14]/70 mt-2 line-clamp-2 leading-relaxed">{room.description}</p>
                                     </div>
                                 </div>
 
-                                <div className="p-5 pt-0 border-t border-[#faf7f2] mt-2 flex items-center justify-between gap-2">
-                                    <div>
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#2b1d14]/50 block">Nightly Rate</span>
-                                        <span className="font-extrabold text-xl text-[#1c120c]">₱{Number(room.price_per_night).toLocaleString()}</span>
-                                    </div>
-
-                                    {/* Villa Action Buttons (ADMINS ONLY) */}
+                                <div className="p-5 pt-0 border-t border-[#faf7f2] mt-2 flex items-center justify-between">
+                                    <span className="font-extrabold text-xl text-[#1c120c]">₱{Number(room.price_per_night).toLocaleString()}</span>
                                     {isAdmin && (
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex gap-2">
                                             <button
-                                                onClick={() => {
-                                                    setSelectedRoom(room);
-                                                    setRoomModalOpen(true);
-                                                }}
-                                                className="min-h-[40px] px-4 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-1.5 hover:bg-[#2b1d14] active:scale-95 transition cursor-pointer"
+                                                onClick={() => { setSelectedRoom(room); setRoomModalOpen(true); }}
+                                                className="px-3 py-2 bg-[#1c120c] text-white text-xs font-bold rounded-xl flex items-center gap-1"
                                             >
                                                 <Edit3 className="w-3.5 h-3.5 text-[#c89349]" />
                                                 <span>Edit</span>
                                             </button>
-
                                             <button
                                                 onClick={() => handleDeleteRoom(room.id, room.name)}
                                                 disabled={deletingRoomId === room.id}
-                                                className="min-h-[40px] px-3 bg-rose-50 text-rose-700 text-xs font-bold rounded-xl hover:bg-rose-100 transition active:scale-95 cursor-pointer border border-rose-200 disabled:opacity-50"
-                                                title="Delete Villa"
+                                                className="px-3 py-2 bg-rose-50 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 hover:bg-rose-100"
                                             >
-                                                {deletingRoomId === room.id ? (
-                                                    <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
-                                                ) : (
-                                                    <Trash2 className="w-4 h-4" />
-                                                )}
+                                                {deletingRoomId === room.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                             </button>
                                         </div>
                                     )}
@@ -648,26 +687,17 @@ export function AdminDashboardComponent({
                     </div>
                 </div>
             ) : mainTab === 'settings' ? (
-                /* TAB 3: Site Content & Branding (ADMINS ONLY) */
                 isAdmin ? (
-                    siteSettings ? (
-                        <SiteSettingsForm settings={siteSettings} />
-                    ) : (
-                        <div className="p-8 text-center text-xs text-[#2b1d14]/60">Loading site settings...</div>
-                    )
+                    siteSettings ? <SiteSettingsForm settings={siteSettings} /> : <div className="p-8 text-center text-xs text-[#2b1d14]/60">Loading settings...</div>
                 ) : (
-                    <div className="bg-white p-12 rounded-3xl border border-[#e6c898]/40 text-center space-y-3">
+                    <div className="bg-white p-12 rounded-3xl border text-center space-y-3">
                         <ShieldAlert className="w-10 h-10 mx-auto text-[#c89349]" />
                         <h3 className="font-bold text-lg text-[#1c120c]">Administrator Access Required</h3>
-                        <p className="text-xs text-[#2b1d14]/60 max-w-md mx-auto">
-                            Editing site-wide branding, colors, logos, and general settings is restricted to Administrators.
-                        </p>
                     </div>
                 )
             ) : (
-                /* TAB 4: Users & Staff Directory & Management */
+                /* TAB 4: Staff Directory & Management */
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Registration Form (ADMINS ONLY) */}
                     {isAdmin ? (
                         <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-4">
                             <div>
@@ -676,9 +706,7 @@ export function AdminDashboardComponent({
                             </div>
 
                             {userMsg && (
-                                <div className={`p-3 text-xs rounded-xl ${
-                                    userMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
-                                }`}>
+                                <div className={`p-3 text-xs rounded-xl ${userMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`}>
                                     {userMsg.text}
                                 </div>
                             )}
@@ -686,58 +714,29 @@ export function AdminDashboardComponent({
                             <form onSubmit={handleCreateUser} className="space-y-3">
                                 <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
                                     <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Full Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="Maria Santos"
-                                        value={fullName}
-                                        onChange={(e) => setFullName(e.target.value)}
-                                        className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none"
-                                    />
+                                    <input type="text" required placeholder="Maria Santos" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none" />
                                 </div>
 
                                 <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
                                     <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Email</label>
-                                    <input
-                                        type="email"
-                                        required
-                                        placeholder="staff@seaview.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none"
-                                    />
+                                    <input type="email" required placeholder="staff@seaview.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none" />
                                 </div>
 
                                 <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
                                     <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Password</label>
-                                    <input
-                                        type="password"
-                                        required
-                                        placeholder="••••••••"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none"
-                                    />
+                                    <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none" />
                                 </div>
 
                                 <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
                                     <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Access Role</label>
-                                    <select
-                                        value={role}
-                                        onChange={(e) => setRole(e.target.value)}
-                                        className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none cursor-pointer"
-                                    >
+                                    <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none cursor-pointer">
                                         <option value="staff">Front Desk Staff</option>
                                         <option value="manager">Resort Manager</option>
                                         <option value="admin">Administrator</option>
                                     </select>
                                 </div>
 
-                                <button
-                                    type="submit"
-                                    disabled={userLoading}
-                                    className="w-full h-12 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition cursor-pointer"
-                                >
+                                <button type="submit" disabled={userLoading} className="w-full h-12 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition cursor-pointer">
                                     {userLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Register User'}
                                 </button>
                             </form>
@@ -746,7 +745,6 @@ export function AdminDashboardComponent({
                         <div className="bg-white p-8 rounded-3xl border border-[#e6c898]/40 text-center space-y-2">
                             <ShieldAlert className="w-8 h-8 mx-auto text-[#c89349]" />
                             <h4 className="font-bold text-sm text-[#1c120c]">Administrator Restricted</h4>
-                            <p className="text-xs text-[#2b1d14]/60">Registering new staff accounts requires Administrator privileges.</p>
                         </div>
                     )}
 
@@ -761,41 +759,20 @@ export function AdminDashboardComponent({
                                 <div key={u.id} className="p-5 flex items-center justify-between flex-wrap gap-4">
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <h4 className="font-bold text-sm text-[#1c120c]">
-                                                {u.user_metadata?.full_name || u.email || 'Staff Member'}
-                                            </h4>
-                                            <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#c89349]/20 text-[#1c120c]">
-                                                {u.user_metadata?.role || 'Staff'}
-                                            </span>
+                                            <h4 className="font-bold text-sm text-[#1c120c]">{u.user_metadata?.full_name || u.email || 'Staff Member'}</h4>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#c89349]/20 text-[#1c120c]">{u.user_metadata?.role || 'Staff'}</span>
                                         </div>
                                         <p className="text-xs text-[#2b1d14]/60 mt-0.5">{u.email || 'No email provided'}</p>
-                                        <span className="text-[10px] text-[#2b1d14]/40 font-mono block mt-1">
-                                            Added: {new Date(u.created_at).toLocaleDateString()}
-                                        </span>
                                     </div>
 
-                                    {/* User Actions (ADMINS ONLY) */}
                                     {isAdmin && (
                                         <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => handleOpenEditUser(u)}
-                                                className="min-h-[36px] px-3.5 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-1 hover:bg-[#2b1d14] transition cursor-pointer"
-                                            >
+                                            <button onClick={() => handleOpenEditUser(u)} className="min-h-[36px] px-3.5 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-1 hover:bg-[#2b1d14] cursor-pointer">
                                                 <Edit3 className="w-3.5 h-3.5 text-[#c89349]" />
                                                 <span>Edit</span>
                                             </button>
-
-                                            <button
-                                                onClick={() => handleDeleteUser(u.id, u.email)}
-                                                disabled={deletingUserId === u.id}
-                                                className="min-h-[36px] px-3 bg-rose-50 text-rose-700 text-xs font-bold rounded-xl hover:bg-rose-100 transition cursor-pointer border border-rose-200 disabled:opacity-50"
-                                                title="Delete Account"
-                                            >
-                                                {deletingUserId === u.id ? (
-                                                    <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
-                                                ) : (
-                                                    <Trash2 className="w-4 h-4" />
-                                                )}
+                                            <button onClick={() => handleDeleteUser(u.id, u.email)} disabled={deletingUserId === u.id} className="min-h-[36px] px-3 bg-rose-50 text-rose-700 text-xs font-bold rounded-xl hover:bg-rose-100 cursor-pointer border border-rose-200">
+                                                {deletingUserId === u.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                             </button>
                                         </div>
                                     )}
@@ -806,16 +783,86 @@ export function AdminDashboardComponent({
                 </div>
             )}
 
+            {/* CANCELLATION REASON MODAL */}
+            {cancelModalBookingId && (
+                <div className="fixed inset-0 z-50 bg-[#1c120c]/80 backdrop-blur-xs flex items-center justify-center p-4">
+                    <div className="bg-white p-6 rounded-3xl max-w-lg w-full space-y-5 shadow-2xl relative border border-[#e6c898]/40 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                            <div className="flex items-center gap-2 text-rose-700">
+                                <AlertTriangle className="w-5 h-5" />
+                                <h3 className="text-lg font-bold text-[#1c120c]">Cancel Reservation</h3>
+                            </div>
+                            <button onClick={() => setCancelModalBookingId(null)} className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer">
+                                <X className="w-5 h-5 text-gray-700" />
+                            </button>
+                        </div>
+
+                        <p className="text-xs text-[#2b1d14]/70">Please select or specify the reason for cancelling this reservation:</p>
+
+                        <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                            {cancellationOptions.map((reason) => (
+                                <label key={reason} className={`flex items-center gap-2.5 p-3 rounded-2xl border text-xs font-semibold cursor-pointer transition ${selectedReason === reason ? 'bg-rose-50 border-rose-300 text-rose-900' : 'bg-[#faf7f2] border-transparent text-[#1c120c]'}`}>
+                                    <input type="radio" name="cancelReason" value={reason} checked={selectedReason === reason} onChange={() => setSelectedReason(reason)} className="accent-rose-600 cursor-pointer" />
+                                    <span>{reason}</span>
+                                </label>
+                            ))}
+
+                            <label className={`flex items-center gap-2.5 p-3 rounded-2xl border text-xs font-semibold cursor-pointer transition ${selectedReason === 'Other' ? 'bg-rose-50 border-rose-300 text-rose-900' : 'bg-[#faf7f2] border-transparent text-[#1c120c]'}`}>
+                                <input type="radio" name="cancelReason" value="Other" checked={selectedReason === 'Other'} onChange={() => setSelectedReason('Other')} className="accent-rose-600 cursor-pointer" />
+                                <span>Other (Enter Custom Reason)</span>
+                            </label>
+                        </div>
+
+                        {selectedReason === 'Other' && (
+                            <div className="space-y-1.5 animate-in fade-in duration-200">
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-rose-700">Specify Other Reason</label>
+                                <textarea rows={2} required placeholder="e.g., Guest requested date change, double booking..." value={otherReasonText} onChange={(e) => setOtherReasonText(e.target.value)} className="w-full text-xs font-semibold text-[#1c120c] bg-[#faf7f2] p-3 rounded-xl border border-rose-200 outline-none resize-none" />
+                            </div>
+                        )}
+
+                        {isAdmin && (
+                            <div className="pt-2 border-t border-gray-100">
+                                <button type="button" onClick={() => setIsManagingReasons(!isManagingReasons)} className="text-[11px] font-bold text-[#c89349] hover:underline flex items-center gap-1 cursor-pointer">
+                                    <Settings className="w-3.5 h-3.5" />
+                                    <span>{isManagingReasons ? 'Hide Reason Options Editor' : 'Manage Cancellation Options (Add/Delete)'}</span>
+                                </button>
+
+                                {isManagingReasons && (
+                                    <div className="mt-3 p-3 bg-[#faf7f2] rounded-2xl border border-[#e6c898]/40 space-y-3 animate-in fade-in duration-200">
+                                        <div className="flex gap-2">
+                                            <input type="text" placeholder="Add new cancellation reason..." value={newReasonInput} onChange={(e) => setNewReasonInput(e.target.value)} className="w-full text-xs bg-white p-2 rounded-xl border outline-none font-medium" />
+                                            <button type="button" onClick={handleAddReason} className="px-3 bg-[#1c120c] text-white text-xs font-bold rounded-xl hover:bg-[#2b1d14] cursor-pointer">Add</button>
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            {cancellationOptions.map((opt, idx) => (
+                                                <div key={idx} className="flex justify-between items-center bg-white p-2 rounded-lg text-xs font-medium border">
+                                                    <span className="truncate pr-2">{opt}</span>
+                                                    <button type="button" onClick={() => handleDeleteReason(idx)} className="text-rose-600 hover:text-rose-800 cursor-pointer p-0.5" title="Delete Reason">
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="flex gap-3 pt-2">
+                            <button type="button" onClick={() => setCancelModalBookingId(null)} className="w-1/2 h-11 bg-white text-[#1c120c] border border-gray-200 font-bold uppercase tracking-widest text-xs rounded-xl hover:bg-gray-50 transition cursor-pointer">Back</button>
+                            <button type="button" onClick={handleConfirmCancellation} className="w-1/2 h-11 bg-rose-700 text-white font-bold uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-1.5 hover:bg-rose-800 transition cursor-pointer shadow-md">
+                                <X className="w-4 h-4" />
+                                <span>Confirm Cancel</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Edit/Add Room Modal (ADMINS ONLY) */}
             {isAdmin && (
-                <EditRoomModal
-                    room={selectedRoom}
-                    isOpen={roomModalOpen}
-                    onClose={() => {
-                        setRoomModalOpen(false);
-                        setSelectedRoom(null);
-                    }}
-                />
+                <EditRoomModal room={selectedRoom} isOpen={roomModalOpen} onClose={() => { setRoomModalOpen(false); setSelectedRoom(null); }} />
             )}
 
             {/* Edit User Modal (ADMINS ONLY) */}
@@ -827,18 +874,13 @@ export function AdminDashboardComponent({
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Staff Access</span>
                                 <h3 className="text-xl font-bold text-[#1c120c]">Edit Staff User</h3>
                             </div>
-                            <button
-                                onClick={() => setEditingUser(null)}
-                                className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-[#e6c898]/30 text-[#1c120c] cursor-pointer"
-                            >
+                            <button onClick={() => setEditingUser(null)} className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-[#e6c898]/30 text-[#1c120c] cursor-pointer">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         {editUserMsg && (
-                            <div className={`mt-4 p-3 text-xs rounded-xl font-bold ${
-                                editUserMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
-                            }`}>
+                            <div className={`mt-4 p-3 text-xs rounded-xl font-bold ${editUserMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`}>
                                 {editUserMsg.text}
                             </div>
                         )}
@@ -846,33 +888,17 @@ export function AdminDashboardComponent({
                         <form onSubmit={handleUpdateUser} className="space-y-3 mt-4">
                             <div className="bg-white p-3 rounded-2xl border border-[#e6c898]/40">
                                 <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Full Name</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={editFullName}
-                                    onChange={(e) => setEditFullName(e.target.value)}
-                                    className="w-full text-xs font-semibold text-[#1c120c] outline-none"
-                                />
+                                <input type="text" required value={editFullName} onChange={(e) => setEditFullName(e.target.value)} className="w-full text-xs font-semibold text-[#1c120c] outline-none" />
                             </div>
 
                             <div className="bg-white p-3 rounded-2xl border border-[#e6c898]/40">
                                 <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Email</label>
-                                <input
-                                    type="email"
-                                    required
-                                    value={editEmail}
-                                    onChange={(e) => setEditEmail(e.target.value)}
-                                    className="w-full text-xs font-semibold text-[#1c120c] outline-none"
-                                />
+                                <input type="email" required value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full text-xs font-semibold text-[#1c120c] outline-none" />
                             </div>
 
                             <div className="bg-white p-3 rounded-2xl border border-[#e6c898]/40">
                                 <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Access Role</label>
-                                <select
-                                    value={editRole}
-                                    onChange={(e) => setEditRole(e.target.value)}
-                                    className="w-full text-xs font-semibold text-[#1c120c] outline-none cursor-pointer"
-                                >
+                                <select value={editRole} onChange={(e) => setEditRole(e.target.value)} className="w-full text-xs font-semibold text-[#1c120c] outline-none cursor-pointer">
                                     <option value="staff">Front Desk Staff</option>
                                     <option value="manager">Resort Manager</option>
                                     <option value="admin">Administrator</option>
@@ -880,41 +906,42 @@ export function AdminDashboardComponent({
                             </div>
 
                             <div className="bg-white p-3 rounded-2xl border border-[#e6c898]/40">
-                                <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">
-                                    New Password <span className="text-gray-400 font-normal">(Leave blank to keep current)</span>
-                                </label>
-                                <input
-                                    type="password"
-                                    placeholder="••••••••"
-                                    value={editPassword}
-                                    onChange={(e) => setEditPassword(e.target.value)}
-                                    className="w-full text-xs font-semibold text-[#1c120c] outline-none"
-                                />
+                                <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">New Password <span className="text-gray-400 font-normal">(Leave blank to keep current)</span></label>
+                                <input type="password" placeholder="••••••••" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="w-full text-xs font-semibold text-[#1c120c] outline-none" />
                             </div>
 
                             <div className="flex gap-3 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setEditingUser(null)}
-                                    className="w-1/2 h-11 bg-white text-[#1c120c] border border-[#e6c898]/40 font-bold uppercase tracking-widest text-xs rounded-xl hover:bg-slate-50 transition cursor-pointer"
-                                >
-                                    Cancel
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    disabled={editUserLoading}
-                                    className="w-1/2 h-11 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition disabled:opacity-50 cursor-pointer"
-                                >
-                                    {editUserLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                                        <>
-                                            <Save className="w-4 h-4 text-[#c89349]" />
-                                            <span>Save User</span>
-                                        </>
-                                    )}
+                                <button type="button" onClick={() => setEditingUser(null)} className="w-1/2 h-11 bg-white text-[#1c120c] border border-[#e6c898]/40 font-bold uppercase tracking-widest text-xs rounded-xl hover:bg-slate-50 transition cursor-pointer">Cancel</button>
+                                <button type="submit" disabled={editUserLoading} className="w-1/2 h-11 bg-[#1c120c] text-[#faf7f2] font-bold uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#2b1d14] transition disabled:opacity-50 cursor-pointer">
+                                    {editUserLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (<><Save className="w-4 h-4 text-[#c89349]" /><span>Save User</span></>)}
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* RECEIPT PREVIEW MODAL */}
+            {viewingReceiptUrl && (
+                <div className="fixed inset-0 z-50 bg-[#1c120c]/80 backdrop-blur-xs flex items-center justify-center p-4">
+                    <div className="bg-white p-5 rounded-3xl max-w-md w-full space-y-4 shadow-2xl relative">
+                        <div className="flex justify-between items-center border-b border-[#e6c898]/40 pb-3">
+                            <div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Payment Verification</span>
+                                <h4 className="text-sm font-bold text-[#1c120c]">Uploaded Payment Screenshot</h4>
+                            </div>
+                            <button onClick={() => setViewingReceiptUrl(null)} className="p-1.5 rounded-full bg-[#faf7f2] hover:bg-[#e6c898]/30 transition text-[#1c120c] cursor-pointer">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="relative aspect-3/4 w-full rounded-2xl overflow-hidden bg-[#faf7f2] border border-[#e6c898]/40">
+                            <Image src={viewingReceiptUrl} alt="Payment Receipt Screenshot" fill className="object-contain" />
+                        </div>
+
+                        <button onClick={() => setViewingReceiptUrl(null)} className="w-full py-3 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#2b1d14] transition cursor-pointer">
+                            Close Receipt
+                        </button>
                     </div>
                 </div>
             )}

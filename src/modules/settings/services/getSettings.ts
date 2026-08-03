@@ -17,6 +17,30 @@ export interface AboutFeature {
     description: string;
 }
 
+export interface PaymentMethodItem {
+    id: string;
+    name: string;
+    account_number: string;
+    account_name: string;
+    type: 'qr' | 'bank';
+    instructions?: string;
+}
+
+export interface EmailTemplateItem {
+    subject: string;
+    status_badge: string;
+    heading: string;
+    body_text: string;
+    footer_text: string;
+}
+
+export interface EmailTemplatesSettings {
+    request_received: EmailTemplateItem;
+    confirmed: EmailTemplateItem;
+    cancelled: EmailTemplateItem;
+    refunded: EmailTemplateItem;
+}
+
 export interface SiteSettings {
     id: string;
     site_name: string;
@@ -67,8 +91,11 @@ export interface SiteSettings {
     about_features_subtitle?: string;
     about_features_title?: string;
     about_features?: AboutFeature[];
-    // 💾 Database storage for custom Admin Tab Titles
+    // 💾 Database storage for custom Admin tab titles, reasons, payment methods, and emails
     admin_tab_names?: Record<string, string>;
+    cancellation_reasons?: string[];
+    payment_methods?: PaymentMethodItem[];
+    email_templates?: EmailTemplatesSettings;
 }
 
 const DEFAULT_HERO_IMAGES = [
@@ -114,6 +141,54 @@ const DEFAULT_ADMIN_TAB_NAMES = {
     users: 'Users & Staff',
 };
 
+const DEFAULT_PAYMENT_METHODS: PaymentMethodItem[] = [
+    {
+        id: 'gcash',
+        name: 'GCash / Maya',
+        account_number: '0917-123-4567',
+        account_name: 'SEAVIEW RESORT',
+        type: 'qr',
+    },
+    {
+        id: 'bank',
+        name: 'Bank Transfer (BDO)',
+        account_number: '0012-3456-7890',
+        account_name: 'SEAVIEW RESORT',
+        type: 'bank',
+    },
+];
+
+const DEFAULT_EMAIL_TEMPLATES: EmailTemplatesSettings = {
+    request_received: {
+        subject: 'Booking Request Received #{bookingRef} - Seaview Resort',
+        status_badge: 'Status: Pending Desk Review',
+        heading: 'Reservation Request Received',
+        body_text: 'Mabuhay {guestName}! We have received your staycation request for {roomName}. Our resort desk is currently verifying your payment.',
+        footer_text: 'Seaview Resort & Executive Kubo Suites • Coastal Highway, Philippines',
+    },
+    confirmed: {
+        subject: '[CONFIRMED] Official Reservation #{bookingRef} - Seaview Resort',
+        status_badge: 'Status: Stay Confirmed',
+        heading: 'Your Staycation is Confirmed!',
+        body_text: 'Great news {guestName}! Your payment has been verified and your stay at {roomName} is officially confirmed.',
+        footer_text: 'Seaview Resort & Executive Kubo Suites • Coastal Highway, Philippines',
+    },
+    cancelled: {
+        subject: 'Booking Cancelled #{bookingRef} - Seaview Resort',
+        status_badge: 'Status: Reservation Cancelled',
+        heading: 'Reservation Request Cancelled',
+        body_text: 'Dear {guestName}, we regret to inform you that your reservation request for {roomName} has been cancelled by our resort desk.',
+        footer_text: 'Seaview Resort & Executive Kubo Suites • Coastal Highway, Philippines',
+    },
+    refunded: {
+        subject: 'Refund Processed #{bookingRef} - Seaview Resort',
+        status_badge: 'Status: Refund Processed',
+        heading: 'Refund Confirmation',
+        body_text: 'Dear {guestName}, your refund request for booking #{bookingRef} ({roomName}) has been processed successfully.',
+        footer_text: 'Seaview Resort & Executive Kubo Suites • Coastal Highway, Philippines',
+    },
+};
+
 export async function getSiteSettings(): Promise<SiteSettings> {
     try {
         const supabase = await createClient();
@@ -148,6 +223,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
                 about_features: (data.about_features && data.about_features.length > 0) ? data.about_features : DEFAULT_ABOUT_FEATURES,
                 sanctuary_badge_text: data.sanctuary_badge_text || 'Modern Beachfront Staycation',
                 admin_tab_names: data.admin_tab_names || DEFAULT_ADMIN_TAB_NAMES,
+                payment_methods: (data.payment_methods && data.payment_methods.length > 0) ? data.payment_methods : DEFAULT_PAYMENT_METHODS,
+                email_templates: data.email_templates || DEFAULT_EMAIL_TEMPLATES,
             } as SiteSettings;
         }
     } catch (err) {
@@ -210,5 +287,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         about_features_title: 'The Seaview Difference',
         about_features: DEFAULT_ABOUT_FEATURES,
         admin_tab_names: DEFAULT_ADMIN_TAB_NAMES,
+        payment_methods: DEFAULT_PAYMENT_METHODS,
+        email_templates: DEFAULT_EMAIL_TEMPLATES,
     };
 }

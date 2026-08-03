@@ -32,7 +32,8 @@ export async function getAdminBookings() {
 
 export async function updateBookingStatusAction(
     bookingId: string,
-    newStatus: 'pending' | 'confirmed' | 'cancelled' | 'refunded'
+    newStatus: 'pending' | 'confirmed' | 'cancelled' | 'refunded',
+    cancellationReason?: string
 ) {
     if (!bookingId) {
         return { success: false, message: 'Invalid booking ID.' };
@@ -54,12 +55,15 @@ export async function updateBookingStatusAction(
         return { success: false, message: 'Booking record not found.' };
     }
 
-    // 2. Update status in Supabase
+    // 2. Prepare payload and update status/cancellation_reason in Supabase
+    const updatePayload: Record<string, any> = { status: newStatus };
+    if (newStatus === 'cancelled' && cancellationReason) {
+        updatePayload.cancellation_reason = cancellationReason;
+    }
+
     const { error: updateError } = await supabase
         .from('bookings')
-        .update({
-            status: newStatus
-        })
+        .update(updatePayload)
         .eq('id', bookingId);
 
     if (updateError) {
@@ -92,6 +96,7 @@ export async function updateBookingStatusAction(
                 checkIn: booking.check_in,
                 checkOut: booking.check_out,
                 totalPrice: Number(booking.total_price),
+                cancellationReason,
             });
         } else if (newStatus === 'refunded' && booking.status !== 'refunded') {
             await sendRefundEmail({
