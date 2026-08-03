@@ -1,9 +1,9 @@
-export const dynamic = 'force-dynamic';
-
 import { getRooms } from '@/modules/rooms/services/getRooms';
 import { getSiteSettings } from '@/modules/settings/services/getSettings';
 import { VillasClient } from '@/modules/rooms/components/VillasClient';
 import { filterAvailableRoomsAction } from '@/modules/rooms/actions/filterRooms';
+
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata() {
     const settings = await getSiteSettings();

@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { createClient as createAdminClient, type AdminUserAttributes } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 
 export async function createStaffUserAction(payload: {
@@ -36,7 +36,7 @@ export async function createStaffUserAction(payload: {
         return { success: false, message: error.message };
     }
 
-    revalidatePath('/admin');
+    revalidatePath('/admin', 'page');
     return { success: true, user: data.user };
 }
 
@@ -60,7 +60,7 @@ export async function updateStaffUserAction(payload: {
 
     const supabaseAdmin = createAdminClient(supabaseUrl, serviceRoleKey);
 
-    const updateAttributes: Record<string, any> = {
+    const updateAttributes: AdminUserAttributes = {
         email: payload.email,
         user_metadata: {
             full_name: payload.fullName,
@@ -78,7 +78,7 @@ export async function updateStaffUserAction(payload: {
         return { success: false, message: error.message };
     }
 
-    revalidatePath('/admin');
+    revalidatePath('/admin', 'page');
     return { success: true, user: data.user };
 }
 
@@ -100,7 +100,7 @@ export async function deleteStaffUserAction(id: string) {
         return { success: false, message: error.message };
     }
 
-    revalidatePath('/admin');
+    revalidatePath('/admin', 'page');
     return { success: true };
 }
 

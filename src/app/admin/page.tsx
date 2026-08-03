@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic';
-
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Palmtree, LogOut, Laptop } from 'lucide-react';
@@ -9,6 +7,8 @@ import { getStaffUsersAction } from '@/modules/admin/actions/userActions';
 import { getRooms } from '@/modules/rooms/services/getRooms';
 import { getSiteSettings } from '@/modules/settings/services/getSettings';
 import { AdminDashboardComponent } from '@/modules/admin/components/settings/AdminDashboard';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
     title: 'Admin Desk | Seaview Resort',

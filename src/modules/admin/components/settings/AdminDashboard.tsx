@@ -79,6 +79,7 @@ export function AdminDashboardComponent({
     const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'refunded'>('all');
     const [loadingId, setLoadingId] = useState<string | null>(null);
     const [viewingReceiptUrl, setViewingReceiptUrl] = useState<string | null>(null);
+    const [isSyncingOta, setIsSyncingOta] = useState(false);
 
     // Cancellation Reasons State
     const [cancellationOptions, setCancellationOptions] = useState<string[]>(
@@ -106,6 +107,24 @@ export function AdminDashboardComponent({
     const [editingTabKey, setEditingTabKey] = useState<string | null>(null);
     const [savingTabKey, setSavingTabKey] = useState<string | null>(null);
 
+    const handleSyncOtaCalendars = async () => {
+        setIsSyncingOta(true);
+        try {
+            const res = await fetch('/api/cron/sync-calendars');
+            const data = await res.json();
+            setIsSyncingOta(false);
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(`Sync Failed: ${data.message}`);
+            }
+        } catch (err: unknown) {
+            setIsSyncingOta(false);
+            alert('Failed to connect to sync endpoint.');
+        }
+    };
+
     const handleSaveTabName = async (key: string) => {
         if (!isAdmin) return;
         setEditingTabKey(null);
@@ -125,7 +144,6 @@ export function AdminDashboardComponent({
         }
     };
 
-    // Save Updated Cancellation Reasons List (Admins Only)
     const handleSaveCancellationReasons = async (newReasons: string[]) => {
         setCancellationOptions(newReasons);
         if (siteSettings) {
@@ -148,7 +166,6 @@ export function AdminDashboardComponent({
         handleSaveCancellationReasons(updated);
     };
 
-    // Status Update Trigger
     const handleStatusUpdate = async (id: string, status: 'confirmed' | 'cancelled' | 'pending' | 'refunded', reason?: string) => {
         setLoadingId(id);
         const res = await updateBookingStatusAction(id, status, reason);
@@ -336,7 +353,6 @@ export function AdminDashboardComponent({
                     </span>
                 </div>
 
-                {/* 🖥️ Responsive Layout: Auto-Wraps on PC / Swipes on Mobile */}
                 <div className="flex items-center gap-2.5 md:gap-3 border-b border-[#e6c898]/40 pb-4 max-md:overflow-x-auto md:flex-wrap max-md:[scrollbar-width:none]">
                     {MAIN_NAVIGATION_TABS.map(({ key, icon: IconComponent }) => {
                         const isSelected = mainTab === key;
@@ -444,7 +460,17 @@ export function AdminDashboardComponent({
                     {/* Bookings Table */}
                     <div className="bg-white rounded-2xl border border-[#e6c898]/40 shadow-xs overflow-hidden">
                         <div className="p-5 border-b border-[#e6c898]/30 flex items-center justify-between flex-wrap gap-3">
-                            <h3 className="font-bold text-lg text-[#1c120c]">Reservations & Payment Status</h3>
+                            <div className="flex items-center gap-3 flex-wrap">
+                                <h3 className="font-bold text-lg text-[#1c120c]">Reservations & Payment Status</h3>
+                                <button
+                                    onClick={handleSyncOtaCalendars}
+                                    disabled={isSyncingOta}
+                                    className="px-3 py-1.5 bg-[#c89349] text-[#1c120c] font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer hover:bg-[#b07d37] transition disabled:opacity-50"
+                                >
+                                    {isSyncingOta ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                                    <span>Sync OTA Calendars</span>
+                                </button>
+                            </div>
                             <div className="flex gap-2 flex-wrap">
                                 {(['all', 'pending', 'confirmed', 'cancelled', 'refunded'] as const).map((tab) => (
                                     <button
@@ -489,7 +515,6 @@ export function AdminDashboardComponent({
                                             <strong>{b.rooms?.name || 'Kubo Villa'}</strong> • {b.check_in} to {b.check_out} ({b.guests_count || 1} {b.guests_count === 1 ? 'Guest' : 'Guests'})
                                         </p>
 
-                                        {/* Display Reason if Cancelled */}
                                         {b.status === 'cancelled' && b.cancellation_reason && (
                                             <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 px-3 py-1 rounded-xl mt-1 inline-block font-medium">
                                                 <strong>Cancellation Reason:</strong> {b.cancellation_reason}
@@ -539,7 +564,6 @@ export function AdminDashboardComponent({
                                                         </button>
                                                     )}
 
-                                                    {/* Open Cancellation Modal */}
                                                     {b.status !== 'cancelled' && (
                                                         <button
                                                             onClick={() => {
