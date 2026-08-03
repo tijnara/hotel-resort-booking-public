@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Save, Loader2, Palette, Home, Info, Camera, Phone, MapPin } from 'lucide-react';
+import { Save, Loader2, Palette, Home, Info, Camera, Phone, MapPin, ChevronRight } from 'lucide-react';
 import { updateSiteSettingsAction } from '../actions/settingsActions';
 import type { SiteSettings } from '@/modules/settings/services/getSettings';
 
@@ -52,9 +52,19 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                 </div>
             )}
 
-            {/* Floating Glass Segmented Tab Bar */}
-            <div className="sticky top-4 z-30 bg-[#faf7f2]/95 backdrop-blur-xl p-1.5 rounded-2xl border border-[#e6c898]/40 shadow-sm relative">
-                <div className="flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-1 py-0.5">
+            {/* Floating Glass Segmented Tab Bar Container */}
+            <div className="sticky top-4 z-30 bg-[#faf7f2]/95 backdrop-blur-xl p-2 rounded-2xl border border-[#e6c898]/40 shadow-sm relative space-y-1.5">
+                {/* 📱 Mobile Indicator for Scrollable Sub-Tabs */}
+                <div className="flex items-center justify-between sm:hidden text-[10px] font-bold uppercase tracking-widest text-[#c89349] px-1 pt-0.5">
+                    <span>Content Sections</span>
+                    <span className="flex items-center gap-1 bg-[#c89349]/15 px-2.5 py-1 rounded-full text-[#1c120c]">
+                        <span>Swipe tabs</span>
+                        <ChevronRight className="w-3.5 h-3.5 animate-pulse text-[#c89349]" />
+                    </span>
+                </div>
+
+                {/* Horizontal Scrollable Tabs */}
+                <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-1 py-0.5">
                     {navTabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = subTab === tab.id;

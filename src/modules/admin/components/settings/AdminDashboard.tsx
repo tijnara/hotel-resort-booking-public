@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2, Sliders, Save, CheckCircle2, Plus, Trash2, ShieldAlert } from 'lucide-react';
+import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Users, Maximize2, Sliders, Save, CheckCircle2, Plus, Trash2, ShieldAlert, ChevronRight } from 'lucide-react';
 import { updateBookingStatusAction } from '../../actions/adminActions';
 import { createStaffUserAction, updateStaffUserAction, deleteStaffUserAction } from '../../actions/userActions';
 import { updateSiteSettingsAction } from '../../actions/settingsActions';
@@ -262,76 +262,88 @@ export function AdminDashboardComponent({
 
     return (
         <div className="space-y-8">
-            {/* Top View Selector with Database-Backed Tab Editing */}
-            <div className="flex items-center gap-3 border-b border-[#e6c898]/40 pb-4 overflow-x-auto [scrollbar-width:none]">
-                {[
-                    { key: 'bookings', icon: Clock },
-                    { key: 'villas', icon: Home },
-                    { key: 'settings', icon: Sliders },
-                    { key: 'users', icon: UserPlus },
-                ].map(({ key, icon: IconComponent }) => {
-                    const isSelected = mainTab === key;
-                    const isEditing = editingTabKey === key;
-                    const isSaving = savingTabKey === key;
+            {/* Top View Selector Container */}
+            <div className="space-y-2">
+                {/* 📱 Mobile Indicator for Scrollable Tabs */}
+                <div className="flex items-center justify-between sm:hidden text-[10px] font-bold uppercase tracking-widest text-[#c89349]">
+                    <span>Control Sections</span>
+                    <span className="flex items-center gap-1 bg-[#c89349]/15 px-2.5 py-1 rounded-full text-[#1c120c]">
+                        <span>Swipe tabs</span>
+                        <ChevronRight className="w-3.5 h-3.5 animate-pulse text-[#c89349]" />
+                    </span>
+                </div>
 
-                    return (
-                        <div key={key} className="flex items-center gap-1 shrink-0">
-                            {isEditing && isAdmin ? (
-                                <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-2xl border border-[#c89349] shadow-sm">
-                                    <input
-                                        type="text"
-                                        value={tabNames[key] || ''}
-                                        onChange={(e) => setTabNames({ ...tabNames, [key]: e.target.value })}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') handleSaveTabName(key);
-                                        }}
-                                        className="text-xs font-bold text-[#1c120c] outline-none w-36 bg-transparent"
-                                        autoFocus
-                                    />
-                                    <button
-                                        onClick={() => handleSaveTabName(key)}
-                                        className="p-1 text-emerald-600 hover:text-emerald-700 cursor-pointer"
-                                        title="Save to database"
-                                    >
-                                        <Check className="w-3.5 h-3.5" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className={`min-h-[44px] px-5 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap ${
-                                    isSelected
-                                        ? 'bg-[#1c120c] text-[#faf7f2]'
-                                        : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
-                                }`}>
-                                    <button
-                                        onClick={() => setMainTab(key as any)}
-                                        className="flex items-center gap-2 cursor-pointer outline-none"
-                                    >
-                                        {isSaving ? (
-                                            <Loader2 className="w-4 h-4 animate-spin text-[#c89349]" />
-                                        ) : (
-                                            <IconComponent className="w-4 h-4 text-[#c89349]" />
-                                        )}
-                                        <span>{tabNames[key]}</span>
-                                    </button>
+                {/* Database-Backed Scrollable Tab Navigation */}
+                <div className="flex items-center gap-3 border-b border-[#e6c898]/40 pb-4 overflow-x-auto [scrollbar-width:none]">
+                    {[
+                        { key: 'bookings', icon: Clock },
+                        { key: 'villas', icon: Home },
+                        { key: 'settings', icon: Sliders },
+                        { key: 'users', icon: UserPlus },
+                    ].map(({ key, icon: IconComponent }) => {
+                        const isSelected = mainTab === key;
+                        const isEditing = editingTabKey === key;
+                        const isSaving = savingTabKey === key;
 
-                                    {/* Rename pencil button visible ONLY to Administrators */}
-                                    {isAdmin && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setEditingTabKey(key);
+                        return (
+                            <div key={key} className="flex items-center gap-1 shrink-0">
+                                {isEditing && isAdmin ? (
+                                    <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-2xl border border-[#c89349] shadow-sm">
+                                        <input
+                                            type="text"
+                                            value={tabNames[key] || ''}
+                                            onChange={(e) => setTabNames({ ...tabNames, [key]: e.target.value })}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleSaveTabName(key);
                                             }}
-                                            className="p-1 hover:text-[#c89349] transition text-gray-400 cursor-pointer ml-1"
-                                            title="Rename tab"
+                                            className="text-xs font-bold text-[#1c120c] outline-none w-36 bg-transparent"
+                                            autoFocus
+                                        />
+                                        <button
+                                            onClick={() => handleSaveTabName(key)}
+                                            className="p-1 text-emerald-600 hover:text-emerald-700 cursor-pointer"
+                                            title="Save to database"
                                         >
-                                            <Edit3 className="w-3 h-3" />
+                                            <Check className="w-3.5 h-3.5" />
                                         </button>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
+                                    </div>
+                                ) : (
+                                    <div className={`min-h-[44px] px-5 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap ${
+                                        isSelected
+                                            ? 'bg-[#1c120c] text-[#faf7f2]'
+                                            : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
+                                    }`}>
+                                        <button
+                                            onClick={() => setMainTab(key as any)}
+                                            className="flex items-center gap-2 cursor-pointer outline-none"
+                                        >
+                                            {isSaving ? (
+                                                <Loader2 className="w-4 h-4 animate-spin text-[#c89349]" />
+                                            ) : (
+                                                <IconComponent className="w-4 h-4 text-[#c89349]" />
+                                            )}
+                                            <span>{tabNames[key]}</span>
+                                        </button>
+
+                                        {/* Rename pencil button visible ONLY to Administrators */}
+                                        {isAdmin && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setEditingTabKey(key);
+                                                }}
+                                                className="p-1 hover:text-[#c89349] transition text-gray-400 cursor-pointer ml-1"
+                                                title="Rename tab"
+                                            >
+                                                <Edit3 className="w-3 h-3" />
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* TAB 1: Reservations & Payments (Open to ALL staff roles) */}
