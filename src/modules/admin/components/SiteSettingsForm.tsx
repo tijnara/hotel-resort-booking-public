@@ -16,6 +16,7 @@ export interface SingleEmailTemplate {
     subject?: string;
     status_badge?: string;
     header_title?: string;
+    header_subtitle?: string;
     heading?: string;
     body_text?: string;
     footer_text?: string;
@@ -25,6 +26,7 @@ const DEFAULT_EMAIL_TEMPLATE: SingleEmailTemplate = {
     subject: '',
     status_badge: '',
     header_title: '',
+    header_subtitle: '',
     heading: '',
     body_text: '',
     footer_text: '',
@@ -228,7 +230,7 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Email Notifications</span>
                             <h3 className="text-lg font-bold text-[#1c120c]">Customize Email Message Templates</h3>
                             <p className="text-xs text-[#2b1d14]/60 mt-1">
-                                Edit subject lines, top header banners, status badges, headings, body text, and footers for all 4 booking email stages.
+                                Edit subject lines, header titles, header subtitles/taglines, status badges, headings, body text, and footers for all 4 booking email stages.
                             </p>
                         </div>
 
@@ -278,7 +280,7 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div>
-                                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Top Email Banner / Header Title</label>
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Top Email Banner Title</label>
                                             <input
                                                 type="text"
                                                 placeholder="e.g. SEAVIEW KUBO RESORT"
@@ -289,15 +291,26 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                                         </div>
 
                                         <div>
-                                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Main Heading</label>
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Header Subtitle / Tagline</label>
                                             <input
                                                 type="text"
-                                                placeholder="e.g. Reservation Confirmed!"
-                                                value={tmpl.heading || ''}
-                                                onChange={(e) => updateField('heading', e.target.value)}
+                                                placeholder="e.g. Modern Filipino Kubo Sanctuary"
+                                                value={tmpl.header_subtitle || ''}
+                                                onChange={(e) => updateField('header_subtitle', e.target.value)}
                                                 className="w-full text-xs font-semibold bg-white p-2.5 rounded-xl border outline-none"
                                             />
                                         </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Main Heading</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Reservation Confirmed!"
+                                            value={tmpl.heading || ''}
+                                            onChange={(e) => updateField('heading', e.target.value)}
+                                            className="w-full text-xs font-semibold bg-white p-2.5 rounded-xl border outline-none"
+                                        />
                                     </div>
 
                                     <div>

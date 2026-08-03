@@ -3,6 +3,7 @@ import { getSiteSettings, EmailTemplateItem } from '@/modules/settings/services/
 
 type ExtendedEmailTemplate = EmailTemplateItem & {
     header_title?: string;
+    header_subtitle?: string;
 };
 
 const transporter = nodemailer.createTransport({
@@ -58,6 +59,7 @@ export async function sendRequestReceivedEmail(props: EmailProps) {
     };
 
     const headerTitle = replacePlaceholders(tmpl?.header_title || settings.site_name || 'SEAVIEW', vars);
+    const headerSubtitle = replacePlaceholders(tmpl?.header_subtitle || 'Modern Filipino Kubo Sanctuary', vars);
     const subject = replacePlaceholders(tmpl?.subject || 'Booking Request Received #{bookingRef} - Seaview Resort', vars);
     const badge = replacePlaceholders(tmpl?.status_badge || 'Status: Pending Desk Review', vars);
     const heading = replacePlaceholders(tmpl?.heading || 'Reservation Request Received', vars);
@@ -74,7 +76,7 @@ export async function sendRequestReceivedEmail(props: EmailProps) {
           <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e6c898; overflow: hidden;">
             <div style="background-color: #1c120c; padding: 20px; text-align: center; color: #faf7f2;">
               <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${headerTitle}</h1>
-              <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">Modern Filipino Kubo Sanctuary</p>
+              <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">${headerSubtitle}</p>
             </div>
             <div style="padding: 24px;">
               <div style="background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 16px;">
@@ -130,6 +132,7 @@ export async function sendConfirmationEmail(props: EmailProps) {
     };
 
     const headerTitle = replacePlaceholders(tmpl?.header_title || settings.site_name || 'SEAVIEW', vars);
+    const headerSubtitle = replacePlaceholders(tmpl?.header_subtitle || 'Modern Filipino Kubo Sanctuary', vars);
     const subject = replacePlaceholders(tmpl?.subject || '[CONFIRMED] Official Reservation #{bookingRef} - Seaview Resort', vars);
     const badge = replacePlaceholders(tmpl?.status_badge || 'Status: Stay Confirmed', vars);
     const heading = replacePlaceholders(tmpl?.heading || 'Your Staycation is Confirmed!', vars);
@@ -146,7 +149,7 @@ export async function sendConfirmationEmail(props: EmailProps) {
           <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e6c898; overflow: hidden;">
             <div style="background-color: #1c120c; padding: 20px; text-align: center; color: #faf7f2;">
               <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${headerTitle}</h1>
-              <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">Modern Filipino Kubo Sanctuary</p>
+              <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">${headerSubtitle}</p>
             </div>
             <div style="padding: 24px;">
               <div style="background-color: #d1fae5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 16px;">
@@ -208,6 +211,7 @@ export async function sendCancellationEmail(props: EmailProps) {
     };
 
     const headerTitle = replacePlaceholders(tmpl?.header_title || settings.site_name || 'SEAVIEW', vars);
+    const headerSubtitle = replacePlaceholders(tmpl?.header_subtitle || 'Modern Filipino Kubo Sanctuary', vars);
     const subject = replacePlaceholders(tmpl?.subject || 'Booking Cancelled #{bookingRef} - Seaview Resort', vars);
     const badge = replacePlaceholders(tmpl?.status_badge || 'Status: Reservation Cancelled', vars);
     const heading = replacePlaceholders(tmpl?.heading || 'Reservation Request Cancelled', vars);
@@ -226,7 +230,7 @@ export async function sendCancellationEmail(props: EmailProps) {
           <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e6c898; overflow: hidden;">
             <div style="background-color: #1c120c; padding: 20px; text-align: center; color: #faf7f2;">
               <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${headerTitle}</h1>
-              <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">Modern Filipino Kubo Sanctuary</p>
+              <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">${headerSubtitle}</p>
             </div>
             <div style="padding: 24px;">
               <div style="background-color: #ffe4e6; border: 1px solid #fecdd3; border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 16px;">
@@ -299,6 +303,7 @@ export async function sendRefundEmail(props: EmailProps) {
     };
 
     const headerTitle = replacePlaceholders(tmpl?.header_title || settings.site_name || 'SEAVIEW', vars);
+    const headerSubtitle = replacePlaceholders(tmpl?.header_subtitle || 'Modern Filipino Kubo Sanctuary', vars);
     const subject = replacePlaceholders(tmpl?.subject || 'Refund Processed #{bookingRef} - Seaview Resort', vars);
     const badge = replacePlaceholders(tmpl?.status_badge || 'Status: Refund Processed', vars);
     const heading = replacePlaceholders(tmpl?.heading || 'Refund Confirmation', vars);
@@ -315,7 +320,7 @@ export async function sendRefundEmail(props: EmailProps) {
           <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e6c898; overflow: hidden;">
             <div style="background-color: #1c120c; padding: 20px; text-align: center; color: #faf7f2;">
               <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${headerTitle}</h1>
-              <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">Modern Filipino Kubo Sanctuary</p>
+              <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">${headerSubtitle}</p>
             </div>
 
             <div style="padding: 24px;">
