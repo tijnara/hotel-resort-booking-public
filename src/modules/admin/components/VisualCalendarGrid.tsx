@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-    ChevronLeft, ChevronRight, Sparkles, X, Flame, TrendingUp, BarChart3, Activity, Percent, PieChart, Building2, Award, Edit3, Loader2
+    ChevronLeft, ChevronRight, Sparkles, X, Flame, TrendingUp, BarChart3, Activity, Percent, PieChart, Building2, Award, Edit3, Loader2, Info, ChevronDown, ChevronUp, AlertTriangle
 } from 'lucide-react';
 import type { AdminBooking } from './settings/AdminDashboard';
 import type { Room } from '@/modules/shared/types/database.types';
@@ -32,6 +32,7 @@ interface VisualCalendarGridProps {
 export function VisualCalendarGrid({ rooms, bookings, siteSettings, isAdmin = false, onSelectBooking }: VisualCalendarGridProps) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedBooking, setSelectedBooking] = useState<AdminBooking | null>(null);
+    const [showIcalGuide, setShowIcalGuide] = useState(false);
 
     // Dynamic Occupancy Icon State
     const [selectedIconKey, setSelectedIconKey] = useState<string>(
@@ -118,6 +119,16 @@ export function VisualCalendarGrid({ rooms, bookings, siteSettings, isAdmin = fa
 
                 {/* Month Controls & Month Quick Switcher */}
                 <div className="flex items-center gap-3 flex-wrap">
+                    <button
+                        type="button"
+                        onClick={() => setShowIcalGuide(!showIcalGuide)}
+                        className="px-3.5 py-2 bg-amber-50 text-amber-900 border border-amber-300 rounded-2xl text-xs font-bold flex items-center gap-1.5 hover:bg-amber-100 transition cursor-pointer"
+                    >
+                        <Info className="w-4 h-4 text-amber-600" />
+                        <span>iCal Sync Guide</span>
+                        {showIcalGuide ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </button>
+
                     <div className="flex items-center bg-[#faf7f2] p-1 rounded-2xl border border-[#e6c898]/40">
                         <button
                             onClick={handlePrevMonth}
@@ -204,6 +215,43 @@ export function VisualCalendarGrid({ rooms, bookings, siteSettings, isAdmin = fa
                 </div>
             </div>
 
+            {/* iCal Setup & Warning Callout Box */}
+            {showIcalGuide && (
+                <div className="bg-amber-50/90 border border-amber-300 p-5 rounded-3xl space-y-3 text-xs text-amber-950 animate-in fade-in duration-200 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-amber-200 pb-2">
+                        <div className="flex items-center gap-2 font-bold text-sm text-amber-900">
+                            <AlertTriangle className="w-4 h-4 text-amber-600" />
+                            <span>Two-Way iCal Calendar Sync Instructions</span>
+                        </div>
+                        <span className="text-[10px] bg-amber-200/80 text-amber-900 px-2.5 py-0.5 rounded-full font-bold">
+                            Supports Any iCal Site (Airbnb, Booking.com, Agoda, VRBO, Expedia)
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                        <div className="bg-white/80 p-3.5 rounded-2xl border border-amber-200/60 space-y-1.5">
+                            <h4 className="font-bold text-amber-900 flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+                                1. Exporting Resort Dates to OTA Channels
+                            </h4>
+                            <p className="text-[11px] text-amber-950/80 leading-relaxed">
+                                Copy your villa&apos;s dynamic endpoint URL <code className="bg-amber-100 px-1 py-0.5 rounded text-[10px] font-mono">/api/villas/[room_id]/ical</code> and paste it into the <strong>Import Calendar</strong> settings of Airbnb, Booking.com, Agoda, or VRBO.
+                            </p>
+                        </div>
+
+                        <div className="bg-white/80 p-3.5 rounded-2xl border border-amber-200/60 space-y-1.5">
+                            <h4 className="font-bold text-amber-900 flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-indigo-600 inline-block" />
+                                2. Importing Dynamic Booking Channels
+                            </h4>
+                            <p className="text-[11px] text-amber-950/80 leading-relaxed">
+                                Go to <strong>Kubo Villas</strong> → <strong>Edit Villa</strong>. Click <strong>&quot;+ Add Booking Site&quot;</strong> to connect any platform (Agoda, VRBO, Airbnb, etc.) by pasting its exported <code className="bg-amber-100 px-1 py-0.5 rounded text-[10px]">.ics</code> URL.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Legend Indicators */}
             <div className="flex items-center gap-4 text-xs font-semibold text-[#2b1d14]/70 bg-white p-4 rounded-2xl border border-[#e6c898]/30 flex-wrap">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Status Legend:</span>
@@ -217,7 +265,7 @@ export function VisualCalendarGrid({ rooms, bookings, siteSettings, isAdmin = fa
                 </span>
                 <span className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded-md bg-indigo-500 border border-indigo-600 inline-block" />
-                    <span>External OTA (Airbnb/Booking)</span>
+                    <span>External OTA (Airbnb/Booking/Agoda/VRBO)</span>
                 </span>
                 <span className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded-md bg-white border-2 border-rose-500 inline-block" />
@@ -269,7 +317,14 @@ export function VisualCalendarGrid({ rooms, bookings, siteSettings, isAdmin = fa
                                 });
 
                                 const isCheckInDay = matchingBooking && matchingBooking.check_in === dateStr;
-                                const isOta = matchingBooking?.payment_method === 'airbnb' || matchingBooking?.payment_method === 'booking.com';
+
+                                // Detect any OTA platform (Airbnb, Booking, Agoda, VRBO, etc.)
+                                const isOta =
+                                    matchingBooking?.payment_method !== 'gcash' &&
+                                    matchingBooking?.payment_method !== 'bank' &&
+                                    matchingBooking?.payment_method !== 'direct' &&
+                                    matchingBooking?.payment_method !== null &&
+                                    matchingBooking?.payment_method !== undefined;
 
                                 return (
                                     <td

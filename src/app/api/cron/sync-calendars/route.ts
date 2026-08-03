@@ -2,14 +2,19 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/modules/shared/lib/supabase/server';
 import ical, { VEvent } from 'node-ical';
 
+interface OtaChannel {
+    source: string;
+    url: string;
+}
+
 export async function GET() {
     try {
         const supabase = await createClient();
 
-        // 1. Fetch all rooms that have an Airbnb or Booking.com iCal URL set
+        // Fetch all rooms with dynamic ical_sources and legacy URL columns
         const { data: rooms, error: roomsErr } = await supabase
             .from('rooms')
-            .select('id, name, airbnb_ical_url, booking_ical_url');
+            .select('id, name, airbnb_ical_url, booking_ical_url, ical_sources');
 
         if (roomsErr || !rooms) {
             return NextResponse.json({ success: false, message: 'Failed to fetch rooms' }, { status: 500 });
@@ -18,15 +23,40 @@ export async function GET() {
         let syncedCount = 0;
 
         for (const room of rooms) {
-            const otaUrls = [
-                { source: 'Airbnb', url: room.airbnb_ical_url },
-                { source: 'Booking.com', url: room.booking_ical_url },
-            ].filter((item) => item.url && item.url.trim() !== '');
+            const otaChannels: OtaChannel[] = [];
 
-            for (const { source, url } of otaUrls) {
+            // 1. Read dynamic ical_sources array
+            const dynamicSources = (room.ical_sources || []) as Array<{ id: string; name: string; url: string }>;
+            for (const item of dynamicSources) {
+                if (item.url && item.url.trim() !== '') {
+                    otaChannels.push({
+                        source: item.name.trim() || 'External OTA',
+                        url: item.url.trim(),
+                    });
+                }
+            }
+
+            // 2. Read legacy column URLs if not already in list
+            if (
+                room.airbnb_ical_url &&
+                room.airbnb_ical_url.trim() !== '' &&
+                !otaChannels.some((c) => c.source.toLowerCase() === 'airbnb')
+            ) {
+                otaChannels.push({ source: 'Airbnb', url: room.airbnb_ical_url.trim() });
+            }
+
+            if (
+                room.booking_ical_url &&
+                room.booking_ical_url.trim() !== '' &&
+                !otaChannels.some((c) => c.source.toLowerCase().includes('booking'))
+            ) {
+                otaChannels.push({ source: 'Booking.com', url: room.booking_ical_url.trim() });
+            }
+
+            for (const { source, url } of otaChannels) {
                 try {
-                    // Fetch the external .ics file from Airbnb / Booking.com
-                    const events = await ical.async.fromURL(url!);
+                    // Fetch external .ics file
+                    const events = await ical.async.fromURL(url);
 
                     for (const key in events) {
                         const event = events[key];
@@ -38,7 +68,6 @@ export async function GET() {
                                 const checkIn = new Date(vEvent.start).toISOString().split('T')[0];
                                 const checkOut = new Date(vEvent.end).toISOString().split('T')[0];
 
-                                // Check if this external booking is already saved in Supabase
                                 const { data: existing } = await supabase
                                     .from('bookings')
                                     .select('id')
@@ -48,18 +77,19 @@ export async function GET() {
                                     .single();
 
                                 if (!existing) {
-                                    // Insert blocked date range into Supabase
+                                    const paymentMethodKey = source.toLowerCase().replace(/\s+/g, '_');
+
                                     await supabase.from('bookings').insert({
                                         room_id: room.id,
                                         guest_name: `${source} Guest`,
-                                        guest_email: `reserved@${source.toLowerCase().replace(/\s+/g, '')}.com`,
+                                        guest_email: `reserved@${paymentMethodKey}.internal`,
                                         guest_phone: 'N/A',
                                         check_in: checkIn,
                                         check_out: checkOut,
                                         guests_count: 1,
                                         total_price: 0,
-                                        payment_method: source.toLowerCase(),
-                                        status: 'confirmed', // Automatically blocks on your website calendar!
+                                        payment_method: paymentMethodKey,
+                                        status: 'confirmed', // Blocks dates on website timeline!
                                     });
                                     syncedCount++;
                                 }
@@ -74,7 +104,7 @@ export async function GET() {
 
         return NextResponse.json({
             success: true,
-            message: `Calendar sync complete. ${syncedCount} new external bookings imported.`,
+            message: `Calendar sync complete. ${syncedCount} new external bookings imported across connected booking channels.`,
         });
     } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error during calendar sync';
