@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { X, Calendar as CalendarIcon, Users, CheckCircle2, AlertCircle, Loader2, ChevronLeft, ChevronRight, Upload, QrCode, Building2, ImageIcon } from 'lucide-react';
 import { createBookingAction } from '@/modules/bookings/actions/createBooking';
 import { getBookedDatesForRoomAction, BookedDateRange } from '@/modules/bookings/actions/getRoomBookings';
-import { getOccupiedDatesSet, isRangeOverlapping } from '@/modules/shared/lib/dateUtils';
+import { getOccupiedDatesSet } from '@/modules/shared/lib/dateUtils';
 import { createClient } from '@/modules/shared/lib/supabase/client';
 import type { Room } from '@/modules/shared/types/database.types';
 
@@ -52,7 +52,6 @@ export function CheckoutDrawer({
 
     const calendarRef = useRef<HTMLDivElement>(null);
 
-    // Track previous open and room state to sync states without synchronous effect calls
     const [prevSync, setPrevSync] = useState({ isOpen: false, roomId: '' });
 
     if (isOpen && room && (isOpen !== prevSync.isOpen || room.id !== prevSync.roomId)) {
@@ -68,7 +67,6 @@ export function CheckoutDrawer({
         setPrevSync({ isOpen: false, roomId: prevSync.roomId });
     }
 
-    // Fetch room-specific booked dates on drawer open asynchronously
     useEffect(() => {
         let isMounted = true;
 
@@ -88,7 +86,6 @@ export function CheckoutDrawer({
         };
     }, [isOpen, room?.id]);
 
-    // Close calendar dropdown when clicking outside
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
             if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
@@ -118,6 +115,23 @@ export function CheckoutDrawer({
     const nights = calcNights();
     const totalPrice = nights * (room.price_per_night || 0);
 
+    // Smart Turnover Check-Out Logic: Valid if no blocked nights between checkIn and candidate Check-Out
+    const isValidCheckOutDate = (candidateCheckOut: string): boolean => {
+        if (!checkIn || candidateCheckOut <= checkIn) return false;
+
+        const current = new Date(checkIn);
+        const end = new Date(candidateCheckOut);
+
+        while (current < end) {
+            const dateKey = current.toISOString().split('T')[0];
+            if (occupiedSet.has(dateKey)) {
+                return false; // Found a blocked night
+            }
+            current.setDate(current.getDate() + 1);
+        }
+        return true;
+    };
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -126,25 +140,44 @@ export function CheckoutDrawer({
         }
     };
 
-    // Handle custom date clicks in calendar dropdown
     const handleDateClick = (dateStr: string) => {
         setErrorMessage(null);
 
-        if (occupiedSet.has(dateStr)) {
-            setErrorMessage('This date is already booked.');
+        // 1. Unmark Check-In if clicked again
+        if (dateStr === checkIn) {
+            setCheckIn('');
+            setCheckOut('');
             return;
         }
 
+        // 2. Unmark Check-Out if clicked again
+        if (dateStr === checkOut) {
+            setCheckOut('');
+            return;
+        }
+
+        // 3. Selecting Check-In (no checkIn set or both checkIn & checkOut already set)
         if (!checkIn || (checkIn && checkOut)) {
+            if (occupiedSet.has(dateStr)) {
+                setErrorMessage('This night is already reserved by another guest.');
+                return;
+            }
             setCheckIn(dateStr);
             setCheckOut('');
-        } else if (checkIn && !checkOut) {
-            if (new Date(dateStr) <= new Date(checkIn)) {
+        }
+        // 4. Selecting Check-Out date
+        else if (checkIn && !checkOut) {
+            if (new Date(dateStr) < new Date(checkIn)) {
+                // If user clicks an earlier date, switch check-in to this date if available
+                if (occupiedSet.has(dateStr)) {
+                    setErrorMessage('This night is already reserved by another guest.');
+                    return;
+                }
                 setCheckIn(dateStr);
                 setCheckOut('');
             } else {
-                if (isRangeOverlapping(checkIn, dateStr, occupiedSet)) {
-                    setErrorMessage('Selected range includes dates that are already booked.');
+                if (!isValidCheckOutDate(dateStr)) {
+                    setErrorMessage('Selected stay includes nights that are already booked.');
                     return;
                 }
                 setCheckOut(dateStr);
@@ -162,11 +195,6 @@ export function CheckoutDrawer({
             return;
         }
 
-        if (isRangeOverlapping(checkIn, checkOut, occupiedSet)) {
-            setErrorMessage('Your selected dates overlap with an existing reservation.');
-            return;
-        }
-
         if (!receiptFile) {
             setErrorMessage('Please upload a screenshot or photo of your payment receipt.');
             return;
@@ -177,7 +205,6 @@ export function CheckoutDrawer({
         try {
             const supabase = createClient();
 
-            // 1. Upload receipt to Supabase 'receipts' bucket
             const fileExt = receiptFile.name.split('.').pop();
             const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
             const filePath = `receipts/${fileName}`;
@@ -192,14 +219,12 @@ export function CheckoutDrawer({
                 return;
             }
 
-            // 2. Get Public URL
             const { data: urlData } = supabase.storage
                 .from('receipts')
                 .getPublicUrl(filePath);
 
             const uploadedReceiptUrl = urlData.publicUrl;
 
-            // 3. Create booking with receipt URL and selected payment method
             const res = await createBookingAction({
                 roomId: room.id,
                 guestName,
@@ -209,7 +234,7 @@ export function CheckoutDrawer({
                 checkOut,
                 guestsCount,
                 totalPrice,
-                paymentMethod, // Pass payment channel selected by guest
+                paymentMethod,
                 receiptUrl: uploadedReceiptUrl,
             });
 
@@ -232,6 +257,8 @@ export function CheckoutDrawer({
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const todayStr = new Date().toISOString().split('T')[0];
+
+    const isSelectingCheckOut = Boolean(checkIn && !checkOut);
 
     return (
         <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-xs flex justify-end">
@@ -352,28 +379,51 @@ export function CheckoutDrawer({
                                         {Array.from({ length: daysInMonth }).map((_, i) => {
                                             const dayNum = i + 1;
                                             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-                                            const isOccupied = occupiedSet.has(dateStr);
+                                            const isNightOccupied = occupiedSet.has(dateStr);
                                             const isPast = dateStr < todayStr;
                                             const isSelected = dateStr === checkIn || dateStr === checkOut;
                                             const isInRange = checkIn && checkOut && dateStr > checkIn && dateStr < checkOut;
+
+                                            // Determine clickability
+                                            let isDisabled = false;
+                                            if (isPast) {
+                                                isDisabled = true;
+                                            } else if (dateStr === checkIn || dateStr === checkOut) {
+                                                isDisabled = false; // Always allow un-selecting current dates
+                                            } else if (!isSelectingCheckOut) {
+                                                isDisabled = isNightOccupied;
+                                            } else {
+                                                isDisabled = !isValidCheckOutDate(dateStr);
+                                            }
+
+                                            const isTurnoverCheckout = isSelectingCheckOut && isNightOccupied && !isDisabled;
 
                                             return (
                                                 <button
                                                     key={dateStr}
                                                     type="button"
-                                                    disabled={isOccupied || isPast}
+                                                    disabled={isDisabled}
                                                     onClick={() => handleDateClick(dateStr)}
                                                     className={`h-8 rounded-lg font-bold flex items-center justify-center text-[11px] transition cursor-pointer relative ${
                                                         isSelected
                                                             ? 'bg-[#c89349] text-[#1c120c]'
                                                             : isInRange
                                                                 ? 'bg-amber-100 text-[#1c120c]'
-                                                                : isOccupied
-                                                                    ? 'bg-[#1c120c]/15 text-[#1c120c]/30 line-through cursor-not-allowed border border-[#1c120c]/10'
-                                                                    : isPast
-                                                                        ? 'text-[#2b1d14]/20 cursor-not-allowed'
-                                                                        : 'hover:bg-[#faf7f2] text-[#1c120c]'
+                                                                : isTurnoverCheckout
+                                                                    ? 'bg-amber-50 text-[#1c120c] border-2 border-dashed border-[#c89349] hover:bg-[#c89349] hover:text-white'
+                                                                    : isNightOccupied
+                                                                        ? 'bg-[#1c120c]/15 text-[#1c120c]/30 line-through cursor-not-allowed border border-[#1c120c]/10'
+                                                                        : isPast
+                                                                            ? 'text-[#2b1d14]/20 cursor-not-allowed'
+                                                                            : 'hover:bg-[#faf7f2] text-[#1c120c]'
                                                     }`}
+                                                    title={
+                                                        isSelected && dateStr === checkIn
+                                                            ? 'Click again to unmark Check-In date'
+                                                            : isTurnoverCheckout
+                                                                ? 'Valid Check-Out Date (12:00 NN)'
+                                                                : undefined
+                                                    }
                                                 >
                                                     {dayNum}
                                                 </button>
