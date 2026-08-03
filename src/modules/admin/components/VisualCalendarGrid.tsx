@@ -1,19 +1,44 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, X } from 'lucide-react';
+import {
+    ChevronLeft, ChevronRight, Sparkles, X, Flame, TrendingUp, BarChart3, Activity, Percent, PieChart, Building2, Award, Edit3, Loader2
+} from 'lucide-react';
 import type { AdminBooking } from './settings/AdminDashboard';
 import type { Room } from '@/modules/shared/types/database.types';
+import type { SiteSettings } from '@/modules/settings/services/getSettings';
+import { updateSiteSettingsAction } from '../actions/settingsActions';
+
+const OCCUPANCY_ICONS = [
+    { key: 'sparkles', label: 'Sparkles', icon: Sparkles },
+    { key: 'flame', label: 'Flame', icon: Flame },
+    { key: 'trending-up', label: 'Trending Up', icon: TrendingUp },
+    { key: 'bar-chart', label: 'Bar Chart', icon: BarChart3 },
+    { key: 'activity', label: 'Activity', icon: Activity },
+    { key: 'percent', label: 'Percent', icon: Percent },
+    { key: 'pie-chart', label: 'Pie Chart', icon: PieChart },
+    { key: 'hotel', label: 'Hotel', icon: Building2 },
+    { key: 'award', label: 'Award', icon: Award },
+] as const;
 
 interface VisualCalendarGridProps {
     rooms: Room[];
     bookings: AdminBooking[];
+    siteSettings?: SiteSettings;
+    isAdmin?: boolean;
     onSelectBooking?: (booking: AdminBooking) => void;
 }
 
-export function VisualCalendarGrid({ rooms, bookings, onSelectBooking }: VisualCalendarGridProps) {
+export function VisualCalendarGrid({ rooms, bookings, siteSettings, isAdmin = false, onSelectBooking }: VisualCalendarGridProps) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedBooking, setSelectedBooking] = useState<AdminBooking | null>(null);
+
+    // Dynamic Occupancy Icon State
+    const [selectedIconKey, setSelectedIconKey] = useState<string>(
+        (siteSettings as { occupancy_icon?: string })?.occupancy_icon || 'sparkles'
+    );
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
+    const [savingIcon, setSavingIcon] = useState(false);
 
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -58,6 +83,25 @@ export function VisualCalendarGrid({ rooms, bookings, onSelectBooking }: VisualC
         ? Math.round((bookedNightsThisMonth / totalPossibleNights) * 100)
         : 0;
 
+    const handleSelectIcon = async (iconKey: string) => {
+        setSelectedIconKey(iconKey);
+        setIsPickerOpen(false);
+        if (!isAdmin) return;
+
+        setSavingIcon(true);
+        const res = await updateSiteSettingsAction({
+            ...siteSettings,
+            occupancy_icon: iconKey,
+        } as SiteSettings);
+        setSavingIcon(false);
+
+        if (!res || !res.success) {
+            alert(`Failed to save occupancy icon: ${res?.message || 'Unknown error'}`);
+        }
+    };
+
+    const CurrentIcon = OCCUPANCY_ICONS.find((i) => i.key === selectedIconKey)?.icon || Sparkles;
+
     return (
         <div className="space-y-6">
             {/* Top Toolbar & Summary Header */}
@@ -97,10 +141,65 @@ export function VisualCalendarGrid({ rooms, bookings, onSelectBooking }: VisualC
                         </button>
                     </div>
 
-                    {/* Occupancy Indicator Pill */}
-                    <div className="bg-[#1c120c] text-[#faf7f2] px-4 py-2 rounded-2xl flex items-center gap-3 text-xs font-bold shadow-xs">
-                        <Sparkles className="w-4 h-4 text-[#c89349]" />
-                        <span>Occupancy: <strong className="text-[#c89349] font-black">{occupancyRate}%</strong></span>
+                    {/* Occupancy Indicator Pill with Editable Icon */}
+                    <div className="relative">
+                        <div className="bg-[#1c120c] text-[#faf7f2] px-4 py-2 rounded-2xl flex items-center gap-2.5 text-xs font-bold shadow-xs">
+                            <div className="flex items-center gap-1">
+                                {savingIcon ? (
+                                    <Loader2 className="w-4 h-4 animate-spin text-[#c89349]" />
+                                ) : (
+                                    <CurrentIcon className="w-4 h-4 text-[#c89349]" />
+                                )}
+                                {isAdmin && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPickerOpen(!isPickerOpen)}
+                                        className="p-0.5 hover:text-[#c89349] transition text-gray-400 cursor-pointer rounded-md hover:bg-white/10"
+                                        title="Customize Occupancy Icon"
+                                    >
+                                        <Edit3 className="w-3 h-3" />
+                                    </button>
+                                )}
+                            </div>
+                            <span>Occupancy: <strong className="text-[#c89349] font-black">{occupancyRate}%</strong></span>
+                        </div>
+
+                        {/* Icon Picker Dropdown */}
+                        {isPickerOpen && isAdmin && (
+                            <div className="absolute right-0 top-full mt-2 z-30 bg-white p-3.5 rounded-2xl border border-[#e6c898] shadow-xl w-64 space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
+                                <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Select Occupancy Icon</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPickerOpen(false)}
+                                        className="p-1 text-gray-400 hover:text-gray-700 cursor-pointer"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-1.5 pt-1">
+                                    {OCCUPANCY_ICONS.map(({ key, label, icon: IconComponent }) => {
+                                        const isSelected = selectedIconKey === key;
+                                        return (
+                                            <button
+                                                key={key}
+                                                type="button"
+                                                onClick={() => handleSelectIcon(key)}
+                                                className={`p-2 rounded-xl flex flex-col items-center gap-1 text-[10px] font-bold transition cursor-pointer border ${
+                                                    isSelected
+                                                        ? 'bg-[#1c120c] text-[#faf7f2] border-[#1c120c]'
+                                                        : 'bg-[#faf7f2] text-[#1c120c] border-[#e6c898]/40 hover:bg-[#c89349]/15'
+                                                }`}
+                                            >
+                                                <IconComponent className="w-4 h-4 text-[#c89349]" />
+                                                <span className="truncate w-full text-center">{label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

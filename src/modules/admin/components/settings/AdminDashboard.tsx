@@ -635,6 +635,8 @@ export function AdminDashboardComponent({
                 <VisualCalendarGrid
                     rooms={initialRooms}
                     bookings={initialBookings}
+                    siteSettings={siteSettings}
+                    isAdmin={isAdmin}
                 />
             ) : mainTab === 'villas' ? (
                 /* TAB 3: Villa Management */

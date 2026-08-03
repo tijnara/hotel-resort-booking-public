@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer';
-import { getSiteSettings } from '@/modules/settings/services/getSettings';
+import { getSiteSettings, EmailTemplateItem } from '@/modules/settings/services/getSettings';
+
+type ExtendedEmailTemplate = EmailTemplateItem & {
+    header_title?: string;
+};
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -39,7 +43,7 @@ export async function sendRequestReceivedEmail(props: EmailProps) {
     }
 
     const settings = await getSiteSettings();
-    const tmpl = settings.email_templates?.request_received;
+    const tmpl = settings.email_templates?.request_received as ExtendedEmailTemplate | undefined;
 
     const formattedPayment = props.paymentMethod === 'gcash' ? 'GCash / Maya' : 'Bank Transfer (BDO)';
 
@@ -53,6 +57,7 @@ export async function sendRequestReceivedEmail(props: EmailProps) {
         paymentMethod: formattedPayment,
     };
 
+    const headerTitle = replacePlaceholders(tmpl?.header_title || settings.site_name || 'SEAVIEW', vars);
     const subject = replacePlaceholders(tmpl?.subject || 'Booking Request Received #{bookingRef} - Seaview Resort', vars);
     const badge = replacePlaceholders(tmpl?.status_badge || 'Status: Pending Desk Review', vars);
     const heading = replacePlaceholders(tmpl?.heading || 'Reservation Request Received', vars);
@@ -68,7 +73,7 @@ export async function sendRequestReceivedEmail(props: EmailProps) {
         <div style="font-family: Arial, sans-serif; background-color: #faf7f2; padding: 24px; color: #1c120c;">
           <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e6c898; overflow: hidden;">
             <div style="background-color: #1c120c; padding: 20px; text-align: center; color: #faf7f2;">
-              <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${settings.site_name || 'SEAVIEW'}</h1>
+              <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${headerTitle}</h1>
               <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">Modern Filipino Kubo Sanctuary</p>
             </div>
             <div style="padding: 24px;">
@@ -98,7 +103,7 @@ export async function sendRequestReceivedEmail(props: EmailProps) {
       `,
         });
         return { success: true, data: info };
-    } catch (err) {
+    } catch (err: unknown) {
         return { success: false, error: err };
     }
 }
@@ -113,7 +118,7 @@ export async function sendConfirmationEmail(props: EmailProps) {
     }
 
     const settings = await getSiteSettings();
-    const tmpl = settings.email_templates?.confirmed;
+    const tmpl = settings.email_templates?.confirmed as ExtendedEmailTemplate | undefined;
 
     const vars = {
         guestName: props.guestName,
@@ -124,6 +129,7 @@ export async function sendConfirmationEmail(props: EmailProps) {
         totalPrice: Number(props.totalPrice).toLocaleString(),
     };
 
+    const headerTitle = replacePlaceholders(tmpl?.header_title || settings.site_name || 'SEAVIEW', vars);
     const subject = replacePlaceholders(tmpl?.subject || '[CONFIRMED] Official Reservation #{bookingRef} - Seaview Resort', vars);
     const badge = replacePlaceholders(tmpl?.status_badge || 'Status: Stay Confirmed', vars);
     const heading = replacePlaceholders(tmpl?.heading || 'Your Staycation is Confirmed!', vars);
@@ -139,7 +145,7 @@ export async function sendConfirmationEmail(props: EmailProps) {
         <div style="font-family: Arial, sans-serif; background-color: #faf7f2; padding: 24px; color: #1c120c;">
           <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e6c898; overflow: hidden;">
             <div style="background-color: #1c120c; padding: 20px; text-align: center; color: #faf7f2;">
-              <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${settings.site_name || 'SEAVIEW'}</h1>
+              <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${headerTitle}</h1>
               <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">Modern Filipino Kubo Sanctuary</p>
             </div>
             <div style="padding: 24px;">
@@ -174,7 +180,7 @@ export async function sendConfirmationEmail(props: EmailProps) {
       `,
         });
         return { success: true, data: info };
-    } catch (err) {
+    } catch (err: unknown) {
         return { success: false, error: err };
     }
 }
@@ -189,7 +195,7 @@ export async function sendCancellationEmail(props: EmailProps) {
     }
 
     const settings = await getSiteSettings();
-    const tmpl = settings.email_templates?.cancelled;
+    const tmpl = settings.email_templates?.cancelled as ExtendedEmailTemplate | undefined;
 
     const vars = {
         guestName: props.guestName,
@@ -201,6 +207,7 @@ export async function sendCancellationEmail(props: EmailProps) {
         cancellationReason: props.cancellationReason || 'Cancelled by Resort Desk',
     };
 
+    const headerTitle = replacePlaceholders(tmpl?.header_title || settings.site_name || 'SEAVIEW', vars);
     const subject = replacePlaceholders(tmpl?.subject || 'Booking Cancelled #{bookingRef} - Seaview Resort', vars);
     const badge = replacePlaceholders(tmpl?.status_badge || 'Status: Reservation Cancelled', vars);
     const heading = replacePlaceholders(tmpl?.heading || 'Reservation Request Cancelled', vars);
@@ -218,7 +225,7 @@ export async function sendCancellationEmail(props: EmailProps) {
         <div style="font-family: Arial, sans-serif; background-color: #faf7f2; padding: 24px; color: #1c120c;">
           <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e6c898; overflow: hidden;">
             <div style="background-color: #1c120c; padding: 20px; text-align: center; color: #faf7f2;">
-              <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${settings.site_name || 'SEAVIEW'}</h1>
+              <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${headerTitle}</h1>
               <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">Modern Filipino Kubo Sanctuary</p>
             </div>
             <div style="padding: 24px;">
@@ -265,7 +272,7 @@ export async function sendCancellationEmail(props: EmailProps) {
       `,
         });
         return { success: true, data: info };
-    } catch (err) {
+    } catch (err: unknown) {
         return { success: false, error: err };
     }
 }
@@ -280,7 +287,7 @@ export async function sendRefundEmail(props: EmailProps) {
     }
 
     const settings = await getSiteSettings();
-    const tmpl = settings.email_templates?.refunded;
+    const tmpl = settings.email_templates?.refunded as ExtendedEmailTemplate | undefined;
 
     const vars = {
         guestName: props.guestName,
@@ -291,6 +298,7 @@ export async function sendRefundEmail(props: EmailProps) {
         totalPrice: Number(props.totalPrice).toLocaleString(),
     };
 
+    const headerTitle = replacePlaceholders(tmpl?.header_title || settings.site_name || 'SEAVIEW', vars);
     const subject = replacePlaceholders(tmpl?.subject || 'Refund Processed #{bookingRef} - Seaview Resort', vars);
     const badge = replacePlaceholders(tmpl?.status_badge || 'Status: Refund Processed', vars);
     const heading = replacePlaceholders(tmpl?.heading || 'Refund Confirmation', vars);
@@ -306,7 +314,7 @@ export async function sendRefundEmail(props: EmailProps) {
         <div style="font-family: Arial, sans-serif; background-color: #faf7f2; padding: 24px; color: #1c120c;">
           <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e6c898; overflow: hidden;">
             <div style="background-color: #1c120c; padding: 20px; text-align: center; color: #faf7f2;">
-              <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${settings.site_name || 'SEAVIEW'}</h1>
+              <h1 style="margin: 0; font-size: 20px; letter-spacing: 2px;">${headerTitle}</h1>
               <p style="margin: 4px 0 0 0; font-size: 11px; color: #c89349; text-transform: uppercase;">Modern Filipino Kubo Sanctuary</p>
             </div>
 
@@ -342,7 +350,7 @@ export async function sendRefundEmail(props: EmailProps) {
         });
 
         return { success: true, data: info };
-    } catch (err) {
+    } catch (err: unknown) {
         return { success: false, error: err };
     }
 }

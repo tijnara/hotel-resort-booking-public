@@ -27,6 +27,7 @@ export interface PaymentMethodItem {
 }
 
 export interface EmailTemplateItem {
+    header_title?: string;
     subject: string;
     status_badge: string;
     heading: string;

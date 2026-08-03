@@ -12,9 +12,10 @@ import { SanctuarySettingsTab } from './settings/SanctuarySettingsTab';
 import { ContactSettingsTab } from './settings/ContactSettingsTab';
 import { FooterSettingsTab } from './settings/FooterSettingsTab';
 
-interface SingleEmailTemplate {
+export interface SingleEmailTemplate {
     subject?: string;
     status_badge?: string;
+    header_title?: string;
     heading?: string;
     body_text?: string;
     footer_text?: string;
@@ -23,6 +24,7 @@ interface SingleEmailTemplate {
 const DEFAULT_EMAIL_TEMPLATE: SingleEmailTemplate = {
     subject: '',
     status_badge: '',
+    header_title: '',
     heading: '',
     body_text: '',
     footer_text: '',
@@ -226,7 +228,7 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Email Notifications</span>
                             <h3 className="text-lg font-bold text-[#1c120c]">Customize Email Message Templates</h3>
                             <p className="text-xs text-[#2b1d14]/60 mt-1">
-                                Edit subject lines, status badges, headers, body text, and footers for all 4 booking email stages.
+                                Edit subject lines, top header banners, status badges, headings, body text, and footers for all 4 booking email stages.
                             </p>
                         </div>
 
@@ -255,6 +257,7 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Email Subject Line</label>
                                             <input
                                                 type="text"
+                                                placeholder="e.g. Booking Confirmation - Seaview Resort"
                                                 value={tmpl.subject || ''}
                                                 onChange={(e) => updateField('subject', e.target.value)}
                                                 className="w-full text-xs font-semibold bg-white p-2.5 rounded-xl border outline-none"
@@ -265,6 +268,7 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Status Badge Text</label>
                                             <input
                                                 type="text"
+                                                placeholder="e.g. CONFIRMED"
                                                 value={tmpl.status_badge || ''}
                                                 onChange={(e) => updateField('status_badge', e.target.value)}
                                                 className="w-full text-xs font-semibold bg-white p-2.5 rounded-xl border outline-none"
@@ -272,14 +276,28 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Main Heading</label>
-                                        <input
-                                            type="text"
-                                            value={tmpl.heading || ''}
-                                            onChange={(e) => updateField('heading', e.target.value)}
-                                            className="w-full text-xs font-semibold bg-white p-2.5 rounded-xl border outline-none"
-                                        />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Top Email Banner / Header Title</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. SEAVIEW KUBO RESORT"
+                                                value={tmpl.header_title || ''}
+                                                onChange={(e) => updateField('header_title', e.target.value)}
+                                                className="w-full text-xs font-semibold bg-white p-2.5 rounded-xl border outline-none"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Main Heading</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. Reservation Confirmed!"
+                                                value={tmpl.heading || ''}
+                                                onChange={(e) => updateField('heading', e.target.value)}
+                                                className="w-full text-xs font-semibold bg-white p-2.5 rounded-xl border outline-none"
+                                            />
+                                        </div>
                                     </div>
 
                                     <div>
