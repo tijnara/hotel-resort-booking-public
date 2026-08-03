@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Save, Loader2, Palette, Home, Info, Camera, Phone, MapPin, ChevronRight, CreditCard, Mail, Plus, Trash2 } from 'lucide-react';
+import { Save, Loader2, Palette, Home, Info, Camera, Phone, MapPin, ChevronRight, CreditCard, Mail } from 'lucide-react';
 import { updateSiteSettingsAction } from '../actions/settingsActions';
 import type { SiteSettings, PaymentMethodItem, EmailTemplatesSettings } from '@/modules/settings/services/getSettings';
 
@@ -85,17 +85,19 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                 </div>
             )}
 
-            {/* Floating Tab Bar Container */}
-            <div className="sticky top-4 z-30 bg-[#faf7f2]/95 backdrop-blur-xl p-2 rounded-2xl border border-[#e6c898]/40 shadow-sm relative space-y-1.5">
-                <div className="flex items-center justify-between sm:hidden text-[10px] font-bold uppercase tracking-widest text-[#c89349] px-1 pt-0.5">
-                    <span>Content Sections</span>
+            {/* Floating Responsive Tab Bar Container */}
+            <div className="sticky top-4 z-30 bg-[#faf7f2]/95 backdrop-blur-xl p-2.5 rounded-2xl border border-[#e6c898]/40 shadow-sm relative space-y-2">
+                {/* 📱 Mobile Indicator for Touch Swiping (Hidden on PC) */}
+                <div className="flex items-center justify-between md:hidden text-[10px] font-bold uppercase tracking-widest text-[#c89349] px-1 pt-0.5">
+                    <span>Site Customization Tabs</span>
                     <span className="flex items-center gap-1 bg-[#c89349]/15 px-2.5 py-1 rounded-full text-[#1c120c]">
                         <span>Swipe tabs</span>
                         <ChevronRight className="w-3.5 h-3.5 animate-pulse text-[#c89349]" />
                     </span>
                 </div>
 
-                <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-1 py-0.5">
+                {/* 🖥️ Desktop Glass Pill Matrix (Auto-Wraps on PC / Swipes on Mobile) */}
+                <div className="flex items-center gap-1.5 md:gap-2 max-md:overflow-x-auto md:flex-wrap max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden px-0.5 py-0.5">
                     {navTabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = subTab === tab.id;
@@ -105,15 +107,18 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                                 key={tab.id}
                                 type="button"
                                 onClick={() => setSubTab(tab.id)}
-                                className={`group relative min-h-[42px] px-3.5 sm:px-4 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all duration-300 shrink-0 cursor-pointer ${
+                                className={`group relative min-h-[40px] px-3.5 md:px-4 rounded-xl text-[11px] md:text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all duration-200 shrink-0 md:shrink cursor-pointer border ${
                                     isActive
-                                        ? 'bg-[#1c120c] text-[#faf7f2] shadow-md scale-[1.02]'
-                                        : 'text-[#2b1d14]/70 hover:bg-white/80 hover:text-[#1c120c]'
+                                        ? 'bg-[#1c120c] text-[#faf7f2] border-[#1c120c] shadow-md scale-[1.02]'
+                                        : 'bg-white/80 text-[#2b1d14]/70 border-[#e6c898]/40 hover:bg-white hover:text-[#1c120c] hover:border-[#c89349]/50'
                                 }`}
                             >
                                 <Icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-[#c89349]' : 'text-[#c89349]/70 group-hover:text-[#c89349]'}`} />
                                 <span>{tab.label}</span>
-                                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#c89349] animate-pulse ml-0.5" />}
+
+                                {isActive && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#c89349] animate-pulse ml-0.5" />
+                                )}
                             </button>
                         );
                     })}
@@ -136,10 +141,9 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                             <button
                                 type="button"
                                 onClick={handleAddPaymentMethod}
-                                className="px-4 py-2.5 bg-[#c89349] text-[#1c120c] font-bold text-xs uppercase rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                className="px-4 py-2.5 bg-[#c89349] text-[#1c120c] font-bold text-xs uppercase rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs hover:bg-[#b07d37] transition active:scale-95"
                             >
-                                <Plus className="w-4 h-4" />
-                                <span>Add Payment Channel</span>
+                                <span>+ Add Payment Channel</span>
                             </button>
                         </div>
 
@@ -153,7 +157,6 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                                             onClick={() => handleDeletePaymentMethod(method.id)}
                                             className="text-rose-600 hover:text-rose-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
                                         >
-                                            <Trash2 className="w-3.5 h-3.5" />
                                             <span>Delete</span>
                                         </button>
                                     </div>
@@ -202,7 +205,7 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Email Notifications</span>
                             <h3 className="text-lg font-bold text-[#1c120c]">Customize Email Message Templates</h3>
                             <p className="text-xs text-[#2b1d14]/60 mt-1">
-                                Edit subject lines, status badges, headers, body text, and footers for all 4 booking email stages. Available dynamic tags: <code className="text-[#c89349] font-bold">{'{guestName}'}</code>, <code className="text-[#c89349] font-bold">{'{roomName}'}</code>, <code className="text-[#c89349] font-bold">{'{bookingRef}'}</code>, <code className="text-[#c89349] font-bold">{'{checkIn}'}</code>, <code className="text-[#c89349] font-bold">{'{checkOut}'}</code>, <code className="text-[#c89349] font-bold">{'{totalPrice}'}</code>.
+                                Edit subject lines, status badges, headers, body text, and footers for all 4 booking email stages.
                             </p>
                         </div>
 

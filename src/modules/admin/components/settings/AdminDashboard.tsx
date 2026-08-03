@@ -113,12 +113,16 @@ export function AdminDashboardComponent({
 
         const updatedTabNames = { ...tabNames };
 
-        await updateSiteSettingsAction({
+        const res = await updateSiteSettingsAction({
             ...siteSettings,
             admin_tab_names: updatedTabNames,
         });
 
         setSavingTabKey(null);
+
+        if (!res || !res.success) {
+            alert(`Failed to save tab name in database: ${res?.message || 'Unknown error'}`);
+        }
     };
 
     // Save Updated Cancellation Reasons List (Admins Only)
@@ -150,8 +154,8 @@ export function AdminDashboardComponent({
         const res = await updateBookingStatusAction(id, status, reason);
         setLoadingId(null);
 
-        if (!res.success) {
-            alert(`Error updating reservation: ${res.message}`);
+        if (!res || !res.success) {
+            alert(`Error updating reservation: ${res?.message || 'Unknown error'}`);
         }
     };
 
@@ -231,10 +235,10 @@ export function AdminDashboardComponent({
         });
 
         setSavingVillasHeader(false);
-        if (res.success) {
+        if (res && res.success) {
             setVillasHeaderMsg({ type: 'success', text: 'Kubo Villas page header updated successfully!' });
         } else {
-            setVillasHeaderMsg({ type: 'error', text: res.message || 'Failed to update page header.' });
+            setVillasHeaderMsg({ type: 'error', text: res?.message || 'Failed to update page header.' });
         }
     };
 
@@ -247,13 +251,13 @@ export function AdminDashboardComponent({
         const res = await createStaffUserAction({ fullName, email, password, role });
         setUserLoading(false);
 
-        if (res.success) {
+        if (res && res.success) {
             setUserMsg({ type: 'success', text: 'New staff user added successfully!' });
             setFullName('');
             setEmail('');
             setPassword('');
         } else {
-            setUserMsg({ type: 'error', text: res.message || 'Failed to create user.' });
+            setUserMsg({ type: 'error', text: res?.message || 'Failed to create user.' });
         }
     };
 
@@ -284,13 +288,13 @@ export function AdminDashboardComponent({
 
         setEditUserLoading(false);
 
-        if (res.success) {
+        if (res && res.success) {
             setEditUserMsg({ type: 'success', text: 'Staff account updated successfully!' });
             setTimeout(() => {
                 setEditingUser(null);
             }, 1000);
         } else {
-            setEditUserMsg({ type: 'error', text: res.message || 'Failed to update user.' });
+            setEditUserMsg({ type: 'error', text: res?.message || 'Failed to update user.' });
         }
     };
 
@@ -302,8 +306,8 @@ export function AdminDashboardComponent({
         const res = await deleteStaffUserAction(id);
         setDeletingUserId(null);
 
-        if (!res.success) {
-            alert(`Error deleting user: ${res.message}`);
+        if (!res || !res.success) {
+            alert(`Error deleting user: ${res?.message || 'Unknown error'}`);
         }
     };
 
@@ -315,16 +319,16 @@ export function AdminDashboardComponent({
         const res = await deleteRoomAction(id);
         setDeletingRoomId(null);
 
-        if (!res.success) {
-            alert(`Error deleting villa: ${res.message}`);
+        if (!res || !res.success) {
+            alert(`Error deleting villa: ${res?.message || 'Unknown error'}`);
         }
     };
 
     return (
         <div className="space-y-8">
-            {/* Top View Selector Container */}
+            {/* Top Navigation Control Container */}
             <div className="space-y-2">
-                <div className="flex items-center justify-between sm:hidden text-[10px] font-bold uppercase tracking-widest text-[#c89349]">
+                <div className="flex items-center justify-between md:hidden text-[10px] font-bold uppercase tracking-widest text-[#c89349]">
                     <span>Control Sections</span>
                     <span className="flex items-center gap-1 bg-[#c89349]/15 px-2.5 py-1 rounded-full text-[#1c120c]">
                         <span>Swipe tabs</span>
@@ -332,16 +336,17 @@ export function AdminDashboardComponent({
                     </span>
                 </div>
 
-                <div className="flex items-center gap-3 border-b border-[#e6c898]/40 pb-4 overflow-x-auto [scrollbar-width:none]">
+                {/* 🖥️ Responsive Layout: Auto-Wraps on PC / Swipes on Mobile */}
+                <div className="flex items-center gap-2.5 md:gap-3 border-b border-[#e6c898]/40 pb-4 max-md:overflow-x-auto md:flex-wrap max-md:[scrollbar-width:none]">
                     {MAIN_NAVIGATION_TABS.map(({ key, icon: IconComponent }) => {
                         const isSelected = mainTab === key;
                         const isEditing = editingTabKey === key;
                         const isSaving = savingTabKey === key;
 
                         return (
-                            <div key={key} className="flex items-center gap-1 shrink-0">
+                            <div key={key} className="flex items-center gap-1 shrink-0 md:shrink">
                                 {isEditing && isAdmin ? (
-                                    <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-2xl border border-[#c89349] shadow-sm">
+                                    <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-2xl border border-[#c89349] shadow-xs">
                                         <input
                                             type="text"
                                             value={tabNames[key] || ''}
@@ -364,7 +369,7 @@ export function AdminDashboardComponent({
                                     <div className={`min-h-[44px] px-5 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap ${
                                         isSelected
                                             ? 'bg-[#1c120c] text-[#faf7f2]'
-                                            : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
+                                            : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40 hover:bg-[#faf7f2]'
                                     }`}>
                                         <button
                                             onClick={() => setMainTab(key)}

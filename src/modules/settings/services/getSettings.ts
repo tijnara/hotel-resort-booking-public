@@ -41,6 +41,14 @@ export interface EmailTemplatesSettings {
     refunded: EmailTemplateItem;
 }
 
+export interface ContactInfoItem {
+    id: string;
+    title: string;
+    value: string;
+    subtitle?: string;
+    icon?: string;
+}
+
 export interface SiteSettings {
     id: string;
     site_name: string;
@@ -80,6 +88,7 @@ export interface SiteSettings {
     contact_subtitle?: string;
     contact_landline?: string;
     inquiry_email?: string;
+    contact_cards?: ContactInfoItem[];
     about_title?: string;
     about_subtitle?: string;
     about_badge_text?: string;
@@ -91,7 +100,7 @@ export interface SiteSettings {
     about_features_subtitle?: string;
     about_features_title?: string;
     about_features?: AboutFeature[];
-    // 💾 Database storage for custom Admin tab titles, reasons, payment methods, and emails
+    // 💾 Database storage for custom Admin tab titles, reasons, payment methods, emails, and contact info
     admin_tab_names?: Record<string, string>;
     cancellation_reasons?: string[];
     payment_methods?: PaymentMethodItem[];
@@ -114,6 +123,37 @@ const DEFAULT_SANCTUARY_GALLERY = [
     'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+];
+
+const DEFAULT_CONTACT_CARDS: ContactInfoItem[] = [
+    {
+        id: 'card_1',
+        title: 'Front Desk & Reservations',
+        value: '+63 912 345 6789',
+        subtitle: 'Available 24/7 for staycation bookings and assistance',
+        icon: 'Phone',
+    },
+    {
+        id: 'card_2',
+        title: 'Email Inquiries',
+        value: 'reservations@seaviewkubo.com',
+        subtitle: 'Guaranteed response within 2 hours',
+        icon: 'Mail',
+    },
+    {
+        id: 'card_3',
+        title: 'Resort Address',
+        value: 'Coastal Highway, Pangasinan, Philippines',
+        subtitle: 'Main Beachfront Entrance & Reception Desk',
+        icon: 'MapPin',
+    },
+    {
+        id: 'card_4',
+        title: 'Check-In Hours',
+        value: 'Check-In: 2:00 PM | Check-Out: 12:00 NN',
+        subtitle: 'Early check-in subject to villa availability',
+        icon: 'Clock',
+    },
 ];
 
 const DEFAULT_ABOUT_FEATURES: AboutFeature[] = [
@@ -208,6 +248,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
                 sanctuary_gallery: (data.sanctuary_gallery && data.sanctuary_gallery.length > 0) ? data.sanctuary_gallery : DEFAULT_SANCTUARY_GALLERY,
                 contact_banner_image: data.contact_banner_image || DEFAULT_CONTACT_BANNER,
                 inquiry_email: data.inquiry_email || 'aranjitarchita@gmail.com',
+                contact_cards: (data.contact_cards && data.contact_cards.length > 0) ? data.contact_cards : DEFAULT_CONTACT_CARDS,
                 footer_watermark: (data.footer_watermark && data.footer_watermark.trim() !== '') ? data.footer_watermark : (data.site_name || 'SEAVIEW'),
                 footer_description: data.footer_description || 'Executive coastal Kubo suites where traditional Filipino craftsmanship meets contemporary beachfront luxury.',
                 about_badge_text: data.about_badge_text || `Discover ${data.site_name || 'SEAVIEW'}`,
@@ -275,6 +316,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         contact_subtitle: 'We are here to assist with your beachfront villa reservations, private staycations, and custom coastal experience inquiries.',
         contact_landline: '(075) 632-8888',
         inquiry_email: 'aranjitarchita@gmail.com',
+        contact_cards: DEFAULT_CONTACT_CARDS,
         about_badge_text: 'Discover SEAVIEW',
         about_title: 'Crafted for Serenity & Comfort',
         about_subtitle: 'A beachfront staycation tucked away along the pristine coastal waters of Pangasinan.',
