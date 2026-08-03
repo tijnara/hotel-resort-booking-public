@@ -50,11 +50,20 @@ interface AdminDashboardProps {
     userRole?: string;
 }
 
+type DashboardTabKey = 'bookings' | 'villas' | 'settings' | 'users';
+
 const DEFAULT_REASONS = [
     'Guest requested cancellation',
     'Invalid or unverified payment receipt',
     'Unpaid / Expired payment deadline',
     'Double booking / Schedule conflict',
+];
+
+const MAIN_NAVIGATION_TABS: Array<{ key: DashboardTabKey; icon: typeof Clock }> = [
+    { key: 'bookings', icon: Clock },
+    { key: 'villas', icon: Home },
+    { key: 'settings', icon: Sliders },
+    { key: 'users', icon: UserPlus },
 ];
 
 export function AdminDashboardComponent({
@@ -66,7 +75,7 @@ export function AdminDashboardComponent({
                                         }: AdminDashboardProps) {
     const isAdmin = userRole.toLowerCase() === 'admin';
 
-    const [mainTab, setMainTab] = useState<'bookings' | 'users' | 'villas' | 'settings'>('bookings');
+    const [mainTab, setMainTab] = useState<DashboardTabKey>('bookings');
     const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'refunded'>('all');
     const [loadingId, setLoadingId] = useState<string | null>(null);
     const [viewingReceiptUrl, setViewingReceiptUrl] = useState<string | null>(null);
@@ -82,7 +91,7 @@ export function AdminDashboardComponent({
     const [newReasonInput, setNewReasonInput] = useState('');
 
     // Supabase Database-Backed Tab Names
-    const DEFAULT_TAB_NAMES = {
+    const DEFAULT_TAB_NAMES: Record<DashboardTabKey, string> = {
         bookings: 'Reservations & Payments',
         villas: `Kubo Villas (${initialRooms.length})`,
         settings: 'Site Content & Branding',
@@ -324,12 +333,7 @@ export function AdminDashboardComponent({
                 </div>
 
                 <div className="flex items-center gap-3 border-b border-[#e6c898]/40 pb-4 overflow-x-auto [scrollbar-width:none]">
-                    {[
-                        { key: 'bookings', icon: Clock },
-                        { key: 'villas', icon: Home },
-                        { key: 'settings', icon: Sliders },
-                        { key: 'users', icon: UserPlus },
-                    ].map(({ key, icon: IconComponent }) => {
+                    {MAIN_NAVIGATION_TABS.map(({ key, icon: IconComponent }) => {
                         const isSelected = mainTab === key;
                         const isEditing = editingTabKey === key;
                         const isSaving = savingTabKey === key;
@@ -363,7 +367,7 @@ export function AdminDashboardComponent({
                                             : 'bg-white text-[#2b1d14]/70 border border-[#e6c898]/40'
                                     }`}>
                                         <button
-                                            onClick={() => setMainTab(key as any)}
+                                            onClick={() => setMainTab(key)}
                                             className="flex items-center gap-2 cursor-pointer outline-none"
                                         >
                                             {isSaving ? (
