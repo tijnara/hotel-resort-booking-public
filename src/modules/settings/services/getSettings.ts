@@ -67,6 +67,8 @@ export interface SiteSettings {
     about_features_subtitle?: string;
     about_features_title?: string;
     about_features?: AboutFeature[];
+    // 💾 Database storage for custom Admin Tab Titles
+    admin_tab_names?: Record<string, string>;
 }
 
 const DEFAULT_HERO_IMAGES = [
@@ -105,6 +107,13 @@ const DEFAULT_ABOUT_FEATURES: AboutFeature[] = [
     },
 ];
 
+const DEFAULT_ADMIN_TAB_NAMES = {
+    bookings: 'Reservations & Payments',
+    villas: 'Kubo Villas',
+    settings: 'Site Content & Branding',
+    users: 'Users & Staff',
+};
+
 export async function getSiteSettings(): Promise<SiteSettings> {
     try {
         const supabase = await createClient();
@@ -138,6 +147,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
                 about_features_title: data.about_features_title || 'The Seaview Difference',
                 about_features: (data.about_features && data.about_features.length > 0) ? data.about_features : DEFAULT_ABOUT_FEATURES,
                 sanctuary_badge_text: data.sanctuary_badge_text || 'Modern Beachfront Staycation',
+                admin_tab_names: data.admin_tab_names || DEFAULT_ADMIN_TAB_NAMES,
             } as SiteSettings;
         }
     } catch (err) {
@@ -199,5 +209,6 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         about_features_subtitle: 'WHY CHOOSE US',
         about_features_title: 'The Seaview Difference',
         about_features: DEFAULT_ABOUT_FEATURES,
+        admin_tab_names: DEFAULT_ADMIN_TAB_NAMES,
     };
 }

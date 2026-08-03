@@ -29,6 +29,11 @@ export default async function AdminPage() {
         getSiteSettings(),
     ]);
 
+    // Determine user role and formatted display label
+    const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+    const userRole = (user.user_metadata?.role || 'staff').toLowerCase();
+    const userDisplayLabel = `${fullName} (${userRole.toUpperCase()})`;
+
     return (
         <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between">
             <div>
@@ -39,7 +44,9 @@ export default async function AdminPage() {
                     </Link>
 
                     <div className="flex items-center gap-4">
-                        <span className="text-xs text-[#e6c898] hidden sm:inline">{user.email}</span>
+                        <span className="text-xs font-semibold text-[#e6c898] hidden sm:inline">
+                            {userDisplayLabel}
+                        </span>
                         <form action="/auth/signout" method="post">
                             <button
                                 type="submit"
@@ -63,6 +70,7 @@ export default async function AdminPage() {
                         initialStaff={staffUsers}
                         initialRooms={rooms}
                         siteSettings={settings}
+                        userRole={userRole}
                     />
                 </main>
             </div>
