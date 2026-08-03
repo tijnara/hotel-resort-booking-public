@@ -245,9 +245,10 @@ export function CheckoutDrawer({
             } else {
                 setErrorMessage(res.message || 'Failed to complete booking.');
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             setIsSubmitting(false);
-            setErrorMessage(err.message || 'Payment submission failed.');
+            const message = err instanceof Error ? err.message : 'Payment submission failed.';
+            setErrorMessage(message);
         }
     };
 

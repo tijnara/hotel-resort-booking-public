@@ -24,7 +24,7 @@ export async function getAdminBookings() {
         }
 
         return data || [];
-    } catch (err) {
+    } catch (err: unknown) {
         console.error('Unexpected error fetching admin bookings:', err);
         return [];
     }
@@ -56,7 +56,11 @@ export async function updateBookingStatusAction(
     }
 
     // 2. Prepare payload and update status/cancellation_reason in Supabase
-    const updatePayload: Record<string, any> = { status: newStatus };
+    const updatePayload: {
+        status: 'pending' | 'confirmed' | 'cancelled' | 'refunded';
+        cancellation_reason?: string;
+    } = { status: newStatus };
+
     if (newStatus === 'cancelled' && cancellationReason) {
         updatePayload.cancellation_reason = cancellationReason;
     }
@@ -109,14 +113,14 @@ export async function updateBookingStatusAction(
                 totalPrice: Number(booking.total_price),
             });
         }
-    } catch (emailErr) {
+    } catch (emailErr: unknown) {
         console.error('Failed to dispatch status update email:', emailErr);
     }
 
     // 4. Revalidate paths to refresh calendars and dashboard views
-    revalidatePath('/admin');
-    revalidatePath('/villas');
-    revalidatePath('/');
+    revalidatePath('/admin', 'page');
+    revalidatePath('/villas', 'page');
+    revalidatePath('/', 'page');
 
     return { success: true };
 }

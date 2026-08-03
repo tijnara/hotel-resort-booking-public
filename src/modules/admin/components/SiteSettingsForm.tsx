@@ -12,6 +12,29 @@ import { SanctuarySettingsTab } from './settings/SanctuarySettingsTab';
 import { ContactSettingsTab } from './settings/ContactSettingsTab';
 import { FooterSettingsTab } from './settings/FooterSettingsTab';
 
+interface SingleEmailTemplate {
+    subject?: string;
+    status_badge?: string;
+    heading?: string;
+    body_text?: string;
+    footer_text?: string;
+}
+
+const DEFAULT_EMAIL_TEMPLATE: SingleEmailTemplate = {
+    subject: '',
+    status_badge: '',
+    heading: '',
+    body_text: '',
+    footer_text: '',
+};
+
+const EMAIL_STAGE_TEMPLATES: Array<{ key: keyof EmailTemplatesSettings; title: string }> = [
+    { key: 'request_received', title: '1. Request Received (Pending Review)' },
+    { key: 'confirmed', title: '2. Booking Confirmed' },
+    { key: 'cancelled', title: '3. Booking Cancelled' },
+    { key: 'refunded', title: '4. Refund Processed' },
+];
+
 export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
     const [subTab, setSubTab] = useState<'branding' | 'home' | 'about' | 'sanctuary' | 'contact' | 'footer' | 'payments' | 'emails'>('branding');
     const [formData, setFormData] = useState<SiteSettings>(settings);
@@ -87,7 +110,6 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
 
             {/* Floating Responsive Tab Bar Container */}
             <div className="sticky top-4 z-30 bg-[#faf7f2]/95 backdrop-blur-xl p-2.5 rounded-2xl border border-[#e6c898]/40 shadow-sm relative space-y-2">
-                {/* 📱 Mobile Indicator for Touch Swiping (Hidden on PC) */}
                 <div className="flex items-center justify-between md:hidden text-[10px] font-bold uppercase tracking-widest text-[#c89349] px-1 pt-0.5">
                     <span>Site Customization Tabs</span>
                     <span className="flex items-center gap-1 bg-[#c89349]/15 px-2.5 py-1 rounded-full text-[#1c120c]">
@@ -96,7 +118,6 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                     </span>
                 </div>
 
-                {/* 🖥️ Desktop Glass Pill Matrix (Auto-Wraps on PC / Swipes on Mobile) */}
                 <div className="flex items-center gap-1.5 md:gap-2 max-md:overflow-x-auto md:flex-wrap max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden px-0.5 py-0.5">
                     {navTabs.map((tab) => {
                         const Icon = tab.icon;
@@ -129,7 +150,7 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
             <div className="transition-all duration-300">
                 {subTab === 'branding' && <BrandingSettingsTab formData={formData} setFormData={setFormData} />}
 
-                {/* 💳 Payment Methods Tab */}
+                {/* Payment Methods Tab */}
                 {subTab === 'payments' && (
                     <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
                         <div className="flex justify-between items-center flex-wrap gap-3">
@@ -198,7 +219,7 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                     </div>
                 )}
 
-                {/* ✉️ Email Templates Tab */}
+                {/* Email Templates Tab */}
                 {subTab === 'emails' && (
                     <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
                         <div>
@@ -209,15 +230,10 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                             </p>
                         </div>
 
-                        {[
-                            { key: 'request_received', title: '1. Request Received (Pending Review)' },
-                            { key: 'confirmed', title: '2. Booking Confirmed' },
-                            { key: 'cancelled', title: '3. Booking Cancelled' },
-                            { key: 'refunded', title: '4. Refund Processed' },
-                        ].map(({ key, title }) => {
-                            const tmpl = (formData.email_templates as any)?.[key] || {};
+                        {EMAIL_STAGE_TEMPLATES.map(({ key, title }) => {
+                            const tmpl: SingleEmailTemplate = formData.email_templates?.[key] || DEFAULT_EMAIL_TEMPLATE;
 
-                            const updateField = (field: string, value: string) => {
+                            const updateField = (field: keyof SingleEmailTemplate, value: string) => {
                                 setFormData({
                                     ...formData,
                                     email_templates: {

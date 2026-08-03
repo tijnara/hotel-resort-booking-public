@@ -18,12 +18,13 @@ export async function createRoomAction(roomData: Partial<Room>) {
             return { success: false, message: error.message };
         }
 
-        revalidatePath('/admin');
-        revalidatePath('/villas');
-        revalidatePath('/');
+        revalidatePath('/admin', 'page');
+        revalidatePath('/villas', 'page');
+        revalidatePath('/', 'page');
         return { success: true, room: data };
-    } catch (err: any) {
-        return { success: false, message: err.message || 'Failed to create room.' };
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to create room.';
+        return { success: false, message };
     }
 }
 
@@ -42,12 +43,13 @@ export async function updateRoomAction(id: string, roomData: Partial<Room>) {
             return { success: false, message: error.message };
         }
 
-        revalidatePath('/admin');
-        revalidatePath('/villas');
-        revalidatePath('/');
+        revalidatePath('/admin', 'page');
+        revalidatePath('/villas', 'page');
+        revalidatePath('/', 'page');
         return { success: true, room: data };
-    } catch (err: any) {
-        return { success: false, message: err.message || 'Failed to update room.' };
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to update room.';
+        return { success: false, message };
     }
 }
 
@@ -64,11 +66,12 @@ export async function deleteRoomAction(id: string) {
             return { success: false, message: error.message };
         }
 
-        revalidatePath('/admin');
-        revalidatePath('/villas');
-        revalidatePath('/');
+        revalidatePath('/admin', 'page');
+        revalidatePath('/villas', 'page');
+        revalidatePath('/', 'page');
         return { success: true };
-    } catch (err: any) {
-        return { success: false, message: err.message || 'Failed to delete room.' };
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to delete room.';
+        return { success: false, message };
     }
 }
