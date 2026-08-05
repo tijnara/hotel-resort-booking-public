@@ -7,8 +7,10 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata() {
     const settings = await getSiteSettings();
+    const siteName = settings.site_name || 'SEAVIEW';
+
     return {
-        title: `Kubo Villas | ${settings.site_name}`,
+        title: settings.villas_meta_title?.trim() || `Kubo Villas | ${siteName}`,
         description: 'Explore and reserve handcrafted beachfront Kubo villas blending ancestral Philippine architecture with modern luxury.',
     };
 }

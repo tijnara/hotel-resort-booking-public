@@ -73,6 +73,79 @@ export function BrandingSettingsTab({ formData, setFormData }: Props) {
                     <h3 className="text-lg font-bold text-[#1c120c]">Business Branding</h3>
                 </div>
 
+                {/* All Page Browser Tab Titles */}
+                <div className="bg-[#faf7f2] p-4 rounded-2xl border border-[#e6c898]/40 space-y-3">
+                    <div>
+                        <span className="text-[10px] font-bold text-[#c89349] uppercase tracking-widest block">
+                            🌐 Browser Tab Titles (SEO Meta Titles)
+                        </span>
+                        <p className="text-[11px] text-gray-500">
+                            Customize the browser tab titles displayed to users for every page of your resort website.
+                        </p>
+                    </div>
+
+                    <div className="space-y-3 pt-1">
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Home Page Tab Title</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. SEAVIEW | Executive Coastal Kubo Villas & Resort"
+                                value={formData.meta_title || ''}
+                                onChange={(e) => setFormData({ ...formData, meta_title: e.target.value })}
+                                className="w-full text-xs font-semibold text-[#1c120c] bg-white p-2.5 rounded-xl border border-[#e6c898]/40 outline-none focus:border-[#c89349]"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Kubo Villas Page Tab Title</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Kubo Villas | SEAVIEW"
+                                    value={formData.villas_meta_title || ''}
+                                    onChange={(e) => setFormData({ ...formData, villas_meta_title: e.target.value })}
+                                    className="w-full text-xs font-semibold text-[#1c120c] bg-white p-2.5 rounded-xl border border-[#e6c898]/40 outline-none focus:border-[#c89349]"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">The Sanctuary Page Tab Title</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. The Sanctuary | SEAVIEW"
+                                    value={formData.sanctuary_meta_title || ''}
+                                    onChange={(e) => setFormData({ ...formData, sanctuary_meta_title: e.target.value })}
+                                    className="w-full text-xs font-semibold text-[#1c120c] bg-white p-2.5 rounded-xl border border-[#e6c898]/40 outline-none focus:border-[#c89349]"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Contact Us Page Tab Title</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Contact Us | SEAVIEW"
+                                    value={formData.contact_meta_title || ''}
+                                    onChange={(e) => setFormData({ ...formData, contact_meta_title: e.target.value })}
+                                    className="w-full text-xs font-semibold text-[#1c120c] bg-white p-2.5 rounded-xl border border-[#e6c898]/40 outline-none focus:border-[#c89349]"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">About Us Page Tab Title</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. About Us | SEAVIEW"
+                                    value={formData.about_meta_title || ''}
+                                    onChange={(e) => setFormData({ ...formData, about_meta_title: e.target.value })}
+                                    className="w-full text-xs font-semibold text-[#1c120c] bg-white p-2.5 rounded-xl border border-[#e6c898]/40 outline-none focus:border-[#c89349]"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
                         <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Business Name</label>

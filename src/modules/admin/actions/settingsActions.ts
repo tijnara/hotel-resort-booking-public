@@ -21,9 +21,9 @@ export async function updateSiteSettingsAction(newSettings: Partial<SiteSettings
             return { success: false, message: error.message };
         }
 
-        // 🚀 Purges root layout and ALL page caches globally (Watermark, Logo, Footer, Nav, etc.)
+        // 🚀 Purges root layout and ALL page caches globally (Browser Title, Watermark, Logo, Footer, Nav, etc.)
         revalidatePath('/', 'layout');
-        revalidatePath('/admin');
+        revalidatePath('/admin', 'layout');
 
         return { success: true };
     } catch (err: unknown) {

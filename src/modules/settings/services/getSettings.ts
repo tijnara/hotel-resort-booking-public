@@ -28,6 +28,7 @@ export interface PaymentMethodItem {
 
 export interface EmailTemplateItem {
     header_title?: string;
+    header_subtitle?: string;
     subject: string;
     status_badge: string;
     heading: string;
@@ -53,6 +54,11 @@ export interface ContactInfoItem {
 export interface SiteSettings {
     id: string;
     site_name: string;
+    meta_title?: string;
+    villas_meta_title?: string;      // 👈 Dynamic Browser Title for Villas Page
+    sanctuary_meta_title?: string;   // 👈 Dynamic Browser Title for Sanctuary Page
+    contact_meta_title?: string;     // 👈 Dynamic Browser Title for Contact Page
+    about_meta_title?: string;       // 👈 Dynamic Browser Title for About Page
     site_icon?: string;
     logo_url: string;
     hero_subtitle: string;
@@ -101,7 +107,6 @@ export interface SiteSettings {
     about_features_subtitle?: string;
     about_features_title?: string;
     about_features?: AboutFeature[];
-    // 💾 Database storage for custom Admin tab titles, reasons, payment methods, emails, and contact info
     admin_tab_names?: Record<string, string>;
     cancellation_reasons?: string[];
     payment_methods?: PaymentMethodItem[];
@@ -201,6 +206,8 @@ const DEFAULT_PAYMENT_METHODS: PaymentMethodItem[] = [
 
 const DEFAULT_EMAIL_TEMPLATES: EmailTemplatesSettings = {
     request_received: {
+        header_title: 'SEAVIEW',
+        header_subtitle: 'Modern Filipino Kubo Sanctuary',
         subject: 'Booking Request Received #{bookingRef} - Seaview Resort',
         status_badge: 'Status: Pending Desk Review',
         heading: 'Reservation Request Received',
@@ -208,6 +215,8 @@ const DEFAULT_EMAIL_TEMPLATES: EmailTemplatesSettings = {
         footer_text: 'Seaview Resort & Executive Kubo Suites • Coastal Highway, Philippines',
     },
     confirmed: {
+        header_title: 'SEAVIEW',
+        header_subtitle: 'Modern Filipino Kubo Sanctuary',
         subject: '[CONFIRMED] Official Reservation #{bookingRef} - Seaview Resort',
         status_badge: 'Status: Stay Confirmed',
         heading: 'Your Staycation is Confirmed!',
@@ -215,6 +224,8 @@ const DEFAULT_EMAIL_TEMPLATES: EmailTemplatesSettings = {
         footer_text: 'Seaview Resort & Executive Kubo Suites • Coastal Highway, Philippines',
     },
     cancelled: {
+        header_title: 'SEAVIEW',
+        header_subtitle: 'Modern Filipino Kubo Sanctuary',
         subject: 'Booking Cancelled #{bookingRef} - Seaview Resort',
         status_badge: 'Status: Reservation Cancelled',
         heading: 'Reservation Request Cancelled',
@@ -222,6 +233,8 @@ const DEFAULT_EMAIL_TEMPLATES: EmailTemplatesSettings = {
         footer_text: 'Seaview Resort & Executive Kubo Suites • Coastal Highway, Philippines',
     },
     refunded: {
+        header_title: 'SEAVIEW',
+        header_subtitle: 'Modern Filipino Kubo Sanctuary',
         subject: 'Refund Processed #{bookingRef} - Seaview Resort',
         status_badge: 'Status: Refund Processed',
         heading: 'Refund Confirmation',
@@ -240,8 +253,14 @@ export async function getSiteSettings(): Promise<SiteSettings> {
             .single();
 
         if (data) {
+            const siteName = data.site_name || 'SEAVIEW';
             return {
                 ...data,
+                meta_title: data.meta_title || `${siteName} | Executive Coastal Kubo Villas & Resort`,
+                villas_meta_title: data.villas_meta_title || `Kubo Villas | ${siteName}`,
+                sanctuary_meta_title: data.sanctuary_meta_title || `The Sanctuary | ${siteName}`,
+                contact_meta_title: data.contact_meta_title || `Contact Us | ${siteName}`,
+                about_meta_title: data.about_meta_title || `About Us | ${siteName}`,
                 site_icon: data.site_icon || 'Palmtree',
                 hero_images: (data.hero_images && data.hero_images.length > 0) ? data.hero_images : DEFAULT_HERO_IMAGES,
                 story_banner_image: data.story_banner_image || DEFAULT_STORY_BANNER,
@@ -250,9 +269,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
                 contact_banner_image: data.contact_banner_image || DEFAULT_CONTACT_BANNER,
                 inquiry_email: data.inquiry_email || 'aranjitarchita@gmail.com',
                 contact_cards: (data.contact_cards && data.contact_cards.length > 0) ? data.contact_cards : DEFAULT_CONTACT_CARDS,
-                footer_watermark: (data.footer_watermark && data.footer_watermark.trim() !== '') ? data.footer_watermark : (data.site_name || 'SEAVIEW'),
+                footer_watermark: (data.footer_watermark && data.footer_watermark.trim() !== '') ? data.footer_watermark : siteName,
                 footer_description: data.footer_description || 'Executive coastal Kubo suites where traditional Filipino craftsmanship meets contemporary beachfront luxury.',
-                about_badge_text: data.about_badge_text || `Discover ${data.site_name || 'SEAVIEW'}`,
+                about_badge_text: data.about_badge_text || `Discover ${siteName}`,
                 about_title: data.about_title || 'Crafted for Serenity & Comfort',
                 about_subtitle: data.about_subtitle || 'A beachfront staycation tucked away along the pristine coastal waters of Pangasinan.',
                 about_story_title: data.about_story_title || 'The Seaview Story',
@@ -276,6 +295,11 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     return {
         id: 'default',
         site_name: 'SEAVIEW',
+        meta_title: 'SEAVIEW | Executive Coastal Kubo Villas & Resort',
+        villas_meta_title: 'Kubo Villas | SEAVIEW',
+        sanctuary_meta_title: 'The Sanctuary | SEAVIEW',
+        contact_meta_title: 'Contact Us | SEAVIEW',
+        about_meta_title: 'About Us | SEAVIEW',
         site_icon: 'Palmtree',
         logo_url: '',
         hero_subtitle: 'MODERN FILIPINO COASTAL SANCTUARY',

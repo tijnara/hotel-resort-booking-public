@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { getSiteSettings } from '@/modules/settings/services/getSettings';
 import './globals.css';
+
+export const dynamic = 'force-dynamic';
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -12,10 +15,16 @@ const geistMono = Geist_Mono({
     subsets: ['latin'],
 });
 
-export const metadata: Metadata = {
-    title: 'Seaview | Modern Filipino Kubo Resort',
-    description: 'Handcrafted beachfront Kubo villas blending ancestral Philippine architecture with modern luxury.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+    const settings = await getSiteSettings();
+
+    const title = settings.meta_title?.trim() || `${settings.site_name || 'SEAVIEW'} | Executive Coastal Kubo Villas & Resort`;
+
+    return {
+        title,
+        description: settings.hero_description || 'Handcrafted beachfront Kubo villas blending ancestral Philippine architecture with modern luxury.',
+    };
+}
 
 export default function RootLayout({
                                        children,

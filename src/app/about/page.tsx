@@ -5,9 +5,11 @@ import { AboutClient } from '@/modules/about/components/AboutClient';
 
 export async function generateMetadata() {
     const settings = await getSiteSettings();
+    const siteName = settings.site_name || 'SEAVIEW';
+
     return {
-        title: `About Us | ${settings.site_name}`,
-        description: `Learn about ${settings.site_name}, our handcrafted kubo villas, and our commitment to authentic oceanfront Filipino hospitality.`,
+        title: settings.about_meta_title?.trim() || `About Us | ${siteName}`,
+        description: `Learn about ${siteName}, our handcrafted kubo villas, and our commitment to authentic oceanfront Filipino hospitality.`,
     };
 }
 

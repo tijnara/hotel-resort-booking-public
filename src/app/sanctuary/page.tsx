@@ -6,8 +6,10 @@ import { SanctuaryClient } from '@/modules/sanctuary/components/SanctuaryClient'
 
 export async function generateMetadata() {
     const settings = await getSiteSettings();
+    const siteName = settings.site_name || 'SEAVIEW';
+
     return {
-        title: `The Sanctuary | ${settings.site_name}`,
+        title: settings.sanctuary_meta_title?.trim() || `The Sanctuary | ${siteName}`,
         description: 'Discover coastal wellness, ocean breezes, and serene luxury at Seaview Sanctuary.',
     };
 }
