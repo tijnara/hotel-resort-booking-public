@@ -2,6 +2,7 @@
 
 import type { SiteSettings, ContactInfoItem } from '@/modules/settings/services/getSettings';
 import { Plus, Trash2, Phone, Mail, MapPin, Clock, HelpCircle } from 'lucide-react';
+import { HeroBackgroundControl } from './HeroBackgroundControl';
 
 interface ContactSettingsTabProps {
     formData: SiteSettings;
@@ -14,6 +15,8 @@ const AVAILABLE_ICONS = [
     { value: 'MapPin', label: 'Location Map Pin', icon: MapPin },
     { value: 'Clock', label: 'Clock / Hours', icon: Clock },
 ];
+
+const DEFAULT_CONTACT_BANNER = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80';
 
 export function ContactSettingsTab({ formData, setFormData }: ContactSettingsTabProps) {
     const handleAddContactCard = () => {
@@ -56,6 +59,18 @@ export function ContactSettingsTab({ formData, setFormData }: ContactSettingsTab
                     <h3 className="text-lg font-bold text-[#1c120c]">Main Heading & Page Subtitle</h3>
                 </div>
 
+                {/* 🎨 Hero Background Option (Image vs Color) */}
+                <HeroBackgroundControl
+                    title="Contact Us Hero Background"
+                    bgType={formData.contact_hero_bg_type || 'image'}
+                    imageUrl={formData.contact_banner_image || ''}
+                    bgColor={formData.contact_hero_bg_color || '#1c120c'}
+                    defaultImageUrl={DEFAULT_CONTACT_BANNER}
+                    onTypeChange={(type) => setFormData({ ...formData, contact_hero_bg_type: type })}
+                    onImageChange={(url) => setFormData({ ...formData, contact_banner_image: url })}
+                    onColorChange={(color) => setFormData({ ...formData, contact_hero_bg_color: color })}
+                />
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
                         <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">
@@ -96,30 +111,16 @@ export function ContactSettingsTab({ formData, setFormData }: ContactSettingsTab
                     />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
-                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">
-                            Landline Number
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.contact_landline || ''}
-                            onChange={(e) => setFormData({ ...formData, contact_landline: e.target.value })}
-                            className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none"
-                        />
-                    </div>
-
-                    <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
-                        <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">
-                            Hero Banner Image URL
-                        </label>
-                        <input
-                            type="url"
-                            value={formData.contact_banner_image || ''}
-                            onChange={(e) => setFormData({ ...formData, contact_banner_image: e.target.value })}
-                            className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none"
-                        />
-                    </div>
+                <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
+                    <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">
+                        Landline Number
+                    </label>
+                    <input
+                        type="text"
+                        value={formData.contact_landline || ''}
+                        onChange={(e) => setFormData({ ...formData, contact_landline: e.target.value })}
+                        className="w-full text-xs font-semibold text-[#1c120c] bg-transparent outline-none"
+                    />
                 </div>
             </div>
 

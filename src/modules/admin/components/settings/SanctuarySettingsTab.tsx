@@ -2,34 +2,20 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Camera, Images, Loader2, Plus, Trash2, Upload } from 'lucide-react';
+import { Camera, Images, Loader2, Plus, Trash2 } from 'lucide-react';
 import { createClient } from '@/modules/shared/lib/supabase/client';
 import type { SiteSettings, SanctuaryAmenity } from '@/modules/settings/services/getSettings';
+import { HeroBackgroundControl } from './HeroBackgroundControl';
 
 interface Props {
     formData: SiteSettings;
     setFormData: React.Dispatch<React.SetStateAction<SiteSettings>>;
 }
 
+const DEFAULT_SANCTUARY_BANNER = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=80';
+
 export function SanctuarySettingsTab({ formData, setFormData }: Props) {
-    const [sancBannerUploading, setSancBannerUploading] = useState(false);
     const [galleryUploading, setGalleryUploading] = useState(false);
-
-    const handleSanctuaryBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setSancBannerUploading(true);
-        const supabase = createClient();
-        const filePath = `sanctuary/banner-${Date.now()}.${file.name.split('.').pop()}`;
-
-        const { error } = await supabase.storage.from('room-images').upload(filePath, file);
-        if (!error) {
-            const { data } = supabase.storage.from('room-images').getPublicUrl(filePath);
-            if (data?.publicUrl) setFormData((prev) => ({ ...prev, sanctuary_banner_image: data.publicUrl }));
-        }
-        setSancBannerUploading(false);
-    };
 
     const handleSanctuaryGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -83,12 +69,24 @@ export function SanctuarySettingsTab({ formData, setFormData }: Props) {
     return (
         <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-6">
             <div>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-1.5">
-          <Camera className="w-3.5 h-3.5" />
-          The Sanctuary Page Content
-        </span>
-                <h3 className="text-lg font-bold text-[#1c120c]">Hero Header, Story Cards, Banner, Amenities & Gallery</h3>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349] flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5" />
+                    The Sanctuary Page Content
+                </span>
+                <h3 className="text-lg font-bold text-[#1c120c]">Hero Header, Background, Amenities & Gallery</h3>
             </div>
+
+            {/* 🎨 Hero Background Option (Image vs Color) */}
+            <HeroBackgroundControl
+                title="The Sanctuary Hero Background"
+                bgType={formData.sanctuary_hero_bg_type || 'image'}
+                imageUrl={formData.sanctuary_banner_image || ''}
+                bgColor={formData.sanctuary_hero_bg_color || '#1c120c'}
+                defaultImageUrl={DEFAULT_SANCTUARY_BANNER}
+                onTypeChange={(type) => setFormData({ ...formData, sanctuary_hero_bg_type: type })}
+                onImageChange={(url) => setFormData({ ...formData, sanctuary_banner_image: url })}
+                onColorChange={(color) => setFormData({ ...formData, sanctuary_hero_bg_color: color })}
+            />
 
             <div className="space-y-3 pb-4 border-b border-[#e6c898]/30">
                 <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
@@ -119,28 +117,6 @@ export function SanctuarySettingsTab({ formData, setFormData }: Props) {
                         onChange={(e) => setFormData({ ...formData, sanctuary_hero_description: e.target.value })}
                         className="w-full text-xs font-medium text-[#1c120c] bg-transparent outline-none resize-none leading-relaxed"
                     />
-                </div>
-            </div>
-
-            {/* Banner Upload */}
-            <div className="bg-[#faf7f2] p-4 rounded-2xl border border-[#e6c898]/40 space-y-3">
-                <label className="block text-[10px] font-bold text-[#2b1d14]/80 uppercase tracking-widest">Sanctuary Banner Photo</label>
-                <div className="flex items-center gap-4">
-                    {formData.sanctuary_banner_image ? (
-                        <div className="relative w-32 h-20 rounded-xl overflow-hidden border border-[#c89349]">
-                            <Image src={formData.sanctuary_banner_image} alt="Sanctuary banner" fill className="object-cover" />
-                        </div>
-                    ) : (
-                        <div className="w-32 h-20 bg-[#1c120c] text-[#c89349] rounded-xl flex items-center justify-center text-[10px] font-bold text-center px-2">
-                            Auto Photo
-                        </div>
-                    )}
-
-                    <label className="cursor-pointer min-h-[40px] px-4 bg-[#1c120c] text-[#faf7f2] text-xs font-bold uppercase rounded-xl flex items-center gap-2 hover:bg-[#2b1d14] transition">
-                        {sancBannerUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-[#c89349]" />}
-                        <span>{formData.sanctuary_banner_image ? 'Change Banner' : 'Upload Banner'}</span>
-                        <input type="file" accept="image/*" onChange={handleSanctuaryBannerUpload} disabled={sancBannerUploading} className="hidden" />
-                    </label>
                 </div>
             </div>
 

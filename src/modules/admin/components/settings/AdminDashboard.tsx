@@ -11,6 +11,7 @@ import { deleteRoomAction } from '../../actions/roomActions';
 import { EditRoomModal } from './EditRoomModal';
 import { SiteSettingsForm } from '../SiteSettingsForm';
 import { VisualCalendarGrid } from '../VisualCalendarGrid';
+import { HeroBackgroundControl } from './HeroBackgroundControl';
 import { createClient } from '@/modules/shared/lib/supabase/client';
 import type { Room } from '@/modules/shared/types/database.types';
 import type { SiteSettings } from '@/modules/settings/services/getSettings';
@@ -61,6 +62,8 @@ const DEFAULT_REASONS = [
     'Unpaid / Expired payment deadline',
     'Double booking / Schedule conflict',
 ];
+
+const DEFAULT_VILLAS_BANNER = 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1600&q=80';
 
 const MAIN_NAVIGATION_TABS: Array<{ key: DashboardTabKey; icon: typeof Clock }> = [
     { key: 'bookings', icon: Clock },
@@ -227,6 +230,10 @@ export function AdminDashboardComponent({
 
     const [villasTitle, setVillasTitle] = useState(siteSettings?.villas_title || 'Handcrafted Kubo Villas');
     const [villasDescription, setVillasDescription] = useState(siteSettings?.villas_description || '');
+    const [villasHeroBgType, setVillasHeroBgType] = useState<'image' | 'color'>(siteSettings?.villas_hero_bg_type || 'image');
+    const [villasHeroBgColor, setVillasHeroBgColor] = useState(siteSettings?.villas_hero_bg_color || '#1c120c');
+    const [villasHeroImage, setVillasHeroImage] = useState(siteSettings?.villas_hero_image || '');
+
     const [savingVillasHeader, setSavingVillasHeader] = useState(false);
     const [villasHeaderMsg, setVillasHeaderMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -276,11 +283,14 @@ export function AdminDashboardComponent({
             ...siteSettings,
             villas_title: villasTitle,
             villas_description: villasDescription,
+            villas_hero_bg_type: villasHeroBgType,
+            villas_hero_bg_color: villasHeroBgColor,
+            villas_hero_image: villasHeroImage,
         });
 
         setSavingVillasHeader(false);
         if (res && res.success) {
-            setVillasHeaderMsg({ type: 'success', text: 'Kubo Villas page header updated successfully!' });
+            setVillasHeaderMsg({ type: 'success', text: 'Kubo Villas page header and hero background updated successfully!' });
         } else {
             setVillasHeaderMsg({ type: 'error', text: res?.message || 'Failed to update page header.' });
         }
@@ -666,7 +676,7 @@ export function AdminDashboardComponent({
                         <div className="bg-white p-6 rounded-3xl border border-[#e6c898]/40 shadow-xs space-y-4">
                             <div>
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#c89349]">Villas Page Content</span>
-                                <h3 className="text-lg font-bold text-[#1c120c]">Main Heading Title & Description Paragraph</h3>
+                                <h3 className="text-lg font-bold text-[#1c120c]">Main Heading Title, Description & Hero Background</h3>
                             </div>
 
                             {villasHeaderMsg && (
@@ -677,7 +687,19 @@ export function AdminDashboardComponent({
                                 </div>
                             )}
 
-                            <form onSubmit={handleSaveVillasHeader} className="space-y-3">
+                            <form onSubmit={handleSaveVillasHeader} className="space-y-4">
+                                {/* 🎨 Hero Background Option (Image vs Color) */}
+                                <HeroBackgroundControl
+                                    title="Cabins / Kubo Villas Hero Background"
+                                    bgType={villasHeroBgType}
+                                    imageUrl={villasHeroImage}
+                                    bgColor={villasHeroBgColor}
+                                    defaultImageUrl={DEFAULT_VILLAS_BANNER}
+                                    onTypeChange={(type) => setVillasHeroBgType(type)}
+                                    onImageChange={(url) => setVillasHeroImage(url)}
+                                    onColorChange={(color) => setVillasHeroBgColor(color)}
+                                />
+
                                 <div className="bg-[#faf7f2] p-3 rounded-2xl border border-[#e6c898]/40">
                                     <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Main Heading Title</label>
                                     <input

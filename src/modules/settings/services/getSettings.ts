@@ -55,12 +55,26 @@ export interface SiteSettings {
     id: string;
     site_name: string;
     meta_title?: string;
-    villas_meta_title?: string;      // 👈 Dynamic Browser Title for Villas Page
-    sanctuary_meta_title?: string;   // 👈 Dynamic Browser Title for Sanctuary Page
-    contact_meta_title?: string;     // 👈 Dynamic Browser Title for Contact Page
-    about_meta_title?: string;       // 👈 Dynamic Browser Title for About Page
+    villas_meta_title?: string;
+    sanctuary_meta_title?: string;
+    contact_meta_title?: string;
+    about_meta_title?: string;
     site_icon?: string;
     logo_url: string;
+
+    // 🎨 Hero Background Controls
+    contact_hero_bg_type?: 'image' | 'color';
+    contact_hero_bg_color?: string;
+    contact_banner_image?: string;
+
+    villas_hero_bg_type?: 'image' | 'color';
+    villas_hero_bg_color?: string;
+    villas_hero_image?: string;
+
+    sanctuary_hero_bg_type?: 'image' | 'color';
+    sanctuary_hero_bg_color?: string;
+    sanctuary_banner_image?: string;
+
     hero_subtitle: string;
     hero_title: string;
     hero_description: string;
@@ -81,7 +95,6 @@ export interface SiteSettings {
     sanctuary_hero_subtitle?: string;
     sanctuary_hero_title?: string;
     sanctuary_hero_description?: string;
-    sanctuary_banner_image?: string;
     sanctuary_amenities?: SanctuaryAmenity[];
     sanctuary_story_heading_1?: string;
     sanctuary_story_body_1?: string;
@@ -90,7 +103,6 @@ export interface SiteSettings {
     sanctuary_badge_text?: string;
     villas_title?: string;
     villas_description?: string;
-    contact_banner_image?: string;
     contact_title?: string;
     contact_subtitle?: string;
     contact_landline?: string;
@@ -122,6 +134,7 @@ const DEFAULT_HERO_IMAGES = [
 const DEFAULT_STORY_BANNER = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1600&q=80';
 const DEFAULT_SANCTUARY_BANNER = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=80';
 const DEFAULT_CONTACT_BANNER = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80';
+const DEFAULT_VILLAS_BANNER = 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1600&q=80';
 const DEFAULT_ABOUT_IMAGE = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=80';
 
 const DEFAULT_SANCTUARY_GALLERY = [
@@ -261,12 +274,24 @@ export async function getSiteSettings(): Promise<SiteSettings> {
                 sanctuary_meta_title: data.sanctuary_meta_title || `The Sanctuary | ${siteName}`,
                 contact_meta_title: data.contact_meta_title || `Contact Us | ${siteName}`,
                 about_meta_title: data.about_meta_title || `About Us | ${siteName}`,
+
+                // 🎨 Background Settings Fallbacks
+                contact_hero_bg_type: data.contact_hero_bg_type || 'image',
+                contact_hero_bg_color: data.contact_hero_bg_color || '#1c120c',
+                contact_banner_image: data.contact_banner_image || DEFAULT_CONTACT_BANNER,
+
+                villas_hero_bg_type: data.villas_hero_bg_type || 'image',
+                villas_hero_bg_color: data.villas_hero_bg_color || '#1c120c',
+                villas_hero_image: data.villas_hero_image || DEFAULT_VILLAS_BANNER,
+
+                sanctuary_hero_bg_type: data.sanctuary_hero_bg_type || 'image',
+                sanctuary_hero_bg_color: data.sanctuary_hero_bg_color || '#1c120c',
+                sanctuary_banner_image: data.sanctuary_banner_image || DEFAULT_SANCTUARY_BANNER,
+
                 site_icon: data.site_icon || 'Palmtree',
                 hero_images: (data.hero_images && data.hero_images.length > 0) ? data.hero_images : DEFAULT_HERO_IMAGES,
                 story_banner_image: data.story_banner_image || DEFAULT_STORY_BANNER,
-                sanctuary_banner_image: data.sanctuary_banner_image || DEFAULT_SANCTUARY_BANNER,
                 sanctuary_gallery: (data.sanctuary_gallery && data.sanctuary_gallery.length > 0) ? data.sanctuary_gallery : DEFAULT_SANCTUARY_GALLERY,
-                contact_banner_image: data.contact_banner_image || DEFAULT_CONTACT_BANNER,
                 inquiry_email: data.inquiry_email || 'aranjitarchita@gmail.com',
                 contact_cards: (data.contact_cards && data.contact_cards.length > 0) ? data.contact_cards : DEFAULT_CONTACT_CARDS,
                 footer_watermark: (data.footer_watermark && data.footer_watermark.trim() !== '') ? data.footer_watermark : siteName,
@@ -300,6 +325,19 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         sanctuary_meta_title: 'The Sanctuary | SEAVIEW',
         contact_meta_title: 'Contact Us | SEAVIEW',
         about_meta_title: 'About Us | SEAVIEW',
+
+        contact_hero_bg_type: 'image',
+        contact_hero_bg_color: '#1c120c',
+        contact_banner_image: DEFAULT_CONTACT_BANNER,
+
+        villas_hero_bg_type: 'image',
+        villas_hero_bg_color: '#1c120c',
+        villas_hero_image: DEFAULT_VILLAS_BANNER,
+
+        sanctuary_hero_bg_type: 'image',
+        sanctuary_hero_bg_color: '#1c120c',
+        sanctuary_banner_image: DEFAULT_SANCTUARY_BANNER,
+
         site_icon: 'Palmtree',
         logo_url: '',
         hero_subtitle: 'MODERN FILIPINO COASTAL SANCTUARY',
@@ -326,7 +364,6 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         sanctuary_hero_subtitle: 'Coastal Wellness & Peace',
         sanctuary_hero_title: 'The Seaview Sanctuary',
         sanctuary_hero_description: 'Unwind in a secluded beachfront haven where natural sea salt breezes, bamboo architecture, and tranquil tide pools rejuvenate your senses.',
-        sanctuary_banner_image: DEFAULT_SANCTUARY_BANNER,
         sanctuary_gallery: DEFAULT_SANCTUARY_GALLERY,
         sanctuary_amenities: [
             { icon: 'Waves', title: 'Oceanfront Tide Pools', description: 'Immerse in private natural tide pools naturally refreshed by daily ocean breezes.' },
@@ -336,7 +373,6 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         sanctuary_badge_text: 'Modern Beachfront Staycation',
         villas_title: 'Handcrafted Kubo Villas',
         villas_description: 'Explore our executive beachfront suites combining traditional Filipino craftsmanship with modern minimalist luxury.',
-        contact_banner_image: DEFAULT_CONTACT_BANNER,
         contact_title: 'Connect with Our Resort Desk',
         contact_subtitle: 'We are here to assist with your beachfront villa reservations, private staycations, and custom coastal experience inquiries.',
         contact_landline: '(075) 632-8888',
