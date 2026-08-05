@@ -458,7 +458,7 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                                     <div key={idx} className="relative aspect-square rounded-xl overflow-hidden bg-[#faf7f2] border border-[#e6c898]/40 group">
                                         <Image
                                             src={url}
-                                            alt={`Villa photo ${idx + 1}`}
+                                            alt={`Villas photo ${idx + 1}`}
                                             fill
                                             className="object-cover"
                                         />
