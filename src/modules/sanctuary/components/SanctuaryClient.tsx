@@ -42,6 +42,10 @@ export function SanctuaryClient({ settings }: SanctuaryClientProps) {
 
     const [currentSlide, setCurrentSlide] = useState(0);
 
+    // Dynamic Hero Background Settings
+    const heroBgType = settings?.sanctuary_hero_bg_type || 'image';
+    const heroBgColor = settings?.sanctuary_hero_bg_color || '#1c120c';
+
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowTideMask(false);
@@ -86,8 +90,13 @@ export function SanctuaryClient({ settings }: SanctuaryClientProps) {
                 {/* Continuous Dark Canvas */}
                 <div className="bg-[#1c120c] text-[#faf7f2]">
                     {/* Hero Section */}
-                    <section id="sanctuary-hero" className="bg-[#1c120c] text-[#faf7f2] pt-16 pb-20 px-4 text-center relative overflow-hidden min-h-[540px] sm:min-h-[620px] flex flex-col justify-center">
-                        {sanctuaryImages.length > 0 && (
+                    <section
+                        id="sanctuary-hero"
+                        className="relative text-[#faf7f2] pt-16 pb-20 px-4 text-center overflow-hidden min-h-[540px] sm:min-h-[620px] flex flex-col justify-center transition-colors duration-300"
+                        style={{ backgroundColor: heroBgType === 'color' ? heroBgColor : '#1c120c' }}
+                    >
+                        {/* Render Gallery / Banner Slideshow if Background Mode is 'image' */}
+                        {heroBgType === 'image' && sanctuaryImages.length > 0 && (
                             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
                                 {sanctuaryImages.map((img, idx) => (
                                     <div
@@ -126,8 +135,8 @@ export function SanctuaryClient({ settings }: SanctuaryClientProps) {
                                 {settings.sanctuary_hero_description || 'Escape to a peaceful beachfront sanctuary. Relax in our modern minimalist villas and enjoy a memorable seaside getaway.'}
                             </p>
 
-                            {/* Slide Controls */}
-                            {sanctuaryImages.length > 1 && (
+                            {/* Slide Controls (Active when in 'image' mode) */}
+                            {heroBgType === 'image' && sanctuaryImages.length > 1 && (
                                 <div className="animate-tide-text-3 pt-6 flex items-center justify-center gap-3">
                                     <button
                                         onClick={() => setCurrentSlide((prev) => (prev - 1 + sanctuaryImages.length) % sanctuaryImages.length)}
