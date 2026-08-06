@@ -25,6 +25,11 @@ export function ContactClient({ settings }: ContactClientProps) {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
 
+    // Dynamic Hero Background Settings
+    const heroBgType = settings?.contact_hero_bg_type || 'image';
+    const heroBgColor = settings?.contact_hero_bg_color || '#1c120c';
+    const bannerPhoto = settings.contact_banner_image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80';
+
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowTideMask(false);
@@ -57,8 +62,6 @@ export function ContactClient({ settings }: ContactClientProps) {
         }
     };
 
-    const bannerPhoto = settings.contact_banner_image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80';
-
     return (
         <div className="min-h-screen bg-[#faf7f2] text-[#1c120c] flex flex-col justify-between relative overflow-x-hidden">
             {/* 🌊 1. Tidal Wave Sweep Mask */}
@@ -77,16 +80,24 @@ export function ContactClient({ settings }: ContactClientProps) {
                 {/* Shared Header Component */}
                 <Header settings={settings} />
 
-                {/* Contact Banner Section with Dark Overlay Card */}
-                <section className="relative min-h-[380px] sm:min-h-[460px] w-full flex items-center justify-center bg-[#1c120c] overflow-hidden">
-                    <Image
-                        src={bannerPhoto}
-                        alt="Resort Front Desk & Entrance"
-                        fill
-                        priority
-                        className="object-cover opacity-60"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1c120c] via-black/40 to-transparent" />
+                {/* Contact Banner Section with Dynamic Color/Image Background */}
+                <section
+                    className="relative min-h-[380px] sm:min-h-[460px] w-full flex items-center justify-center overflow-hidden transition-colors duration-300"
+                    style={{ backgroundColor: heroBgType === 'color' ? heroBgColor : '#1c120c' }}
+                >
+                    {/* Render Image Background if 'image' mode is selected */}
+                    {heroBgType === 'image' && (
+                        <>
+                            <Image
+                                src={bannerPhoto}
+                                alt="Resort Front Desk & Entrance"
+                                fill
+                                priority
+                                className="object-cover opacity-60"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#1c120c] via-black/40 to-transparent" />
+                        </>
+                    )}
 
                     {/* Floating Dark Card with Shimmer & Staggered Reveal */}
                     <div className="relative z-10 max-w-2xl mx-4 my-8 p-6 sm:p-10 bg-[#1c120c]/90 backdrop-blur-md rounded-3xl border border-[#c89349]/30 text-center shadow-2xl space-y-3">

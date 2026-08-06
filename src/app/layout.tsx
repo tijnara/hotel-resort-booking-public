@@ -18,11 +18,51 @@ const geistMono = Geist_Mono({
 export async function generateMetadata(): Promise<Metadata> {
     const settings = await getSiteSettings();
 
-    const title = settings.meta_title?.trim() || `${settings.site_name || 'SEAVIEW'} | Executive Coastal Kubo Villas & Resort`;
+    const siteName = settings.site_name || 'SEAVIEW';
+    const title = settings.meta_title?.trim() || `${siteName} | Executive Coastal Kubo Villas & Resort`;
+    const description = settings.hero_description || 'Handcrafted beachfront Kubo villas blending ancestral Philippine architecture with modern luxury.';
+    const ogImage = settings.hero_images?.[0] || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=630';
 
     return {
-        title,
-        description: settings.hero_description || 'Handcrafted beachfront Kubo villas blending ancestral Philippine architecture with modern luxury.',
+        metadataBase: new URL('https://seaview-booking-website.vercel.app'),
+        title: {
+            default: title,
+            template: `%s | ${siteName}`,
+        },
+        description,
+        keywords: [
+            'Seaview Resort',
+            'Beachfront Kubo Villas',
+            'Pangasinan Resort',
+            'Philippines Staycation',
+            'Executive Cabin Suites',
+            'Coastal Vacation Rental',
+        ],
+        openGraph: {
+            title,
+            description,
+            siteName,
+            type: 'website',
+            locale: 'en_PH',
+            images: [
+                {
+                    url: ogImage,
+                    width: 1200,
+                    height: 630,
+                    alt: `${siteName} Beachfront Resort Preview`,
+                },
+            ],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: [ogImage],
+        },
+        robots: {
+            index: true,
+            follow: true,
+        },
     };
 }
 
