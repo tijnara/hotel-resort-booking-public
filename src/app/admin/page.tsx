@@ -25,7 +25,7 @@ export default async function AdminPage() {
     const [bookings, staffUsers, rooms, settings] = await Promise.all([
         getAdminBookings(),
         getStaffUsersAction(),
-        getRooms(),
+        getRooms(true), // 👈 Pass 'true' to include hidden/maintenance rooms on the Admin Desk
         getSiteSettings(),
     ]);
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { X, Loader2, Save, Upload, Trash2, Plus, Image as ImageIcon, Globe, HelpCircle, ChevronDown, ChevronUp, CheckCircle2, EyeOff } from 'lucide-react';
+import { X, Loader2, Save, Upload, Trash2, Plus, Image as ImageIcon, Globe, HelpCircle, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/modules/shared/lib/supabase/client';
 import { updateRoomAction, createRoomAction } from '../../actions/roomActions';
 import type { Room } from '@/modules/shared/types/database.types';
@@ -34,7 +34,6 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
     const [maxGuests, setMaxGuests] = useState(room?.max_guests || 2);
     const [bedType, setBedType] = useState(room?.bed_type || '1 King Bed');
     const [sizeSqm, setSizeSqm] = useState(room?.size_sqm || 35);
-    const [isHidden, setIsHidden] = useState<boolean>(room?.is_hidden || false);
 
     // Dynamic OTA Channels State
     const [icalSources, setIcalSources] = useState<OtaSource[]>(() => {
@@ -144,7 +143,7 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
             bed_type: bedType,
             size_sqm: Number(sizeSqm),
             images,
-            is_hidden: isHidden,
+            is_hidden: room?.is_hidden || false,
             ical_sources: icalSources.filter((s) => s.name.trim() !== '' || s.url.trim() !== ''),
         };
 
@@ -190,29 +189,6 @@ export function EditRoomModal({ room, isOpen, onClose }: EditRoomModalProps) {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-                    {/* 🛠️ Hide Villa for Maintenance Toggle */}
-                    <div className="bg-amber-50/80 p-4 rounded-2xl border border-amber-200/80 flex items-center justify-between gap-3">
-                        <div className="space-y-0.5">
-                            <span className="text-xs font-bold text-[#1c120c] flex items-center gap-1.5">
-                                <EyeOff className="w-3.5 h-3.5 text-amber-700" />
-                                Hide Villa from Guest Website (Maintenance)
-                            </span>
-                            <p className="text-[11px] text-gray-600 leading-snug">
-                                Enable to hide from public search & booking while undergoing roof or plumbing repairs.
-                            </p>
-                        </div>
-
-                        <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                            <input
-                                type="checkbox"
-                                checked={isHidden}
-                                onChange={(e) => setIsHidden(e.target.checked)}
-                                className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#c89349]"></div>
-                        </label>
-                    </div>
-
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="bg-white p-3 rounded-2xl border border-[#e6c898]/40">
                             <label className="block text-[10px] font-bold text-[#2b1d14]/60 uppercase tracking-widest mb-1">Villa Name</label>
