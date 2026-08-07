@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Sliders, Save, CheckCircle2, Plus, Trash2, ShieldAlert, ChevronRight, Image as ImageIcon, AlertTriangle, Settings, LayoutGrid, Radio } from 'lucide-react';
+import { Check, X, Clock, Calendar, UserPlus, Home, Edit3, RefreshCw, Loader2, Sliders, Save, CheckCircle2, Plus, Trash2, ShieldAlert, ChevronRight, Image as ImageIcon, AlertTriangle, Settings, LayoutGrid, Radio, EyeOff } from 'lucide-react';
 import { updateBookingStatusAction } from '../../actions/adminActions';
 import { createStaffUserAction, updateStaffUserAction, deleteStaffUserAction } from '../../actions/userActions';
 import { updateSiteSettingsAction } from '../../actions/settingsActions';
@@ -746,6 +746,15 @@ export function AdminDashboardComponent({
                                         {room.images?.[0] && (
                                             <Image src={room.images[0]} alt={room.name} fill className="object-cover" />
                                         )}
+
+                                        {/* 🛠️ Hidden / Maintenance Badge */}
+                                        {room.is_hidden && (
+                                            <div className="absolute top-3 left-3 bg-rose-900/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-rose-400/30 flex items-center gap-1 shadow-md">
+                                                <EyeOff className="w-3 h-3 text-rose-200" />
+                                                <span>Hidden / Maintenance</span>
+                                            </div>
+                                        )}
+
                                         <div className="absolute top-3 right-3 bg-[#1c120c]/85 backdrop-blur-md text-[#faf7f2] text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-[#c89349]/30">
                                             {room.bed_type}
                                         </div>
@@ -765,7 +774,7 @@ export function AdminDashboardComponent({
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => { setSelectedRoom(room); setRoomModalOpen(true); }}
-                                                className="px-3 py-2 bg-[#1c120c] text-white text-xs font-bold rounded-xl flex items-center gap-1"
+                                                className="px-3 py-2 bg-[#1c120c] text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer"
                                             >
                                                 <Edit3 className="w-3.5 h-3.5 text-[#c89349]" />
                                                 <span>Edit</span>
@@ -773,7 +782,7 @@ export function AdminDashboardComponent({
                                             <button
                                                 onClick={() => handleDeleteRoom(room.id, room.name)}
                                                 disabled={deletingRoomId === room.id}
-                                                className="px-3 py-2 bg-rose-50 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 hover:bg-rose-100"
+                                                className="px-3 py-2 bg-rose-50 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 hover:bg-rose-100 cursor-pointer"
                                             >
                                                 {deletingRoomId === room.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                             </button>

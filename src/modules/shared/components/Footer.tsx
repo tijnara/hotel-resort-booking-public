@@ -108,7 +108,16 @@ export function Footer({ settings, onNavClick }: FooterProps) {
                     </div>
                 </div>
 
-                <div className="pt-6 border-t border-[#2b1d14] flex flex-col sm:flex-row items-center justify-between text-xs text-[#faf7f2]/50 gap-3">
+                {/* ⚖️ Legal & Policy Links */}
+                <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-[#faf7f2]/70 pt-4 border-t border-[#2b1d14]">
+                    <Link href="/policies" className="hover:text-[#c89349] transition">Cancellation & Refund Policy</Link>
+                    <span>•</span>
+                    <Link href="/policies" className="hover:text-[#c89349] transition">Terms & Conditions</Link>
+                    <span>•</span>
+                    <Link href="/policies" className="hover:text-[#c89349] transition">Privacy Policy</Link>
+                </div>
+
+                <div className="pt-4 border-t border-[#2b1d14] flex flex-col sm:flex-row items-center justify-between text-xs text-[#faf7f2]/50 gap-3">
                     <p>© 2026 {settings.site_name}. All rights reserved.</p>
                     <p className="flex items-center gap-1.5 font-medium text-[#c89349]">
                         <Laptop className="w-4 h-4 text-[#c89349]" />

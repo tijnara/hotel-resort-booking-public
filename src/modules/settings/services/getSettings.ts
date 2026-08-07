@@ -51,6 +51,12 @@ export interface ContactInfoItem {
     icon?: string;
 }
 
+export interface LegalPolicyItem {
+    id: string;
+    title: string;
+    content: string;
+}
+
 export interface SiteSettings {
     id: string;
     site_name: string;
@@ -74,6 +80,9 @@ export interface SiteSettings {
     sanctuary_hero_bg_type?: 'image' | 'color';
     sanctuary_hero_bg_color?: string;
     sanctuary_banner_image?: string;
+
+    // ⚖️ Dynamic Legal & Policy Documents
+    legal_policies?: LegalPolicyItem[];
 
     hero_subtitle: string;
     hero_title: string;
@@ -124,6 +133,44 @@ export interface SiteSettings {
     payment_methods?: PaymentMethodItem[];
     email_templates?: EmailTemplatesSettings;
 }
+
+const DEFAULT_LEGAL_POLICIES: LegalPolicyItem[] = [
+    {
+        id: 'cancellation',
+        title: 'Cancellation & Refund Policy',
+        content: `1. STANDARD CANCELLATION SCHEDULE
+• 7 Days or More Before Check-In: Full 100% refund or free date rebooking.
+• 3 to 6 Days Before Check-In: 50% refund or rebooking subject to villa availability.
+• Less Than 48 Hours Before Check-In: Non-refundable.
+
+2. INCLEMENT WEATHER & FORCE MAJEURE
+Rain alone does not qualify for immediate cancellation or refund. However, if an official Typhoon Warning is issued covering Pangasinan or travel routes on your check-in date, guests may rebook their stay within 6 months at no extra charge or request a full refund.`,
+    },
+    {
+        id: 'terms',
+        title: 'Terms & Conditions',
+        content: `1. GUEST RESPONSIBILITY & PROPERTY CARE
+Guests are expected to treat Seaview Kubo Villas, amenities, and oceanfront grounds with care. Any damage caused to property, bamboo furniture, capiz windows, or resort appliances during stay will be assessed and billed to the registered primary guest.
+
+2. CHECK-IN & CHECK-OUT POLICY
+Standard Check-In time is 2:00 PM. Standard Check-Out time is 12:00 NN. Early check-in or late check-out is subject to villa availability and prior front desk approval. Valid government-issued ID is required upon arrival.
+
+3. MAXIMUM OCCUPANCY & QUIET HOURS
+Each Kubo Villa has a strict maximum guest capacity specified upon booking. Unregistered stayover guests are not permitted. To preserve serenity, quiet hours begin at 10:00 PM nightly across all beachfront grounds.`,
+    },
+    {
+        id: 'privacy',
+        title: 'Privacy Policy',
+        content: `1. INFORMATION WE COLLECT
+Seaview collects guest details (full name, phone number, email address, payment verification receipts) solely to process reservation requests, issue confirmation notices, and assist guest inquiries.
+
+2. DATA PROTECTION & PRIVACY ACT
+Your personal information is kept strictly confidential in compliance with the Philippine Data Privacy Act of 2012. We do not sell, share, or distribute guest data to third-party marketing services.
+
+3. PAYMENT VERIFICATION
+Uploaded GCash or bank payment screenshots are accessed exclusively by authorized front desk staff to verify stay payments and are securely stored.`,
+    },
+];
 
 const DEFAULT_HERO_IMAGES = [
     'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=80',
@@ -275,6 +322,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
                 contact_meta_title: data.contact_meta_title || `Contact Us | ${siteName}`,
                 about_meta_title: data.about_meta_title || `About Us | ${siteName}`,
 
+                // ⚖️ Dynamic Legal Policies Fallback
+                legal_policies: (data.legal_policies && data.legal_policies.length > 0) ? data.legal_policies : DEFAULT_LEGAL_POLICIES,
+
                 // 🎨 Background Settings Fallbacks
                 contact_hero_bg_type: data.contact_hero_bg_type || 'image',
                 contact_hero_bg_color: data.contact_hero_bg_color || '#1c120c',
@@ -325,6 +375,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         sanctuary_meta_title: 'The Sanctuary | SEAVIEW',
         contact_meta_title: 'Contact Us | SEAVIEW',
         about_meta_title: 'About Us | SEAVIEW',
+
+        legal_policies: DEFAULT_LEGAL_POLICIES,
 
         contact_hero_bg_type: 'image',
         contact_hero_bg_color: '#1c120c',

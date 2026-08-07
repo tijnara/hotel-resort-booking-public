@@ -1,10 +1,17 @@
 import { createClient } from '@/modules/shared/lib/supabase/server';
 import type { Room } from '@/modules/shared/types/database.types';
 
-export async function getRooms(): Promise<Room[]> {
+export async function getRooms(includeHidden = false): Promise<Room[]> {
     try {
         const supabase = await createClient();
-        const { data, error } = await supabase.from('rooms').select('*').order('price_per_night', { ascending: true });
+        let query = supabase.from('rooms').select('*').order('price_per_night', { ascending: true });
+
+        // Filter out hidden / maintenance rooms for public guest views
+        if (!includeHidden) {
+            query = query.or('is_hidden.is.null,is_hidden.eq.false');
+        }
+
+        const { data, error } = await query;
 
         if (error || !data || data.length === 0) {
             return getFallbackRooms();
@@ -30,6 +37,7 @@ function getFallbackRooms(): Room[] {
             size_sqm: 48,
             images: ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80'],
             is_available: true,
+            is_hidden: false,
         },
         {
             id: '2',
@@ -43,6 +51,7 @@ function getFallbackRooms(): Room[] {
             size_sqm: 65,
             images: ['https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=1200&q=80'],
             is_available: true,
+            is_hidden: false,
         },
     ];
 }
