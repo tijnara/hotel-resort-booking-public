@@ -25,13 +25,14 @@ export default async function AdminPage() {
     const [bookings, staffUsers, rooms, settings] = await Promise.all([
         getAdminBookings(),
         getStaffUsersAction(),
-        getRooms(true), // 👈 Pass 'true' to include hidden/maintenance rooms on the Admin Desk
+        getRooms(true), // Pass 'true' to include hidden/maintenance rooms on the Admin Desk
         getSiteSettings(),
     ]);
 
-    // Determine user role and formatted display label
+    // Determine user role, permissions, and formatted display label
     const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
     const userRole = (user.user_metadata?.role || 'staff').toLowerCase();
+    const userPermissions = user.user_metadata?.permissions || ['bookings', 'calendar'];
     const userDisplayLabel = `${fullName} (${userRole.toUpperCase()})`;
 
     return (
@@ -71,6 +72,7 @@ export default async function AdminPage() {
                         initialRooms={rooms}
                         siteSettings={settings}
                         userRole={userRole}
+                        userPermissions={userPermissions}
                     />
                 </main>
             </div>

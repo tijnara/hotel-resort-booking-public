@@ -43,7 +43,7 @@ export interface StaffUser {
     id: string;
     email?: string;
     created_at: string;
-    user_metadata?: { full_name?: string; role?: string };
+    user_metadata?: { full_name?: string; role?: string; permissions?: string[] };
 }
 
 interface AdminDashboardProps {
@@ -52,6 +52,7 @@ interface AdminDashboardProps {
     initialRooms?: Room[];
     siteSettings?: SiteSettings;
     userRole?: string;
+    userPermissions?: string[];
 }
 
 type DashboardTabKey = 'bookings' | 'calendar' | 'villas' | 'settings' | 'users';
@@ -77,11 +78,19 @@ export function AdminDashboardComponent({
                                             initialRooms = [],
                                             siteSettings,
                                             userRole = 'staff',
+                                            userPermissions = ['bookings', 'calendar'],
                                         }: AdminDashboardProps) {
     const router = useRouter();
     const isAdmin = userRole.toLowerCase() === 'admin';
 
-    const [mainTab, setMainTab] = useState<DashboardTabKey>('bookings');
+    // Filter available navigation tabs based on role & granted permissions
+    const visibleTabs = MAIN_NAVIGATION_TABS.filter((tab) =>
+        isAdmin || userPermissions.includes(tab.key)
+    );
+
+    const [mainTab, setMainTab] = useState<DashboardTabKey>(
+        visibleTabs[0]?.key || 'bookings'
+    );
     const [loadingId, setLoadingId] = useState<string | null>(null);
     const [viewingReceiptUrl, setViewingReceiptUrl] = useState<string | null>(null);
     const [isSyncingOta, setIsSyncingOta] = useState(false);
@@ -216,12 +225,13 @@ export function AdminDashboardComponent({
         }
     };
 
-    const handleCreateUser = async (payload: { fullName: string; email: string; password: string; role: string }) => {
+    const handleCreateUser = async (payload: { fullName: string; email: string; password: string; role: string; permissions?: string[] }) => {
         const res = await createStaffUserAction(payload);
         return { success: !!res?.success, message: res?.message };
     };
 
-    const handleUpdateUser = async (payload: { id: string; fullName: string; email: string; role: string; password?: string }) => {
+    // 🛠️ Fixed: Made permissions optional (permissions?: string[]) to match EditUserModal's handler type signature
+    const handleUpdateUser = async (payload: { id: string; fullName: string; email: string; role: string; permissions?: string[]; password?: string }) => {
         const res = await updateStaffUserAction(payload);
         return { success: !!res?.success, message: res?.message };
     };
@@ -251,7 +261,7 @@ export function AdminDashboardComponent({
 
                 <div className="flex items-center justify-between gap-3 border-b border-[#e6c898]/40 pb-4 flex-wrap">
                     <div className="flex items-center gap-2.5 md:gap-3 max-md:overflow-x-auto md:flex-wrap max-md:[scrollbar-width:none]">
-                        {MAIN_NAVIGATION_TABS.map(({ key, icon: IconComponent }) => {
+                        {visibleTabs.map(({ key, icon: IconComponent }) => {
                             const isSelected = mainTab === key;
                             const isEditing = editingTabKey === key;
                             const isSaving = savingTabKey === key;

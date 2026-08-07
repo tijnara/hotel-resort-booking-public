@@ -8,6 +8,7 @@ export async function createStaffUserAction(payload: {
     password: string;
     fullName: string;
     role: string;
+    permissions?: string[];
 }) {
     if (!payload.email || !payload.password || !payload.fullName) {
         return { success: false, message: 'All fields are required.' };
@@ -28,6 +29,7 @@ export async function createStaffUserAction(payload: {
         user_metadata: {
             full_name: payload.fullName,
             role: payload.role || 'staff',
+            permissions: payload.permissions || ['bookings', 'calendar'],
         },
         email_confirm: true, // Auto-confirm email for immediate staff login
     });
@@ -45,6 +47,7 @@ export async function updateStaffUserAction(payload: {
     email: string;
     fullName: string;
     role: string;
+    permissions?: string[];
     password?: string;
 }) {
     if (!payload.id || !payload.email || !payload.fullName) {
@@ -65,6 +68,7 @@ export async function updateStaffUserAction(payload: {
         user_metadata: {
             full_name: payload.fullName,
             role: payload.role || 'staff',
+            permissions: payload.permissions || ['bookings', 'calendar'],
         },
     };
 
