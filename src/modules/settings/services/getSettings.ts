@@ -57,6 +57,12 @@ export interface LegalPolicyItem {
     content: string;
 }
 
+export interface FaqItem {
+    id: string;
+    question: string;
+    answer: string;
+}
+
 export interface SiteSettings {
     id: string;
     site_name: string;
@@ -83,6 +89,9 @@ export interface SiteSettings {
 
     // ⚖️ Dynamic Legal & Policy Documents
     legal_policies?: LegalPolicyItem[];
+
+    // ❓ Dynamic FAQ Accordion List
+    faqs?: FaqItem[];
 
     hero_subtitle: string;
     hero_title: string;
@@ -169,6 +178,29 @@ Your personal information is kept strictly confidential in compliance with the P
 
 3. PAYMENT VERIFICATION
 Uploaded GCash or bank payment screenshots are accessed exclusively by authorized front desk staff to verify stay payments and are securely stored.`,
+    },
+];
+
+const DEFAULT_FAQS: FaqItem[] = [
+    {
+        id: 'faq_1',
+        question: 'What are the standard Check-In and Check-Out times?',
+        answer: 'Standard Check-In time is at 2:00 PM and Check-Out is at 12:00 NN. Early check-in or late check-out is subject to villa availability and prior front desk approval.',
+    },
+    {
+        id: 'faq_2',
+        question: 'Are pets allowed inside the Kubo Villas?',
+        answer: 'Yes! We are pet-friendly for small to medium breeds. We kindly request guests to keep pets supervised and bring their own pet bedding.',
+    },
+    {
+        id: 'faq_3',
+        question: 'Is there a corkage fee for outside food or drinks?',
+        answer: 'We do not charge corkage fees for personal snacks or drinks! You are free to bring your own food. Heavy cooking equipment requires prior desk approval.',
+    },
+    {
+        id: 'faq_4',
+        question: 'Is secure parking available on resort grounds?',
+        answer: 'Yes, we provide free, secure gated parking for all registered staycation guests directly on resort property.',
     },
 ];
 
@@ -325,6 +357,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
                 // ⚖️ Dynamic Legal Policies Fallback
                 legal_policies: (data.legal_policies && data.legal_policies.length > 0) ? data.legal_policies : DEFAULT_LEGAL_POLICIES,
 
+                // ❓ Dynamic FAQs Fallback
+                faqs: (data.faqs && data.faqs.length > 0) ? data.faqs : DEFAULT_FAQS,
+
                 // 🎨 Background Settings Fallbacks
                 contact_hero_bg_type: data.contact_hero_bg_type || 'image',
                 contact_hero_bg_color: data.contact_hero_bg_color || '#1c120c',
@@ -377,6 +412,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         about_meta_title: 'About Us | SEAVIEW',
 
         legal_policies: DEFAULT_LEGAL_POLICIES,
+        faqs: DEFAULT_FAQS,
 
         contact_hero_bg_type: 'image',
         contact_hero_bg_color: '#1c120c',

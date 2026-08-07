@@ -7,6 +7,7 @@ import { sendInquiryAction } from '../actions/sendInquiryAction';
 import { Header } from '@/modules/shared/components/Header';
 import { Footer } from '@/modules/shared/components/Footer';
 import { BrandIcon } from '@/modules/shared/components/BrandIcon';
+import { FaqSection } from '@/modules/shared/components/FaqSection'; // 👈 Import FaqSection
 import type { SiteSettings } from '@/modules/settings/services/getSettings';
 
 interface ContactClientProps {
@@ -80,12 +81,11 @@ export function ContactClient({ settings }: ContactClientProps) {
                 {/* Shared Header Component */}
                 <Header settings={settings} />
 
-                {/* Contact Banner Section with Dynamic Color/Image Background */}
+                {/* Contact Banner Section */}
                 <section
                     className="relative min-h-[380px] sm:min-h-[460px] w-full flex items-center justify-center overflow-hidden transition-colors duration-300"
                     style={{ backgroundColor: heroBgType === 'color' ? heroBgColor : '#1c120c' }}
                 >
-                    {/* Render Image Background if 'image' mode is selected */}
                     {heroBgType === 'image' && (
                         <>
                             <Image
@@ -99,7 +99,6 @@ export function ContactClient({ settings }: ContactClientProps) {
                         </>
                     )}
 
-                    {/* Floating Dark Card with Shimmer & Staggered Reveal */}
                     <div className="relative z-10 max-w-2xl mx-4 my-8 p-6 sm:p-10 bg-[#1c120c]/90 backdrop-blur-md rounded-3xl border border-[#c89349]/30 text-center shadow-2xl space-y-3">
                         <div className="animate-tide-text-1">
                             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#c89349] block">
@@ -263,6 +262,9 @@ export function ContactClient({ settings }: ContactClientProps) {
                         )}
                     </div>
                 </section>
+
+                {/* ❓ FAQ Accordion Section */}
+                <FaqSection faqs={settings.faqs} />
             </div>
 
             {/* Shared Footer Component */}

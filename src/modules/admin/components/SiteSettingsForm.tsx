@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Save, Loader2, Palette, Home, Info, Camera, Phone, MapPin, ChevronRight, CreditCard, Mail, ShieldCheck } from 'lucide-react';
+import { Save, Loader2, Palette, Home, Info, Camera, Phone, MapPin, ChevronRight, CreditCard, Mail, ShieldCheck, HelpCircle } from 'lucide-react';
 import { updateSiteSettingsAction } from '../actions/settingsActions';
 import type { SiteSettings, PaymentMethodItem, EmailTemplatesSettings } from '@/modules/settings/services/getSettings';
 
@@ -12,6 +12,7 @@ import { SanctuarySettingsTab } from './settings/SanctuarySettingsTab';
 import { ContactSettingsTab } from './settings/ContactSettingsTab';
 import { FooterSettingsTab } from './settings/FooterSettingsTab';
 import { LegalSettingsTab } from './settings/LegalSettingsTab';
+import { FaqSettingsTab } from './settings/FaqSettingsTab';
 
 export interface SingleEmailTemplate {
     subject?: string;
@@ -41,7 +42,7 @@ const EMAIL_STAGE_TEMPLATES: Array<{ key: keyof EmailTemplatesSettings; title: s
 ];
 
 export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
-    const [subTab, setSubTab] = useState<'branding' | 'home' | 'about' | 'sanctuary' | 'contact' | 'footer' | 'payments' | 'emails' | 'policies'>('branding');
+    const [subTab, setSubTab] = useState<'branding' | 'home' | 'about' | 'sanctuary' | 'contact' | 'footer' | 'payments' | 'emails' | 'policies' | 'faqs'>('branding');
     const [formData, setFormData] = useState<SiteSettings>(settings);
     const [loading, setLoading] = useState(false);
     const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -71,6 +72,7 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
         { id: 'contact', label: 'Contact Page', icon: Phone },
         { id: 'footer', label: 'Footer Info', icon: MapPin },
         { id: 'policies', label: 'Legal & Policies', icon: ShieldCheck },
+        { id: 'faqs', label: 'FAQ Accordion', icon: HelpCircle },
     ] as const;
 
     // Payment Method Handlers
@@ -346,6 +348,7 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                 {subTab === 'contact' && <ContactSettingsTab formData={formData} setFormData={setFormData} />}
                 {subTab === 'footer' && <FooterSettingsTab formData={formData} setFormData={setFormData} />}
                 {subTab === 'policies' && <LegalSettingsTab formData={formData} setFormData={setFormData} />}
+                {subTab === 'faqs' && <FaqSettingsTab formData={formData} setFormData={setFormData} />}
             </div>
 
             {/* Global Save Button */}
